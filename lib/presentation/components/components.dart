@@ -4,6 +4,7 @@ export 'app_search_field.dart';
 export 'app_snackbar.dart';
 export 'app_text_field.dart';
 export 'banner_carousel.dart';
+export 'brand_logo.dart';
 export 'cart_actions.dart';
 export 'loading_indicator.dart';
 export 'menu_group.dart';

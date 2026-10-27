@@ -17,15 +17,45 @@ class CartButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final units = context.select<CartProvider, int>((c) => c.totalUnits);
+    final theme = Theme.of(context);
 
-    return IconButton(
-      tooltip: 'Carrito',
-      onPressed: () => Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const CartPage())),
-      icon: Badge(
-        isLabelVisible: units > 0,
-        label: Text('$units'),
-        child: const Icon(Icons.shopping_cart_outlined),
+    // Botón claro sobre el navbar (que es del color de marca): así se ve el
+    // carrito aunque el navbar sea negro. La cantidad va en ámbar.
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: Tooltip(
+        message: 'Carrito',
+        child: Material(
+          color: theme.colorScheme.onPrimary,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const CartPage())),
+            child: SizedBox(
+              width: 42,
+              height: 42,
+              child: Center(
+                child: Badge(
+                  isLabelVisible: units > 0,
+                  label: Text(
+                    '$units',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  backgroundColor: const Color(0xFFFFC107),
+                  child: Icon(
+                    Icons.shopping_cart_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

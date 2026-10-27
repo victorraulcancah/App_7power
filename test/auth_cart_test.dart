@@ -308,7 +308,7 @@ void main() {
       await cart.add(product(2, 'Cable RCA', price: 30, stock: 9),
           quantity: 2);
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
 
       expect(find.text('Mi carrito'), findsOneWidget);
@@ -330,7 +330,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
 
       expect(find.text('Tu carrito está vacío'), findsOneWidget);

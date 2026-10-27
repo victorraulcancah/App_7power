@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:appecommerce/core/utils/format_utils.dart';
@@ -81,6 +82,19 @@ void main() {
     expect(find.text('Agotado'), findsNothing);
     await tester.tap(find.byIcon(Icons.add_shopping_cart));
     expect(added, 1);
+  });
+
+  testWidgets('BrandLogo usa el de la empresa y, si no hay o falla, el de la web',
+      (tester) async {
+    await tester.pumpWidget(_wrap(const BrandLogo()));
+    expect(find.byType(SvgPicture), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
+
+    // Con URL se intenta cargar la imagen; en los tests la red responde 400,
+    // así que termina mostrando el logo de respaldo.
+    await tester.pumpWidget(_wrap(const BrandLogo(url: 'http://api.test/logo.png')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SvgPicture), findsOneWidget);
   });
 
   testWidgets('ErrorState ofrece reintentar', (tester) async {

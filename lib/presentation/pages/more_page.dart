@@ -184,20 +184,7 @@ class _BrandCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          if (info?.logoUrl != null)
-            Image.network(
-              info!.logoUrl!,
-              height: 48,
-              errorBuilder: (_, _, _) => Text(
-                info?.name ?? '',
-                style: theme.textTheme.titleLarge?.copyWith(color: onColor),
-              ),
-            )
-          else
-            Text(
-              info?.name ?? AppConstants.appName,
-              style: theme.textTheme.titleLarge?.copyWith(color: onColor),
-            ),
+          BrandLogo(url: info?.logoUrl, height: 48),
           const SizedBox(height: 10),
           Text(
             'Audio automotriz, multimedia, seguridad y energía para tu vehículo.',

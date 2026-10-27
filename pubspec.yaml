@@ -41,6 +41,7 @@ dependencies:
   url_launcher: ^6.3.3
   font_awesome_flutter: ^11.0.0
   flutter_secure_storage: ^11.2.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    # Logo de la tienda web: se usa cuando el logo de la empresa no carga.
+    - assets/images/logo.svg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

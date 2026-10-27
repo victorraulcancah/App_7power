@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_constants.dart';
+import '../components/components.dart';
 import '../providers/company_provider.dart';
 import '../providers/products_provider.dart';
 import 'account_page.dart';
@@ -38,13 +38,7 @@ class _MainShellState extends State<MainShell> {
       appBar: AppBar(
         actions: const [CartButton()],
         // El logo queda centrado; el carrito, a la derecha.
-        title: company?.logoUrl != null
-            ? Image.network(
-                company!.logoUrl!,
-                height: 34,
-                errorBuilder: (_, _, _) => Text(company.name),
-              )
-            : Text(company?.name ?? AppConstants.appName),
+        title: BrandLogo(url: company?.logoUrl, height: 34),
       ),
       body: IndexedStack(
         index: _tab,

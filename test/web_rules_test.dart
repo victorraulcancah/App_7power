@@ -240,7 +240,7 @@ void main() {
       await cart.add(product(1, 'Driver', price: 0, stock: 9));
       await cart.add(product(2, 'Cable', price: 30, stock: 9));
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
 
       expect(find.text('Precio solo para clientes'), findsOneWidget);
@@ -258,7 +258,7 @@ void main() {
           .read<CartProvider>()
           .add(product(1, 'Driver', price: 25, stock: 9), quantity: 2);
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
 
       expect(find.text('Total'), findsOneWidget);
@@ -280,7 +280,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
 
       expect(find.text('Precio solo para clientes'), findsNothing);
@@ -299,7 +299,7 @@ void main() {
       expect(summaries.map((s) => s.currency), ['s', 'd']);
       expect(summaries.map((s) => s.total), [40, 10]);
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
       expect(find.text('Total S/'), findsOneWidget);
       expect(find.text('Total US\$'), findsOneWidget);
@@ -313,7 +313,7 @@ void main() {
           .read<CartProvider>()
           .add(product(1, 'A', price: 10, stock: 2), quantity: 2);
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
 
       final plus = tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.add));

@@ -81,7 +81,7 @@ Future<TestEnv> _openCart(
 
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+  await tester.tap(find.byTooltip('Carrito'));
   await tester.pumpAndSettle();
   return env;
 }
@@ -534,7 +534,7 @@ void main() {
           .read<CartProvider>()
           .add(product(1, 'Driver', price: 25, stock: 9));
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
+      await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
       expect(find.text('Pagar'), findsOneWidget);
       expect(find.text('Cotizar'), findsOneWidget);
