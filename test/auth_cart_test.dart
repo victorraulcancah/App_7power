@@ -316,7 +316,8 @@ void main() {
       // Subtotal y total: 120 + 30 x 2.
       expect(find.text('S/ 180.00'), findsNWidgets(2));
       expect(find.text('Subtotal (3 items)'), findsOneWidget);
-      expect(find.text('Inicia sesión para pagar'), findsOneWidget);
+      expect(find.text('Pagar'), findsOneWidget);
+      expect(find.text('Cotizar'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.delete_outline).first);
       await tester.pumpAndSettle();
@@ -407,7 +408,12 @@ void main() {
       await tester.tap(find.text('Ingresar'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ana Pérez'), findsOneWidget);
+      expect(find.text('Hola, Ana Pérez'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Cerrar sesión'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Cerrar sesión'), findsOneWidget);
       expect(env.apiClient.authToken, 'token-cliente');
       expect(env.cartRemote.syncCalls, 1);
@@ -432,7 +438,7 @@ void main() {
 
       expect(find.text('Las credenciales proporcionadas son incorrectas.'),
           findsOneWidget);
-      expect(find.text('Ana Pérez'), findsNothing);
+      expect(find.text('Hola, Ana Pérez'), findsNothing);
     });
 
     testWidgets('el formulario valida correo y contraseña vacíos',
@@ -459,8 +465,13 @@ void main() {
 
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
-      expect(find.text('Ana Pérez'), findsOneWidget);
+      expect(find.text('Hola, Ana Pérez'), findsOneWidget);
 
+      await tester.scrollUntilVisible(
+        find.text('Cerrar sesión'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.text('Cerrar sesión'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Salir'));

@@ -38,6 +38,17 @@ class ApiConstants {
   static const String quotesEndpoint = '/cotizaciones/mis-cotizaciones';
   static const String quoteEndpoint = '/cotizaciones';
 
+  // Checkout
+  static const String paymentTypesEndpoint = '/tipos-pago/activos';
+  static const String gatewayEndpoint = '/pasarela/configuracion';
+  static const String creditEndpoint = '/cliente/credito';
+  static const String holderEndpoint = '/cliente/titular';
+  static const String exchangeRateEndpoint = '/cliente/tipo-cambio';
+  static const String couponValidateEndpoint = '/cupones/validar';
+  static const String verifyStockEndpoint = '/cotizaciones/verificar-stock';
+  static const String createQuoteEndpoint = '/cotizaciones/ecommerce';
+  static const String payEndpoint = '/pago-en-linea/pagar';
+
   // Ubicaciones (públicas)
   static const String departmentsEndpoint = '/departamentos';
   static const String provincesEndpoint = '/provincias';

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/entities/address_entity.dart';
+import '../../../domain/usecases/addresses_usecases.dart';
 import '../../components/components.dart';
 import '../../providers/addresses_provider.dart';
 
@@ -57,7 +58,7 @@ class _AddressFormPageState extends State<AddressFormPage> {
     super.dispose();
   }
 
-  GetUbigeo get _ubigeo => context.read<AddressesProvider>().ubigeo;
+  GetUbigeoUseCase get _ubigeo => context.read<AddressesProvider>().ubigeo;
 
   /// Carga los departamentos y, al editar, también provincias y distritos para
   /// dejar elegida la ubicación actual de la dirección.
@@ -236,8 +237,6 @@ class _AddressFormPageState extends State<AddressFormPage> {
   }
 }
 
-typedef GetUbigeo = dynamic;
-
 class _Dropdown extends StatelessWidget {
   final String label;
   final UbigeoOption? value;
@@ -254,6 +253,9 @@ class _Dropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<UbigeoOption>(
+      // `initialValue` solo cuenta al crearse: al cambiar el nivel anterior hay
+      // que reconstruir el campo para que se vacíe.
+      key: ValueKey('$label-${value?.ubigeoId}-${options.length}'),
       initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
@@ -267,7 +269,7 @@ class _Dropdown extends StatelessWidget {
           DropdownMenuItem(value: o, child: Text(o.name)),
       ],
       onChanged: options.isEmpty ? null : onChanged,
-      validator: (v) => v == null ? 'Elige $label'.toLowerCase().replaceFirst('elige ', 'Elige ') : null,
+      validator: (v) => v == null ? 'Elige ${label.toLowerCase()}' : null,
     );
   }
 }

@@ -8,6 +8,7 @@ import '../../domain/entities/product_detail_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../components/components.dart';
 import '../providers/product_detail_provider.dart';
+import '../widgets/favorite_button.dart';
 import '../widgets/product_tile.dart';
 import 'cart_page.dart';
 import 'login_page.dart';
@@ -51,7 +52,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Producto'),
-        actions: const [CartButton()],
+        actions: [
+          if (provider.detail != null)
+            FavoriteButton(product: provider.detail!.product),
+          const CartButton(),
+        ],
       ),
       body: switch (provider.status) {
         ProductDetailStatus.loading =>

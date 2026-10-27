@@ -159,8 +159,15 @@ class ApiClient {
         final first = errors.values.first;
         if (first is List && first.isNotEmpty) return first.first.toString();
       }
-      // Algunos endpoints usan `error` en lugar de `message`.
-      final message = body['message'] ?? body['error'];
+      // Algunos endpoints usan `error` en lugar de `message`. En un 500 el
+      // `message` es genérico ("Error al crear cotización") y el motivo real
+      // (stock, montos que no cuadran...) viene en `error`, como lo muestra la
+      // web; se recorta para no enseñar un volcado largo.
+      final error = body['error'];
+      if (response.statusCode >= 500 && error is String && error.isNotEmpty) {
+        return error.length > 240 ? '${error.substring(0, 240)}…' : error;
+      }
+      final message = body['message'] ?? error;
       return message is String && message.isNotEmpty ? message : null;
     } catch (_) {
       return null;

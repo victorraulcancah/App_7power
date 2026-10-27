@@ -7,6 +7,7 @@ import '../../domain/entities/cart_item_entity.dart';
 import '../components/components.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
+import 'checkout/checkout_page.dart';
 import 'login_page.dart';
 
 /// Ícono del carrito con la cantidad de unidades. Abre [CartPage].
@@ -206,6 +207,15 @@ class _Summary extends StatelessWidget {
 
   const _Summary({required this.cart});
 
+  void _start(BuildContext context, bool loggedIn, CheckoutMode mode) {
+    if (!loggedIn) {
+      AppSnackbar.info(context, 'Inicia sesión para continuar con tu compra.');
+      LoginPage.open(context);
+      return;
+    }
+    CheckoutPage.open(context, mode);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -259,19 +269,20 @@ class _Summary extends StatelessWidget {
                   ),
               ],
               const SizedBox(height: 12),
+              // Los dos botones se ven también como invitado: al tocarlos se
+              // pide iniciar sesión, así el flujo de compra se conoce antes de
+              // tener cuenta (igual que la web).
               AppButton(
-                label: loggedIn ? 'Pagar' : 'Inicia sesión para pagar',
-                icon: loggedIn ? Icons.credit_card : Icons.login,
-                onPressed: () {
-                  if (!loggedIn) {
-                    LoginPage.open(context);
-                    return;
-                  }
-                  AppSnackbar.info(
-                    context,
-                    'El pago estará disponible muy pronto.',
-                  );
-                },
+                label: 'Pagar',
+                icon: Icons.credit_card,
+                onPressed: () => _start(context, loggedIn, CheckoutMode.pay),
+              ),
+              const SizedBox(height: 8),
+              AppButton(
+                label: 'Cotizar',
+                icon: Icons.description_outlined,
+                variant: AppButtonVariant.outline,
+                onPressed: () => _start(context, loggedIn, CheckoutMode.quote),
               ),
             ],
           ),

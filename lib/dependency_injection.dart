@@ -5,6 +5,19 @@ import 'package:provider/single_child_widget.dart';
 import 'core/network/api_client.dart';
 
 // Data Layer
+import 'data/datasources/addresses_remote_datasource.dart';
+import 'data/datasources/checkout_remote_datasource.dart';
+import 'data/repositories/checkout_repository_impl.dart';
+import 'domain/repositories/checkout_repository.dart';
+import 'domain/usecases/checkout_usecases.dart';
+import 'presentation/providers/checkout_provider.dart';
+import 'data/datasources/favorites_remote_datasource.dart';
+import 'data/datasources/purchases_remote_datasource.dart';
+import 'data/datasources/quotes_remote_datasource.dart';
+import 'data/repositories/addresses_repository_impl.dart';
+import 'data/repositories/favorites_repository_impl.dart';
+import 'data/repositories/purchases_repository_impl.dart';
+import 'data/repositories/quotes_repository_impl.dart';
 import 'data/datasources/auth_local_datasource.dart';
 import 'data/datasources/auth_remote_datasource.dart';
 import 'data/datasources/cart_local_datasource.dart';
@@ -17,6 +30,14 @@ import 'data/repositories/product_repository_impl.dart';
 import 'data/repositories/store_repository_impl.dart';
 
 // Domain Layer
+import 'domain/repositories/addresses_repository.dart';
+import 'domain/repositories/favorites_repository.dart';
+import 'domain/repositories/purchases_repository.dart';
+import 'domain/repositories/quotes_repository.dart';
+import 'domain/usecases/addresses_usecases.dart';
+import 'domain/usecases/favorites_usecases.dart';
+import 'domain/usecases/purchases_usecases.dart';
+import 'domain/usecases/quotes_usecases.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/repositories/cart_repository.dart';
 import 'domain/repositories/product_repository.dart';
@@ -30,6 +51,10 @@ import 'domain/usecases/get_product_detail_usecase.dart';
 import 'domain/usecases/get_products_usecase.dart';
 
 // Presentation Layer
+import 'presentation/providers/addresses_provider.dart';
+import 'presentation/providers/favorites_provider.dart';
+import 'presentation/providers/purchases_provider.dart';
+import 'presentation/providers/quotes_provider.dart';
 import 'presentation/providers/auth_aware_reload.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/cart_provider.dart';
@@ -64,6 +89,21 @@ class DependencyInjection {
   static final StoreRepository _storeRepository = StoreRepositoryImpl(
     StoreRemoteDataSourceImpl(_apiClient),
   );
+
+  static final FavoritesRepository _favoritesRepository =
+      FavoritesRepositoryImpl(FavoritesRemoteDataSourceImpl(_apiClient));
+
+  static final PurchasesRepository _purchasesRepository =
+      PurchasesRepositoryImpl(PurchasesRemoteDataSourceImpl(_apiClient));
+
+  static final AddressesRepository _addressesRepository =
+      AddressesRepositoryImpl(AddressesRemoteDataSourceImpl(_apiClient));
+
+  static final QuotesRepository _quotesRepository =
+      QuotesRepositoryImpl(QuotesRemoteDataSourceImpl(_apiClient));
+
+  static final CheckoutRepository _checkoutRepository =
+      CheckoutRepositoryImpl(CheckoutRemoteDataSourceImpl(_apiClient));
 
   /// Providers globales de la app. Cada feature nueva registra aquí su
   /// provider con sus casos de uso (datasource -> repository -> usecase).
@@ -117,6 +157,50 @@ class DependencyInjection {
         authAware<ProductDetailProvider>(
           () => ProductDetailProvider(
             getProductDetailUseCase: GetProductDetailUseCase(_productRepository),
+          ),
+        ),
+        // Mi cuenta: datos del cliente. Al iniciar o cerrar sesión se vacían
+        // (o se recargan) para no mostrar lo de otra cuenta.
+        authAware<FavoritesProvider>(
+          () => FavoritesProvider(
+            getFavoritesUseCase: GetFavoritesUseCase(_favoritesRepository),
+            addFavoriteUseCase: AddFavoriteUseCase(_favoritesRepository),
+            removeFavoriteUseCase: RemoveFavoriteUseCase(_favoritesRepository),
+          ),
+        ),
+        authAware<PurchasesProvider>(
+          () => PurchasesProvider(
+            getOnlinePurchasesUseCase:
+                GetOnlinePurchasesUseCase(_purchasesRepository),
+            getStorePurchasesUseCase:
+                GetStorePurchasesUseCase(_purchasesRepository),
+          ),
+        ),
+        authAware<AddressesProvider>(
+          () => AddressesProvider(
+            getAddressesUseCase: GetAddressesUseCase(_addressesRepository),
+            saveAddressUseCase: SaveAddressUseCase(_addressesRepository),
+            deleteAddressUseCase: DeleteAddressUseCase(_addressesRepository),
+            setDefaultAddressUseCase:
+                SetDefaultAddressUseCase(_addressesRepository),
+            ubigeo: GetUbigeoUseCase(_addressesRepository),
+          ),
+        ),
+        authAware<QuotesProvider>(
+          () => QuotesProvider(
+            getQuotesUseCase: GetQuotesUseCase(_quotesRepository),
+            cancelQuoteUseCase: CancelQuoteUseCase(_quotesRepository),
+          ),
+        ),
+        // Checkout: se reinicia al abrirlo, no depende de la sesión.
+        ChangeNotifierProvider<CheckoutProvider>(
+          create: (_) => CheckoutProvider(
+            getPaymentTypesUseCase: GetPaymentTypesUseCase(_checkoutRepository),
+            extras: GetCheckoutExtrasUseCase(_checkoutRepository),
+            validateCouponUseCase: ValidateCouponUseCase(_checkoutRepository),
+            verifyStockUseCase: VerifyStockUseCase(_checkoutRepository),
+            createQuotesUseCase: CreateQuotesUseCase(_checkoutRepository),
+            payOnlineUseCase: PayOnlineUseCase(_checkoutRepository),
           ),
         ),
       ];

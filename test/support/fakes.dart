@@ -30,7 +30,35 @@ import 'package:appecommerce/domain/usecases/get_categories_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_company_info_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_product_detail_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_products_usecase.dart';
+import 'package:appecommerce/core/utils/format_utils.dart';
+import 'package:appecommerce/domain/entities/cart_item_entity.dart';
+import 'package:appecommerce/data/datasources/checkout_remote_datasource.dart';
+import 'package:appecommerce/data/repositories/checkout_repository_impl.dart';
+import 'package:appecommerce/domain/entities/checkout_entity.dart';
+import 'package:appecommerce/domain/usecases/checkout_usecases.dart';
+import 'package:appecommerce/presentation/providers/checkout_provider.dart';
+import 'package:appecommerce/data/datasources/addresses_remote_datasource.dart';
+import 'package:appecommerce/data/datasources/favorites_remote_datasource.dart';
 import 'package:appecommerce/data/datasources/product_remote_datasource.dart';
+import 'package:appecommerce/data/datasources/purchases_remote_datasource.dart';
+import 'package:appecommerce/data/datasources/quotes_remote_datasource.dart';
+import 'package:appecommerce/data/models/address_model.dart';
+import 'package:appecommerce/data/models/product_model.dart';
+import 'package:appecommerce/data/models/purchase_model.dart';
+import 'package:appecommerce/data/models/quote_model.dart';
+import 'package:appecommerce/data/repositories/addresses_repository_impl.dart';
+import 'package:appecommerce/data/repositories/favorites_repository_impl.dart';
+import 'package:appecommerce/data/repositories/purchases_repository_impl.dart';
+import 'package:appecommerce/data/repositories/quotes_repository_impl.dart';
+import 'package:appecommerce/domain/entities/address_entity.dart';
+import 'package:appecommerce/domain/usecases/addresses_usecases.dart';
+import 'package:appecommerce/domain/usecases/favorites_usecases.dart';
+import 'package:appecommerce/domain/usecases/purchases_usecases.dart';
+import 'package:appecommerce/domain/usecases/quotes_usecases.dart';
+import 'package:appecommerce/presentation/providers/addresses_provider.dart';
+import 'package:appecommerce/presentation/providers/favorites_provider.dart';
+import 'package:appecommerce/presentation/providers/purchases_provider.dart';
+import 'package:appecommerce/presentation/providers/quotes_provider.dart';
 import 'package:appecommerce/data/models/category_model.dart';
 import 'package:appecommerce/data/models/product_detail_model.dart';
 import 'package:appecommerce/dependency_injection.dart';
@@ -317,6 +345,211 @@ class FakeCartRemote implements CartRemoteDataSource {
   }
 }
 
+/// "Servidor" de favoritos en memoria. Con [failure] todas las llamadas fallan.
+class FakeFavoritesRemote implements FavoritesRemoteDataSource {
+  List<ProductModel> items = [];
+  Exception? failure;
+  final List<int> added = [];
+  final List<int> removed = [];
+
+  @override
+  Future<List<ProductModel>> getFavorites() async {
+    if (failure != null) throw failure!;
+    return List.of(items);
+  }
+
+  @override
+  Future<void> add(int productId) async {
+    if (failure != null) throw failure!;
+    added.add(productId);
+  }
+
+  @override
+  Future<void> remove(int productId) async {
+    if (failure != null) throw failure!;
+    removed.add(productId);
+  }
+}
+
+class FakePurchasesRemote implements PurchasesRemoteDataSource {
+  List<PurchaseModel> online = [];
+  StorePurchasesModel store =
+      const StorePurchasesModel(linked: false, sales: []);
+
+  @override
+  Future<List<PurchaseModel>> getOnlinePurchases() async => List.of(online);
+
+  @override
+  Future<StorePurchasesModel> getStorePurchases() async => store;
+}
+
+class FakeAddressesRemote implements AddressesRemoteDataSource {
+  List<AddressModel> items = [];
+  final List<AddressDraft> saved = [];
+  final List<int?> savedIds = [];
+  final List<int> deleted = [];
+  final List<int> madeDefault = [];
+
+  final departments = const [
+    UbigeoOption(code: '15', name: 'LIMA', ubigeoId: '150000'),
+    UbigeoOption(code: '04', name: 'AREQUIPA', ubigeoId: '40000'),
+  ];
+  final provinces = const {
+    '15': [UbigeoOption(code: '01', name: 'LIMA', ubigeoId: '150100')],
+    '04': [UbigeoOption(code: '01', name: 'AREQUIPA', ubigeoId: '40100')],
+  };
+  final districts = const {
+    '15/01': [
+      UbigeoOption(code: '22', name: 'MIRAFLORES', ubigeoId: '150122'),
+      UbigeoOption(code: '01', name: 'LIMA CERCADO', ubigeoId: '150101'),
+    ],
+  };
+
+  @override
+  Future<List<AddressModel>> getAddresses() async => List.of(items);
+
+  @override
+  Future<void> save(AddressDraft draft, {int? id}) async {
+    saved.add(draft);
+    savedIds.add(id);
+  }
+
+  @override
+  Future<void> delete(int id) async => deleted.add(id);
+
+  @override
+  Future<void> setDefault(int id) async => madeDefault.add(id);
+
+  @override
+  Future<List<UbigeoOption>> getDepartments() async => departments;
+
+  @override
+  Future<List<UbigeoOption>> getProvinces(String department) async =>
+      provinces[department] ?? const [];
+
+  @override
+  Future<List<UbigeoOption>> getDistricts(
+    String department,
+    String province,
+  ) async =>
+      districts['$department/$province'] ?? const [];
+}
+
+class FakeQuotesRemote implements QuotesRemoteDataSource {
+  List<QuoteModel> items = [];
+  final List<int> cancelled = [];
+  Exception? cancelFailure;
+
+  @override
+  Future<List<QuoteModel>> getQuotes() async => List.of(items);
+
+  @override
+  Future<void> cancel(int id, {String? reason}) async {
+    if (cancelFailure != null) throw cancelFailure!;
+    cancelled.add(id);
+  }
+}
+
+/// Checkout en memoria: guarda lo último que se le envió para poder revisarlo.
+class FakeCheckoutRemote implements CheckoutRemoteDataSource {
+  List<PaymentTypeEntity> paymentTypes = const [
+    PaymentTypeEntity(id: 1, name: 'Transferencia', code: 'transferencia'),
+    PaymentTypeEntity(id: 2, name: 'Yape', code: 'yape'),
+    PaymentTypeEntity(id: 3, name: 'Crédito', code: 'credito_autorizado'),
+  ];
+  bool testMode = true;
+  double credit = 0;
+  String? holderPhone;
+  double? exchangeRate;
+
+  /// Respuesta de `verificar-stock`.
+  StockCheck stock = const StockCheck(hasStock: true);
+
+  /// Resultado del pago: null = aprobado, o el mensaje de rechazo.
+  String? declineMessage;
+  Exception? payFailure;
+  Exception? quoteFailure;
+
+  QuoteOrder? lastQuote;
+  PaymentOrder? lastPayment;
+  final List<String> couponsAsked = [];
+
+  @override
+  Future<List<PaymentTypeEntity>> getPaymentTypes() async => paymentTypes;
+
+  @override
+  Future<bool> isGatewayInTestMode() async => testMode;
+
+  @override
+  Future<double> getCreditAvailable() async => credit;
+
+  @override
+  Future<String?> getHolderPhone() async => holderPhone;
+
+  @override
+  Future<double?> getExchangeRate() async => exchangeRate;
+
+  @override
+  Future<CouponEntity> validateCoupon(String code, double total) async {
+    couponsAsked.add(code);
+    if (code != 'PROMO10') throw const ValidationException('Cupón no válido o expirado');
+    return CouponEntity(
+      code: code,
+      discount: total * 0.1,
+      totalWithDiscount: total * 0.9,
+    );
+  }
+
+  @override
+  Future<StockCheck> verifyStock(List<CartItemEntity> items) async => stock;
+
+  @override
+  Future<List<CreatedQuote>> createQuotes(QuoteOrder order) async {
+    if (quoteFailure != null) throw quoteFailure!;
+    lastQuote = order;
+    final currencies = {for (final i in order.items) FormatUtils.normalizeCurrency(i.currency)};
+    return [
+      for (final c in ['s', 'd'].where(currencies.contains))
+        CreatedQuote(
+          code: '2026-00001${c == 'd' ? '-D' : ''}',
+          orderCode: 'PED-1',
+          currency: c,
+          total: order.items
+              .where((i) => FormatUtils.normalizeCurrency(i.currency) == c)
+              .fold(0.0, (s, i) => s + i.subtotal),
+        ),
+    ];
+  }
+
+  @override
+  Future<PaymentResult> pay(PaymentOrder order) async {
+    if (payFailure != null) throw payFailure!;
+    lastPayment = order;
+    if (declineMessage != null) {
+      return PaymentResult(approved: false, message: declineMessage!);
+    }
+    return PaymentResult(
+      approved: true,
+      message: 'Pago aprobado (pasarela de prueba, sin cobro real).',
+      simulated: true,
+      reference: 'SIM-ABC123',
+      cardBrand: order.card.brand,
+      cardLast4: order.card.last4,
+      purchase: PurchaseModel.fromJson({
+        'codigo': 'PAGO-2026-00001',
+        'estado_proceso': 'pendiente_facturar',
+        'moneda': order.currency ?? 's',
+        'subtotal': 100,
+        'total': 100,
+        'direccion_envio': order.delivery.address.fullAddress,
+        'items': [
+          {'producto_id': 1, 'nombre': 'Driver', 'cantidad': 1, 'precio_unitario': 100, 'subtotal': 100},
+        ],
+      }),
+    );
+  }
+}
+
 /// Todo lo que necesita la app, con dobles en lugar de red y almacenamiento.
 class TestEnv {
   final FakeProductRepo products;
@@ -326,6 +559,11 @@ class TestEnv {
   final FakeCartLocal cartLocal = FakeCartLocal();
   final FakeCartRemote cartRemote = FakeCartRemote();
   final FakeProductRemote productRemote = FakeProductRemote();
+  final FakeFavoritesRemote favoritesRemote = FakeFavoritesRemote();
+  final FakePurchasesRemote purchasesRemote = FakePurchasesRemote();
+  final FakeAddressesRemote addressesRemote = FakeAddressesRemote();
+  final FakeQuotesRemote quotesRemote = FakeQuotesRemote();
+  final FakeCheckoutRemote checkoutRemote = FakeCheckoutRemote();
   final ApiClient apiClient = ApiClient(isConnected: () async => true);
 
   late final AuthRepositoryImpl authRepo = AuthRepositoryImpl(
@@ -398,5 +636,48 @@ class TestEnv {
             getProductDetailUseCase: GetProductDetailUseCase(products),
           ),
         ),
+        DependencyInjection.authAware<FavoritesProvider>(() {
+          final repo = FavoritesRepositoryImpl(favoritesRemote);
+          return FavoritesProvider(
+            getFavoritesUseCase: GetFavoritesUseCase(repo),
+            addFavoriteUseCase: AddFavoriteUseCase(repo),
+            removeFavoriteUseCase: RemoveFavoriteUseCase(repo),
+          );
+        }),
+        DependencyInjection.authAware<PurchasesProvider>(() {
+          final repo = PurchasesRepositoryImpl(purchasesRemote);
+          return PurchasesProvider(
+            getOnlinePurchasesUseCase: GetOnlinePurchasesUseCase(repo),
+            getStorePurchasesUseCase: GetStorePurchasesUseCase(repo),
+          );
+        }),
+        DependencyInjection.authAware<AddressesProvider>(() {
+          final repo = AddressesRepositoryImpl(addressesRemote);
+          return AddressesProvider(
+            getAddressesUseCase: GetAddressesUseCase(repo),
+            saveAddressUseCase: SaveAddressUseCase(repo),
+            deleteAddressUseCase: DeleteAddressUseCase(repo),
+            setDefaultAddressUseCase: SetDefaultAddressUseCase(repo),
+            ubigeo: GetUbigeoUseCase(repo),
+          );
+        }),
+        DependencyInjection.authAware<QuotesProvider>(() {
+          final repo = QuotesRepositoryImpl(quotesRemote);
+          return QuotesProvider(
+            getQuotesUseCase: GetQuotesUseCase(repo),
+            cancelQuoteUseCase: CancelQuoteUseCase(repo),
+          );
+        }),
+        ChangeNotifierProvider<CheckoutProvider>(create: (_) {
+          final repo = CheckoutRepositoryImpl(checkoutRemote);
+          return CheckoutProvider(
+            getPaymentTypesUseCase: GetPaymentTypesUseCase(repo),
+            extras: GetCheckoutExtrasUseCase(repo),
+            validateCouponUseCase: ValidateCouponUseCase(repo),
+            verifyStockUseCase: VerifyStockUseCase(repo),
+            createQuotesUseCase: CreateQuotesUseCase(repo),
+            payOnlineUseCase: PayOnlineUseCase(repo),
+          );
+        }),
       ]);
 }
