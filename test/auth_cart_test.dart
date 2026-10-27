@@ -458,6 +458,10 @@ void main() {
     });
 
     testWidgets('cerrar sesión vuelve al formulario', (tester) async {
+      // Pantalla alta: el botón de cerrar sesión queda al final del menú.
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final env = TestEnv();
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());

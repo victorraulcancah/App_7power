@@ -28,6 +28,27 @@ class ApiConstants {
   static const String logoutEndpoint = '/logout';
   static const String cartEndpoint = '/cart';
 
+  // Información de la empresa (públicos)
+  static const String aboutEndpoint = '/sobre-nosotros/publico';
+  static const String shippingStepsEndpoint = '/pasos-envio';
+  static const String contactEndpoint = '/contacto';
+  static const String claimCreateEndpoint = '/reclamos/crear';
+  static const String claimLookupEndpoint = '/reclamos/buscar';
+
+  /// Sitio web de la tienda: de ahí salen los PDF legales y las páginas de
+  /// registro y recuperación de contraseña.
+  static const String webDomain = String.fromEnvironment(
+    'WEB_DOMAIN',
+    defaultValue: 'https://7power.pe',
+  );
+  static const String legalInfoPdf = '$webDomain/assets/legal/informacion-legal.pdf';
+  static const String termsPdf =
+      '$webDomain/assets/legal/terminos-y-condiciones-de-compra.pdf';
+  static const String returnsPdf =
+      '$webDomain/assets/legal/terminos-y-condiciones-de-compra.pdf#page=3';
+  static const String privacyPdf = '$webDomain/assets/legal/'
+      'politica-de-privacidad-y-proteccion-de-datos-personales.pdf';
+
   // Mi cuenta (requieren token de cliente)
   static const String profileEndpoint = '/user';
   static const String phoneEndpoint = '/user/telefono';

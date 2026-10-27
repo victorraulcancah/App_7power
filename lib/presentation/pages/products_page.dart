@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/format_utils.dart';
 import '../components/components.dart';
 import '../providers/products_provider.dart';
 import '../widgets/product_tile.dart';
@@ -117,7 +118,7 @@ class _CategoryFilter extends StatelessWidget {
           _chip('Todos', provider.selectedCategoryId == null,
               () => provider.selectCategory(null)),
           for (final c in provider.categories)
-            _chip(c.name, provider.selectedCategoryId == c.id,
+            _chip(FormatUtils.titleCase(c.name), provider.selectedCategoryId == c.id,
                 () => provider.selectCategory(c.id)),
         ],
       ),

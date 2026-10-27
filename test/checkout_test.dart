@@ -89,15 +89,23 @@ Future<TestEnv> _openCart(
 /// Baja la pantalla hasta que [finder] se construya (las listas son perezosas).
 Future<void> _reveal(WidgetTester tester, Finder finder) async {
   final scrollable = find.byType(Scrollable).first;
-  if (finder.evaluate().isNotEmpty) {
+  if (finder.evaluate().isEmpty) {
+    // Primero hacia abajo; si no está, hacia arriba.
+    try {
+      await tester.scrollUntilVisible(finder, 200, scrollable: scrollable, maxScrolls: 60);
+    } catch (_) {
+      await tester.scrollUntilVisible(finder, -200, scrollable: scrollable, maxScrolls: 60);
+    }
+  } else {
     await tester.ensureVisible(finder);
-    return;
   }
-  // Primero hacia abajo; si no está, hacia arriba.
-  try {
-    await tester.scrollUntilVisible(finder, 200, scrollable: scrollable, maxScrolls: 60);
-  } catch (_) {
-    await tester.scrollUntilVisible(finder, -200, scrollable: scrollable, maxScrolls: 60);
+  await tester.pump();
+  // Lo deja hacia el centro de la pantalla: un widget a medio mostrar no
+  // recibe el toque en su centro.
+  final delta = tester.getCenter(finder).dy - 300;
+  if (delta.abs() > 1) {
+    await tester.drag(scrollable, Offset(0, -delta));
+    await tester.pump();
   }
 }
 

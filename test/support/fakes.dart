@@ -31,6 +31,12 @@ import 'package:appecommerce/domain/usecases/get_company_info_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_product_detail_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_products_usecase.dart';
 import 'package:appecommerce/core/utils/format_utils.dart';
+import 'package:appecommerce/data/datasources/info_remote_datasource.dart';
+import 'package:appecommerce/data/models/info_model.dart';
+import 'package:appecommerce/data/repositories/info_repository_impl.dart';
+import 'package:appecommerce/domain/entities/info_entity.dart';
+import 'package:appecommerce/domain/usecases/info_usecases.dart';
+import 'package:appecommerce/presentation/providers/info_provider.dart';
 import 'package:appecommerce/domain/entities/cart_item_entity.dart';
 import 'package:appecommerce/data/datasources/checkout_remote_datasource.dart';
 import 'package:appecommerce/data/repositories/checkout_repository_impl.dart';
@@ -450,6 +456,64 @@ class FakeQuotesRemote implements QuotesRemoteDataSource {
   }
 }
 
+/// Información de la empresa en memoria.
+class FakeInfoRemote implements InfoRemoteDataSource {
+  AboutModel about = const AboutModel(
+    name: '7power',
+    description: 'Somos una empresa peruana de audio automotriz.',
+    values: [
+      AboutValueEntity(title: 'Misión', description: 'Desarrollar soluciones.'),
+      AboutValueEntity(title: 'Visión', description: 'Ser referentes.'),
+    ],
+  );
+  List<ShippingStepEntity> steps = const [
+    ShippingStepEntity(order: 1, title: 'Realiza el pedido', description: 'Por la web'),
+    ShippingStepEntity(order: 2, title: 'Espera su transporte'),
+  ];
+
+  Exception? failure;
+  final List<ContactMessage> contacts = [];
+  final List<ClaimDraft> claims = [];
+  ClaimStatus? claimToFind;
+
+  @override
+  Future<AboutModel> getAbout() async {
+    if (failure != null) throw failure!;
+    return about;
+  }
+
+  @override
+  Future<List<ShippingStepEntity>> getShippingSteps() async => steps;
+
+  @override
+  Future<void> sendContact(ContactMessage message) async {
+    if (failure != null) throw failure!;
+    contacts.add(message);
+  }
+
+  @override
+  Future<ClaimReceipt> submitClaim(ClaimDraft claim) async {
+    if (failure != null) throw failure!;
+    claims.add(claim);
+    return ClaimReceipt(
+      number: 'REC-2026-00001',
+      deadline: DateTime(2026, 11, 20),
+    );
+  }
+
+  @override
+  Future<ClaimStatus> findClaim(String number) async {
+    final found = claimToFind;
+    if (found == null || found.number != number) {
+      throw const ServerException(
+        'Reclamo no encontrado con el número proporcionado',
+        '404',
+      );
+    }
+    return found;
+  }
+}
+
 /// Checkout en memoria: guarda lo último que se le envió para poder revisarlo.
 class FakeCheckoutRemote implements CheckoutRemoteDataSource {
   List<PaymentTypeEntity> paymentTypes = const [
@@ -564,6 +628,7 @@ class TestEnv {
   final FakeAddressesRemote addressesRemote = FakeAddressesRemote();
   final FakeQuotesRemote quotesRemote = FakeQuotesRemote();
   final FakeCheckoutRemote checkoutRemote = FakeCheckoutRemote();
+  final FakeInfoRemote infoRemote = FakeInfoRemote();
   final ApiClient apiClient = ApiClient(isConnected: () async => true);
 
   late final AuthRepositoryImpl authRepo = AuthRepositoryImpl(
@@ -666,6 +731,16 @@ class TestEnv {
           return QuotesProvider(
             getQuotesUseCase: GetQuotesUseCase(repo),
             cancelQuoteUseCase: CancelQuoteUseCase(repo),
+          );
+        }),
+        ChangeNotifierProvider<InfoProvider>(create: (_) {
+          final repo = InfoRepositoryImpl(infoRemote);
+          return InfoProvider(
+            getAboutUseCase: GetAboutUseCase(repo),
+            getShippingStepsUseCase: GetShippingStepsUseCase(repo),
+            sendContactUseCase: SendContactUseCase(repo),
+            submitClaimUseCase: SubmitClaimUseCase(repo),
+            findClaimUseCase: FindClaimUseCase(repo),
           );
         }),
         ChangeNotifierProvider<CheckoutProvider>(create: (_) {

@@ -10,6 +10,7 @@ import 'package:appecommerce/data/models/product_model.dart';
 import 'package:appecommerce/domain/entities/product_detail_entity.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
+import 'package:appecommerce/presentation/components/product_card.dart';
 import 'support/fakes.dart';
 
 /// Contexto del shell, aunque haya otra pantalla encima.
@@ -104,7 +105,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
       await _goToShop(tester);
-      await tester.tap(find.text('Driver').first);
+      await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
 
       expect(find.text('S/ 100.00'), findsOneWidget);
@@ -129,7 +130,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
       await _goToShop(tester);
-      await tester.tap(find.text('Driver').first);
+      await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
 
       expect(find.byType(SegmentedButton<String>), findsNothing);
@@ -176,7 +177,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
       await _goToShop(tester);
-      await tester.tap(find.text('Driver').first);
+      await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
 
       expect(find.text('Precio solo para clientes'), findsOneWidget);

@@ -11,6 +11,7 @@ import 'package:appecommerce/data/models/user_model.dart';
 import 'package:appecommerce/domain/entities/purchase_entity.dart';
 import 'package:appecommerce/presentation/providers/auth_provider.dart';
 
+import 'package:appecommerce/presentation/components/product_card.dart';
 import 'support/fakes.dart';
 
 BuildContext _context(WidgetTester tester) =>
@@ -276,12 +277,15 @@ void main() {
       expect(find.text('Hola, Ana Pérez'), findsOneWidget);
       // El menú es una lista: se baja hasta cada entrada.
       for (final entry in [
+        'Compras',
+        'Cotizaciones',
+        'Mis listas',
         'Datos personales',
         'Direcciones',
-        'Mis cotizaciones',
-        'Mis compras',
-        'Mis listas',
         'Mi carrito',
+        'Libro de reclamaciones',
+        'Contáctanos',
+        'Sobre nosotros',
         'Cerrar sesión',
       ]) {
         await tester.scrollUntilVisible(
@@ -371,7 +375,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Tienda'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Driver').first);
+      await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.favorite_border));
@@ -388,7 +392,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Tienda'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Driver').first);
+      await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.favorite_border));
@@ -407,7 +411,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Tienda'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Driver').first);
+      await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.favorite_border));
@@ -445,7 +449,7 @@ void main() {
       final env = TestEnv();
       env.purchasesRemote.online = [purchase('facturado')];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis compras');
+      await _openSection(tester, 'Compras');
 
       expect(find.text('PAGO-1'), findsOneWidget);
       expect(find.text('Facturado'), findsOneWidget);
@@ -478,7 +482,7 @@ void main() {
       final env = TestEnv();
       env.purchasesRemote.online = [purchase('cancelado')];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis compras');
+      await _openSection(tester, 'Compras');
       await tester.tap(find.text('PAGO-1'));
       await tester.pumpAndSettle();
 
@@ -490,7 +494,7 @@ void main() {
         (tester) async {
       final env = TestEnv();
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis compras');
+      await _openSection(tester, 'Compras');
 
       expect(find.text('Aún no tienes compras en línea'), findsOneWidget);
 
@@ -517,7 +521,7 @@ void main() {
         ],
       });
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis compras');
+      await _openSection(tester, 'Compras');
       await tester.tap(find.text('En tienda'));
       await tester.pumpAndSettle();
 
@@ -673,7 +677,7 @@ void main() {
         _quote(3, status: 'Cancelado', editable: false),
       ];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis cotizaciones');
+      await _openSection(tester, 'Cotizaciones');
 
       expect(find.text('Cotización 2026-00001'), findsOneWidget);
       expect(find.text('En espera'), findsOneWidget);
@@ -687,7 +691,7 @@ void main() {
       final env = TestEnv();
       env.quotesRemote.items = [_quote(1)];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis cotizaciones');
+      await _openSection(tester, 'Cotizaciones');
       await tester.tap(find.text('Cotización 2026-00001'));
       await tester.pumpAndSettle();
 
@@ -708,7 +712,7 @@ void main() {
         _quote(2, status: 'En preparación', editable: false),
       ];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis cotizaciones');
+      await _openSection(tester, 'Cotizaciones');
       await tester.tap(find.text('Cotización 2026-00002'));
       await tester.pumpAndSettle();
 
@@ -726,7 +730,7 @@ void main() {
         '422',
       );
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis cotizaciones');
+      await _openSection(tester, 'Cotizaciones');
       await tester.tap(find.text('Cotización 2026-00001'));
       await tester.pumpAndSettle();
 

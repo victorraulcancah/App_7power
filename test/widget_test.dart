@@ -203,7 +203,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Categorías'), findsOneWidget);
-    expect(find.widgetWithText(ActionChip, 'DRIVER'), findsOneWidget);
+    expect(find.text('Driver'), findsOneWidget);
 
     // La portada es una lista: lo que queda fuera de pantalla no se construye
     // hasta hacer scroll.
@@ -220,6 +220,10 @@ void main() {
 
   testWidgets('Tocar una categoría de la portada abre la tienda filtrada',
       (tester) async {
+    // Pantalla alta: la portada es larga y las categorías quedan bajo el pliegue.
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final env = TestEnv(catalog: [
       product(1, 'Driver 400W'),
       product(2, 'Cable RCA', categoryId: 2),
@@ -227,7 +231,7 @@ void main() {
     await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(ActionChip, 'RCA'));
+    await tester.tap(find.text('RCA'));
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(ChoiceChip, 'RCA'), findsOneWidget);

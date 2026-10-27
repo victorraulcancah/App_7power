@@ -21,6 +21,19 @@ class FormatUtils {
           ? _dolares.format(amount)
           : _soles.format(amount);
 
+  /// "AMPLIFICADOR DE POTENCIA" -> "Amplificador de potencia". Los nombres de
+  /// categoría llegan en mayúsculas y no caben en una etiqueta corta; las
+  /// siglas de hasta 3 letras ("RCA", "USB") se dejan como están.
+  static String titleCase(String text) {
+    final words = text.trim().split(RegExp(r'\s+'));
+    return [
+      for (var i = 0; i < words.length; i++)
+        words[i].length <= 3
+            ? words[i]
+            : words[i][0].toUpperCase() + words[i].substring(1).toLowerCase(),
+    ].join(' ');
+  }
+
   /// Acepta números o strings (el backend a veces devuelve decimales como string).
   static double toDouble(dynamic value, [double fallback = 0]) {
     if (value is num) return value.toDouble();

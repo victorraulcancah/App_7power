@@ -6,6 +6,11 @@ import 'core/network/api_client.dart';
 
 // Data Layer
 import 'data/datasources/addresses_remote_datasource.dart';
+import 'data/datasources/info_remote_datasource.dart';
+import 'data/repositories/info_repository_impl.dart';
+import 'domain/repositories/info_repository.dart';
+import 'domain/usecases/info_usecases.dart';
+import 'presentation/providers/info_provider.dart';
 import 'data/datasources/checkout_remote_datasource.dart';
 import 'data/repositories/checkout_repository_impl.dart';
 import 'domain/repositories/checkout_repository.dart';
@@ -105,6 +110,9 @@ class DependencyInjection {
   static final CheckoutRepository _checkoutRepository =
       CheckoutRepositoryImpl(CheckoutRemoteDataSourceImpl(_apiClient));
 
+  static final InfoRepository _infoRepository =
+      InfoRepositoryImpl(InfoRemoteDataSourceImpl(_apiClient));
+
   /// Providers globales de la app. Cada feature nueva registra aquí su
   /// provider con sus casos de uso (datasource -> repository -> usecase).
   static List<SingleChildWidget> get providers => [
@@ -190,6 +198,15 @@ class DependencyInjection {
           () => QuotesProvider(
             getQuotesUseCase: GetQuotesUseCase(_quotesRepository),
             cancelQuoteUseCase: CancelQuoteUseCase(_quotesRepository),
+          ),
+        ),
+        ChangeNotifierProvider<InfoProvider>(
+          create: (_) => InfoProvider(
+            getAboutUseCase: GetAboutUseCase(_infoRepository),
+            getShippingStepsUseCase: GetShippingStepsUseCase(_infoRepository),
+            sendContactUseCase: SendContactUseCase(_infoRepository),
+            submitClaimUseCase: SubmitClaimUseCase(_infoRepository),
+            findClaimUseCase: FindClaimUseCase(_infoRepository),
           ),
         ),
         // Checkout: se reinicia al abrirlo, no depende de la sesión.

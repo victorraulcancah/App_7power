@@ -7,10 +7,11 @@ import '../providers/products_provider.dart';
 import 'account_page.dart';
 import 'cart_page.dart';
 import 'home_page.dart';
+import 'more_page.dart';
 import 'products_page.dart';
 
 /// Estructura principal: barra superior con el logo, contenido por pestañas y
-/// navegación inferior.
+/// navegación inferior (Inicio, Tienda, Cuenta y Más).
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -36,6 +37,7 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       appBar: AppBar(
         actions: const [CartButton()],
+        // El logo queda centrado; el carrito, a la derecha.
         title: company?.logoUrl != null
             ? Image.network(
                 company!.logoUrl!,
@@ -50,6 +52,7 @@ class _MainShellState extends State<MainShell> {
           HomePage(onOpenShop: _openShop),
           const ProductsPage(),
           const AccountPage(),
+          const MorePage(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -58,18 +61,23 @@ class _MainShellState extends State<MainShell> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            selectedIcon: Icon(Icons.home_rounded),
             label: 'Inicio',
           ),
           NavigationDestination(
             icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront),
+            selectedIcon: Icon(Icons.storefront_rounded),
             label: 'Tienda',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
             label: 'Cuenta',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_rounded),
+            selectedIcon: Icon(Icons.menu_rounded),
+            label: 'Más',
           ),
         ],
       ),
