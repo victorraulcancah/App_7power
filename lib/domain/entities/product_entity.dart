@@ -8,12 +8,17 @@ class ProductEntity {
   final int? categoryId;
   final String? imageUrl;
 
-  /// 0 cuando el producto no tiene precio en las listas del cliente.
+  /// Precio según la lista del cliente (o la de visitantes). 0 si el producto
+  /// no tiene precio en esa lista.
   final double price;
 
   /// Código de moneda del backend: 's' (soles) o 'd' (dólares).
   final String? currency;
   final int stock;
+
+  /// false cuando el invitado no tiene ninguna lista de precios: el precio se
+  /// oculta ("Precio solo para clientes") y se pide iniciar sesión.
+  final bool priceVisible;
 
   const ProductEntity({
     required this.id,
@@ -27,8 +32,24 @@ class ProductEntity {
     this.categoryId,
     this.imageUrl,
     this.currency,
+    this.priceVisible = true,
   });
 
-  bool get hasPrice => price > 0;
   bool get isAvailable => stock > 0;
+
+  /// El mismo producto con otro precio/moneda (selector de moneda del detalle).
+  ProductEntity copyWith({double? price, String? currency}) => ProductEntity(
+        id: id,
+        name: name,
+        price: price ?? this.price,
+        stock: stock,
+        code: code,
+        description: description,
+        brand: brand,
+        category: category,
+        categoryId: categoryId,
+        imageUrl: imageUrl,
+        currency: currency ?? this.currency,
+        priceVisible: priceVisible,
+      );
 }

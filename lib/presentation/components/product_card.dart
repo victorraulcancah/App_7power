@@ -2,18 +2,24 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 import 'price_text.dart';
 import 'product_image.dart';
+import 'stock_label.dart';
 
 /// Tarjeta de producto para grillas y listas. No conoce la entidad de dominio:
 /// recibe datos primitivos para poder reutilizarse en catálogo, favoritos,
 /// carrito, etc. Necesita una altura acotada (celda de grilla, `SizedBox`).
+///
+/// Sigue las reglas de la web: el stock se muestra con sus umbrales; si el
+/// precio no es visible (invitado sin lista) se pide iniciar sesión y no hay
+/// botón de carrito; sin stock el botón queda deshabilitado.
 class ProductCard extends StatelessWidget {
   final String name;
   final String? brand;
   final String? imageUrl;
-  final double? price;
+  final double price;
   final double? oldPrice;
   final String? currency;
-  final bool outOfStock;
+  final int stock;
+  final bool priceVisible;
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
 
@@ -21,11 +27,12 @@ class ProductCard extends StatelessWidget {
     super.key,
     required this.name,
     required this.price,
+    required this.stock,
     this.brand,
     this.imageUrl,
     this.oldPrice,
     this.currency,
-    this.outOfStock = false,
+    this.priceVisible = true,
     this.onTap,
     this.onAddToCart,
   });
@@ -34,6 +41,7 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final radius = BorderRadius.circular(AppConstants.defaultBorderRadius);
+    final available = stock > 0;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -51,16 +59,8 @@ class ProductCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   ProductImage(url: imageUrl),
-                  if (outOfStock)
-                    Container(
-                      color: Colors.black45,
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Agotado',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(color: Colors.white),
-                      ),
-                    ),
+                  if (!available)
+                    Container(color: Colors.white.withValues(alpha: 0.55)),
                 ],
               ),
             ),
@@ -83,20 +83,24 @@ class ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium,
                   ),
+                  const SizedBox(height: 4),
+                  StockLabel(stock: stock),
                   const SizedBox(height: 6),
                   Row(
                     children: [
                       Expanded(
-                        child: PriceText(
-                          price: price,
-                          oldPrice: oldPrice,
-                          currency: currency,
-                        ),
+                        child: priceVisible
+                            ? PriceText(
+                                price: price,
+                                oldPrice: oldPrice,
+                                currency: currency,
+                              )
+                            : const LockedPrice(),
                       ),
-                      if (onAddToCart != null)
+                      if (priceVisible && onAddToCart != null)
                         IconButton.filled(
                           visualDensity: VisualDensity.compact,
-                          onPressed: outOfStock ? null : onAddToCart,
+                          onPressed: available ? onAddToCart : null,
                           icon: const Icon(Icons.add_shopping_cart, size: 18),
                         ),
                     ],

@@ -30,8 +30,23 @@ class CartButton extends StatelessWidget {
   }
 }
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Al abrir el carrito se refrescan precios y stock (la web hace lo mismo
+    // con el carrito de invitado: su copia local puede estar desactualizada).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CartProvider>().load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +122,11 @@ class _CartLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final cart = context.read<CartProvider>();
     final theme = Theme.of(context);
+    final loggedIn = context.watch<AuthProvider>().isAuthenticated;
+
+    // Igual que la web: el invitado solo ve el precio si es mayor que 0;
+    // con sesión se muestra siempre.
+    final showPrice = loggedIn || item.hasPrice;
 
     Future<void> run(Future<String?> Function() action) async {
       final error = await action();
@@ -131,8 +151,17 @@ class _CartLine extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium),
+              if (item.code != null)
+                Text('Código: ${item.code}',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.outline)),
+              const SizedBox(height: 2),
+              StockLabel(stock: item.stock),
               const SizedBox(height: 4),
-              PriceText(price: item.price, currency: item.currency),
+              if (showPrice)
+                PriceText(price: item.price, currency: item.currency)
+              else
+                const LockedPrice(),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -142,13 +171,19 @@ class _CartLine extends StatelessWidget {
                       ignoring: busy,
                       child: QuantitySelector(
                         value: item.quantity,
-                        max: item.stock > 0 ? item.stock : item.quantity,
+                        // Como la web: tope en el stock (o 1 si no hay dato).
+                        max: item.stock > 0 ? item.stock : 1,
                         onChanged: (v) =>
                             run(() => cart.setQuantity(item.productId, v)),
                       ),
                     ),
                   ),
                   const Spacer(),
+                  if (showPrice)
+                    Text(
+                      FormatUtils.money(item.subtotal, currency: item.currency),
+                      style: theme.textTheme.titleSmall,
+                    ),
                   IconButton(
                     tooltip: 'Quitar',
                     icon: const Icon(Icons.delete_outline),
@@ -174,8 +209,12 @@ class _Summary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final auth = context.watch<AuthProvider>();
-    final totals = cart.totalsByCurrency;
+    final loggedIn = context.watch<AuthProvider>().isAuthenticated;
+    final summaries = cart.summaries;
+
+    // Totales: cliente con sesión, o invitado cuyos productos tienen todos
+    // precio público. Si no, se pide iniciar sesión.
+    final showTotals = loggedIn || cart.allItemsPriced;
 
     return Material(
       elevation: 8,
@@ -185,37 +224,46 @@ class _Summary extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final entry in totals.entries)
-                Row(
-                  children: [
-                    Text('Total', style: theme.textTheme.titleMedium),
-                    const Spacer(),
-                    Text(
-                      FormatUtils.money(entry.value, currency: entry.key),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              if (cart.hasItemsWithoutPrice)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    'Hay productos sin precio: no están incluidos en el total.',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.outline),
+              if (!showTotals)
+                _LockedSummary(onLogin: () => LoginPage.open(context))
+              else ...[
+                for (final s in summaries)
+                  Row(
+                    children: [
+                      Text('Subtotal (${s.units} items)',
+                          style: theme.textTheme.bodyMedium),
+                      const Spacer(),
+                      Text(FormatUtils.money(s.total, currency: s.currency)),
+                    ],
                   ),
-                ),
+                const Divider(),
+                for (final s in summaries)
+                  Row(
+                    children: [
+                      Text(
+                        // Con varias monedas se indica a cuál corresponde.
+                        summaries.length > 1
+                            ? 'Total ${s.currency == 'd' ? 'US\$' : 'S/'}'
+                            : 'Total',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const Spacer(),
+                      Text(
+                        FormatUtils.money(s.total, currency: s.currency),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
               const SizedBox(height: 12),
               AppButton(
-                label: auth.isAuthenticated
-                    ? 'Finalizar compra'
-                    : 'Inicia sesión para comprar',
-                icon: auth.isAuthenticated ? Icons.lock_outline : Icons.login,
+                label: loggedIn ? 'Pagar' : 'Inicia sesión para pagar',
+                icon: loggedIn ? Icons.credit_card : Icons.login,
                 onPressed: () {
-                  if (!auth.isAuthenticated) {
+                  if (!loggedIn) {
                     LoginPage.open(context);
                     return;
                   }
@@ -228,6 +276,39 @@ class _Summary extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LockedSummary extends StatelessWidget {
+  final VoidCallback onLogin;
+
+  const _LockedSummary({required this.onLogin});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.lock_outline, color: theme.colorScheme.error),
+          const SizedBox(height: 4),
+          Text('Precios solo para clientes',
+              style: theme.textTheme.titleSmall),
+          Text(
+            'Inicia sesión para ver el subtotal y total de tu pedido.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
       ),
     );
   }

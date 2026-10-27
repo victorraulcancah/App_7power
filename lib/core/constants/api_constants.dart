@@ -28,6 +28,21 @@ class ApiConstants {
   static const String logoutEndpoint = '/logout';
   static const String cartEndpoint = '/cart';
 
+  // Mi cuenta (requieren token de cliente)
+  static const String profileEndpoint = '/user';
+  static const String phoneEndpoint = '/user/telefono';
+  static const String favoritesEndpoint = '/favoritos';
+  static const String onlinePurchasesEndpoint = '/pago-en-linea';
+  static const String storePurchasesEndpoint = '/compras/mis-compras-erp';
+  static const String addressesEndpoint = '/mis-direcciones';
+  static const String quotesEndpoint = '/cotizaciones/mis-cotizaciones';
+  static const String quoteEndpoint = '/cotizaciones';
+
+  // Ubicaciones (públicas)
+  static const String departmentsEndpoint = '/departamentos';
+  static const String provincesEndpoint = '/provincias';
+  static const String districtsEndpoint = '/distritos';
+
   // Catálogo público
   static const String productosEndpoint = '/productos-publicos';
   static const String productoDetalleEndpoint = '/productos-publicos/{id}';

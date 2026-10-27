@@ -12,4 +12,5 @@ export 'product_image.dart';
 export 'quantity_selector.dart';
 export 'section_header.dart';
 export 'state_message.dart';
+export 'stock_label.dart';
 export 'status_tag.dart';

@@ -1,5 +1,14 @@
 import 'product_entity.dart';
 
+/// Precio del producto en una de las monedas que le corresponden al cliente.
+class CurrencyOption {
+  /// 's' (soles) o 'd' (dólares).
+  final String currency;
+  final double price;
+
+  const CurrencyOption({required this.currency, required this.price});
+}
+
 /// Ficha completa de un producto.
 class ProductDetailEntity {
   final ProductEntity product;
@@ -12,6 +21,9 @@ class ProductDetailEntity {
   final String? warranty;
   final List<ProductEntity> related;
 
+  /// Más de una opción => la ficha muestra el selector S/ - US$.
+  final List<CurrencyOption> currencyOptions;
+
   const ProductDetailEntity({
     required this.product,
     this.images = const [],
@@ -20,6 +32,7 @@ class ProductDetailEntity {
     this.technicalFeatures,
     this.warranty,
     this.related = const [],
+    this.currencyOptions = const [],
   });
 
   /// Secciones de texto que tienen contenido, en el orden en que se muestran.

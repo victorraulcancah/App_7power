@@ -30,6 +30,7 @@ import 'domain/usecases/get_product_detail_usecase.dart';
 import 'domain/usecases/get_products_usecase.dart';
 
 // Presentation Layer
+import 'presentation/providers/auth_aware_reload.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/cart_provider.dart';
 import 'presentation/providers/company_provider.dart';
@@ -53,6 +54,7 @@ class DependencyInjection {
     remote: CartRemoteDataSourceImpl(_apiClient),
     local: CartLocalDataSourceImpl(),
     isLoggedIn: () => _apiClient.authToken != null,
+    products: ProductRemoteDataSourceImpl(_apiClient),
   );
 
   static final ProductRepository _productRepository = ProductRepositoryImpl(
@@ -71,6 +73,8 @@ class DependencyInjection {
             loginUseCase: LoginUseCase(_authRepository),
             logoutUseCase: LogoutUseCase(_authRepository),
             restoreSessionUseCase: RestoreSessionUseCase(_authRepository),
+            refreshProfileUseCase: RefreshProfileUseCase(_authRepository),
+            updatePhoneUseCase: UpdatePhoneUseCase(_authRepository),
             repository: _authRepository,
           )..restore(),
         ),
@@ -96,22 +100,36 @@ class DependencyInjection {
             getCompanyInfoUseCase: GetCompanyInfoUseCase(_storeRepository),
           )..load(),
         ),
-        ChangeNotifierProvider<HomeProvider>(
-          create: (_) => HomeProvider(
+        // Estos tres muestran precios, que dependen del cliente logueado: se
+        // recargan al iniciar o cerrar sesión.
+        authAware<HomeProvider>(
+          () => HomeProvider(
             getBannersUseCase: GetBannersUseCase(_storeRepository),
             getProductsUseCase: GetProductsUseCase(_productRepository),
           ),
         ),
-        ChangeNotifierProvider<ProductsProvider>(
-          create: (_) => ProductsProvider(
+        authAware<ProductsProvider>(
+          () => ProductsProvider(
             getProductsUseCase: GetProductsUseCase(_productRepository),
             getCategoriesUseCase: GetCategoriesUseCase(_productRepository),
           ),
         ),
-        ChangeNotifierProvider<ProductDetailProvider>(
-          create: (_) => ProductDetailProvider(
+        authAware<ProductDetailProvider>(
+          () => ProductDetailProvider(
             getProductDetailUseCase: GetProductDetailUseCase(_productRepository),
           ),
         ),
       ];
+
+  /// Provider cuyos datos se recargan cuando cambia la sesión.
+  static ChangeNotifierProxyProvider<AuthProvider, T>
+      authAware<T extends AuthAwareReload>(T Function() create) =>
+          ChangeNotifierProxyProvider<AuthProvider, T>(
+            create: (_) => create(),
+            update: (_, auth, provider) => provider!
+              ..onAuthChanged(
+                known: auth.status != AuthStatus.initial,
+                authenticated: auth.isAuthenticated,
+              ),
+          );
 }

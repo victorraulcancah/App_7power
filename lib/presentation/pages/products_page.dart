@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../components/components.dart';
 import '../providers/products_provider.dart';
-import 'product_detail_page.dart';
+import '../widgets/product_tile.dart';
 
 /// Catálogo de productos de la tienda (pestaña "Tienda").
 class ProductsPage extends StatefulWidget {
@@ -82,7 +82,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   padding: const EdgeInsets.all(AppConstants.defaultPadding),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 220,
-                    childAspectRatio: 0.62,
+                    childAspectRatio: 0.56,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -91,17 +91,7 @@ class _ProductsPageState extends State<ProductsPage> {
                     if (i >= products.length) {
                       return const LoadingIndicator();
                     }
-                    final p = products[i];
-                    return ProductCard(
-                      name: p.name,
-                      brand: p.brand,
-                      imageUrl: p.imageUrl,
-                      price: p.price,
-                      currency: p.currency,
-                      outOfStock: !p.isAvailable,
-                      onTap: () => ProductDetailPage.open(context, p),
-                      onAddToCart: () => CartActions.add(context, p),
-                    );
+                    return ProductTile(product: products[i]);
                   },
                 ),
         );

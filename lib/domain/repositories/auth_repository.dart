@@ -10,6 +10,12 @@ abstract class AuthRepository {
   /// Recupera la sesión guardada en el dispositivo, o null si no hay.
   Future<Either<Failure, UserEntity?>> restoreSession();
 
+  /// Vuelve a pedir los datos del cliente al servidor y los guarda.
+  Future<Either<Failure, UserEntity>> refreshProfile();
+
+  /// Cambia el celular del cliente (9 dígitos, empieza con 9).
+  Future<Either<Failure, UserEntity>> updatePhone(String phone);
+
   Future<void> logout();
 
   /// Emite cuando el servidor rechaza el token guardado (venció o se abrió

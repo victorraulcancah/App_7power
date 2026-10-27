@@ -11,6 +11,9 @@ class UserEntity {
   final String? photoUrl;
   final bool emailVerified;
 
+  /// Código del cliente en el ERP, si su cuenta está vinculada.
+  final String? erpCode;
+
   const UserEntity({
     required this.id,
     required this.fullName,
@@ -22,6 +25,7 @@ class UserEntity {
     this.documentNumber,
     this.photoUrl,
     this.emailVerified = false,
+    this.erpCode,
   });
 
   /// Iniciales para el avatar cuando no hay foto.
@@ -33,4 +37,18 @@ class UserEntity {
     final last = parts.length > 1 ? parts.last[0] : '';
     return (first + last).toUpperCase();
   }
+
+  UserEntity copyWith({String? phone}) => UserEntity(
+        id: id,
+        fullName: fullName,
+        email: email,
+        firstNames: firstNames,
+        lastNames: lastNames,
+        phone: phone ?? this.phone,
+        documentType: documentType,
+        documentNumber: documentNumber,
+        photoUrl: photoUrl,
+        emailVerified: emailVerified,
+        erpCode: erpCode,
+      );
 }

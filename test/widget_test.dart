@@ -39,7 +39,7 @@ void main() {
     });
 
     expect(p.price, 45.5);
-    expect(p.hasPrice, isTrue);
+    expect(p.priceVisible, isTrue);
     expect(p.currency, 'd');
     expect(p.stock, 92);
     expect(p.categoryId, 46);
@@ -56,7 +56,6 @@ void main() {
     });
 
     expect(p.price, 0);
-    expect(p.hasPrice, isFalse);
     expect(p.imageUrl, isNull);
     expect(p.isAvailable, isFalse);
   });
@@ -251,7 +250,8 @@ void main() {
     expect(find.text('Cable RCA'), findsWidgets);
     expect(find.text('Parlante'), findsWidgets);
     expect(find.text('Agotado'), findsWidgets);
-    expect(find.text('Consultar precio'), findsWidgets);
+    // Como en la web, un precio 0 se muestra tal cual (no se oculta).
+    expect(find.text('S/ 0.00'), findsWidgets);
     expect(find.text('S/ 120.00'), findsWidgets);
   });
 

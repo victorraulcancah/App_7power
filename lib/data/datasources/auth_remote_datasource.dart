@@ -18,6 +18,10 @@ abstract class AuthRemoteDataSource {
 
   /// Revoca [token] en el servidor.
   Future<void> logout(String token);
+
+  Future<UserModel> getProfile();
+
+  Future<void> updatePhone(String phone);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -52,5 +56,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       ApiConstants.logoutEndpoint,
       headers: {'Authorization': 'Bearer $token'},
     );
+  }
+
+  @override
+  Future<UserModel> getProfile() async {
+    final response = await client.get(ApiConstants.profileEndpoint);
+    final body =
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    return UserModel.fromJson(body['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> updatePhone(String phone) async {
+    await client.patch(ApiConstants.phoneEndpoint, body: {'telefono': phone});
   }
 }

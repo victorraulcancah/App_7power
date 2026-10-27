@@ -30,6 +30,10 @@ import 'package:appecommerce/domain/usecases/get_categories_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_company_info_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_product_detail_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_products_usecase.dart';
+import 'package:appecommerce/data/datasources/product_remote_datasource.dart';
+import 'package:appecommerce/data/models/category_model.dart';
+import 'package:appecommerce/data/models/product_detail_model.dart';
+import 'package:appecommerce/dependency_injection.dart';
 import 'package:appecommerce/main.dart';
 import 'package:appecommerce/presentation/providers/auth_provider.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
@@ -41,10 +45,15 @@ import 'package:appecommerce/presentation/providers/products_provider.dart';
 /// Catálogo falso: filtra en memoria como lo haría el backend y devuelve los
 /// resultados en páginas de [pageSize].
 class FakeProductRepo implements ProductRepository {
-  final List<ProductEntity> products;
+  /// Se puede reemplazar en un test para simular que el servidor cambió lo que
+  /// devuelve (por ejemplo, los precios tras iniciar sesión).
+  List<ProductEntity> products;
   final Failure? failure;
   final int pageSize;
   final List<int> requestedPages = [];
+
+  /// Opciones de moneda por producto para la ficha.
+  final Map<int, List<CurrencyOption>> currencyOptions = {};
 
   FakeProductRepo(this.products, {this.failure, this.pageSize = 20});
 
@@ -104,6 +113,7 @@ class FakeProductRepo implements ProductRepository {
       product: product,
       longDescription: 'Descripción de ${product.name}',
       warranty: '12 meses',
+      currencyOptions: currencyOptions[id] ?? const [],
     ));
   }
 }
@@ -150,15 +160,43 @@ ProductEntity product(
   int categoryId = 1,
   double price = 10,
   int stock = 5,
+  String currency = 's',
+  bool priceVisible = true,
 }) =>
     ProductEntity(
       id: id,
       name: name,
       categoryId: categoryId,
       price: price,
-      currency: 's',
+      currency: currency,
       stock: stock,
+      priceVisible: priceVisible,
     );
+
+/// Origen de datos de productos para el refresco del carrito de invitado:
+/// devuelve la ficha que se le haya cargado en [details]; si no hay, falla.
+class FakeProductRemote implements ProductRemoteDataSource {
+  final Map<int, ProductDetailModel> details = {};
+
+  @override
+  Future<ProductDetailModel> getProductDetail(int id) async {
+    final detail = details[id];
+    if (detail == null) throw const ServerException('Producto no encontrado');
+    return detail;
+  }
+
+  @override
+  Future<ProductsPageEntity> getProducts({
+    required int page,
+    String? search,
+    int? categoryId,
+    int? limit,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<List<CategoryModel>> getCategories() => throw UnimplementedError();
+}
 
 /// Resultado de login configurable.
 class FakeAuthRemote implements AuthRemoteDataSource {
@@ -179,6 +217,23 @@ class FakeAuthRemote implements AuthRemoteDataSource {
 
   @override
   Future<void> logout(String token) async => loggedOutTokens.add(token);
+
+  /// Celular que el servidor "guardó" con `updatePhone`.
+  String? savedPhone;
+
+  /// Lo que devuelve `GET /user`.
+  UserModel profile = testUser;
+
+  @override
+  Future<UserModel> getProfile() async => profile;
+
+  @override
+  Future<void> updatePhone(String phone) async {
+    if (!phone.startsWith('9')) {
+      throw const ServerException('Celular no válido', '422');
+    }
+    savedPhone = phone;
+  }
 }
 
 class FakeAuthLocal implements AuthLocalDataSource {
@@ -270,6 +325,7 @@ class TestEnv {
   final FakeAuthLocal authLocal = FakeAuthLocal();
   final FakeCartLocal cartLocal = FakeCartLocal();
   final FakeCartRemote cartRemote = FakeCartRemote();
+  final FakeProductRemote productRemote = FakeProductRemote();
   final ApiClient apiClient = ApiClient(isConnected: () async => true);
 
   late final AuthRepositoryImpl authRepo = AuthRepositoryImpl(
@@ -282,6 +338,7 @@ class TestEnv {
     remote: cartRemote,
     local: cartLocal,
     isLoggedIn: () => apiClient.authToken != null,
+    products: productRemote,
   );
 
   TestEnv({
@@ -299,6 +356,8 @@ class TestEnv {
             loginUseCase: LoginUseCase(authRepo),
             logoutUseCase: LogoutUseCase(authRepo),
             restoreSessionUseCase: RestoreSessionUseCase(authRepo),
+            refreshProfileUseCase: RefreshProfileUseCase(authRepo),
+            updatePhoneUseCase: UpdatePhoneUseCase(authRepo),
             repository: authRepo,
           )..restore(),
         ),
@@ -322,20 +381,20 @@ class TestEnv {
             getCompanyInfoUseCase: GetCompanyInfoUseCase(store),
           )..load(),
         ),
-        ChangeNotifierProvider<HomeProvider>(
-          create: (_) => HomeProvider(
+        DependencyInjection.authAware<HomeProvider>(
+          () => HomeProvider(
             getBannersUseCase: GetBannersUseCase(store),
             getProductsUseCase: GetProductsUseCase(products),
           ),
         ),
-        ChangeNotifierProvider<ProductsProvider>(
-          create: (_) => ProductsProvider(
+        DependencyInjection.authAware<ProductsProvider>(
+          () => ProductsProvider(
             getProductsUseCase: GetProductsUseCase(products),
             getCategoriesUseCase: GetCategoriesUseCase(products),
           ),
         ),
-        ChangeNotifierProvider<ProductDetailProvider>(
-          create: (_) => ProductDetailProvider(
+        DependencyInjection.authAware<ProductDetailProvider>(
+          () => ProductDetailProvider(
             getProductDetailUseCase: GetProductDetailUseCase(products),
           ),
         ),

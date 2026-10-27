@@ -5,7 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../components/components.dart';
 import '../providers/home_provider.dart';
 import '../providers/products_provider.dart';
-import 'product_detail_page.dart';
+import '../widgets/product_tile.dart';
 
 /// Portada: banners, categorías y productos. No lleva footer: en la app esa
 /// función la cumple la barra de navegación inferior.
@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
               onAction: () => widget.onOpenShop(),
             ),
             SizedBox(
-              height: 300,
+              height: 330,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(
@@ -87,19 +87,9 @@ class _HomePageState extends State<HomePage> {
                 itemCount: home.featured.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 12),
                 itemBuilder: (context, i) {
-                  final p = home.featured[i];
                   return SizedBox(
                     width: 170,
-                    child: ProductCard(
-                      name: p.name,
-                      brand: p.brand,
-                      imageUrl: p.imageUrl,
-                      price: p.price,
-                      currency: p.currency,
-                      outOfStock: !p.isAvailable,
-                      onTap: () => ProductDetailPage.open(context, p),
-                      onAddToCart: () => CartActions.add(context, p),
-                    ),
+                    child: ProductTile(product: home.featured[i]),
                   );
                 },
               ),

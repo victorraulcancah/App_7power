@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../core/constants/api_constants.dart';
+import '../../core/utils/format_utils.dart';
 import '../../domain/entities/product_detail_entity.dart';
 import 'product_model.dart';
 
@@ -14,6 +15,7 @@ class ProductDetailModel extends ProductDetailEntity {
     super.technicalFeatures,
     super.warranty,
     super.related,
+    super.currencyOptions,
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class ProductDetailModel extends ProductDetailEntity {
     final product = ProductModel.fromDetailJson({
       ...productJson,
       'moneda': json['moneda'] ?? productJson['moneda'],
+      'precio_visible': json['precio_visible'] ?? productJson['precio_visible'],
     });
 
     String? text(String key) {
@@ -43,6 +46,14 @@ class ProductDetailModel extends ProductDetailEntity {
       related: ((json['productos_relacionados'] as List?) ?? const [])
           .cast<Map<String, dynamic>>()
           .map(ProductModel.fromDetailJson)
+          .toList(),
+      // Una moneda por cada lista de precios aplicable que tenga precio.
+      currencyOptions: ((json['moneda_opciones'] as List?) ?? const [])
+          .cast<Map<String, dynamic>>()
+          .map((o) => CurrencyOption(
+                currency: FormatUtils.normalizeCurrency(o['moneda']?.toString()),
+                price: FormatUtils.toDouble(o['precio_venta']),
+              ))
           .toList(),
     );
   }

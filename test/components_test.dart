@@ -71,6 +71,7 @@ void main() {
         brand: 'Bosch',
         price: 199.9,
         oldPrice: 249.9,
+        stock: 25,
         onAddToCart: () => added++,
       ),
     )));

@@ -8,10 +8,18 @@ class FormatUtils {
   static final NumberFormat _dolares =
       NumberFormat.currency(locale: 'en_US', symbol: 'US\$ ', decimalDigits: 2);
 
-  /// 1234.5 -> "S/ 1,234.50". [currency] es el código del backend:
-  /// 's' (soles, por defecto) o 'd' (dólares).
+  /// Moneda del backend normalizada: 'd' (dólares; también llega "usd") o 's'
+  /// (soles, la de por defecto). Igual que el pipe `moneda` de la web.
+  static String normalizeCurrency(String? currency) {
+    final value = currency?.toLowerCase().trim();
+    return (value == 'd' || value == 'usd') ? 'd' : 's';
+  }
+
+  /// 1234.5 -> "S/ 1,234.50" (o "US$ 1,234.50" en dólares).
   static String money(num amount, {String? currency}) =>
-      currency == 'd' ? _dolares.format(amount) : _soles.format(amount);
+      normalizeCurrency(currency) == 'd'
+          ? _dolares.format(amount)
+          : _soles.format(amount);
 
   /// Acepta números o strings (el backend a veces devuelve decimales como string).
   static double toDouble(dynamic value, [double fallback = 0]) {

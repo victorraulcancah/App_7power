@@ -9,6 +9,7 @@ import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
+import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remote;
@@ -61,6 +62,30 @@ class AuthRepositoryImpl implements AuthRepository {
         apiClient.authToken = session.token;
         return session.user;
       });
+
+  @override
+  Future<Either<Failure, UserEntity>> refreshProfile() => guardRequest(() async {
+        final user = await remote.getProfile();
+        await _saveUser(user);
+        return user;
+      });
+
+  @override
+  Future<Either<Failure, UserEntity>> updatePhone(String phone) =>
+      guardRequest(() async {
+        await remote.updatePhone(phone);
+        final session = await local.readSession();
+        // Se conserva el resto de los datos guardados y se cambia el celular.
+        final current = session?.user ?? await remote.getProfile();
+        final updated = UserModel.fromEntity(current.copyWith(phone: phone));
+        await _saveUser(updated);
+        return updated;
+      });
+
+  Future<void> _saveUser(UserModel user) async {
+    final token = apiClient.authToken;
+    if (token != null) await local.saveSession(token, user);
+  }
 
   @override
   Future<void> logout() async {

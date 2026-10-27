@@ -7,6 +7,7 @@ import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../datasources/cart_local_datasource.dart';
 import '../datasources/cart_remote_datasource.dart';
+import '../datasources/product_remote_datasource.dart';
 import '../models/cart_item_model.dart';
 
 class CartRepositoryImpl implements CartRepository {
@@ -16,16 +17,52 @@ class CartRepositoryImpl implements CartRepository {
   /// Si hay sesión iniciada el carrito va al servidor; si no, al dispositivo.
   final bool Function() isLoggedIn;
 
+  /// Para refrescar el carrito de invitado con los datos actuales de cada
+  /// producto. Sin él, el carrito local se devuelve tal cual.
+  final ProductRemoteDataSource? products;
+
   CartRepositoryImpl({
     required this.remote,
     required this.local,
     required this.isLoggedIn,
+    this.products,
   });
 
   @override
   Future<Either<Failure, List<CartItemEntity>>> getCart() => guardRequest(
-        () async => isLoggedIn() ? await remote.getCart() : await local.read(),
+        () async => isLoggedIn() ? await remote.getCart() : _refreshGuestCart(),
       );
+
+  /// El carrito de invitado guarda una copia de precio y stock que se queda
+  /// vieja. Como la web, se vuelve a pedir cada producto al servidor; si uno
+  /// falla se conserva su copia.
+  Future<List<CartItemModel>> _refreshGuestCart() async {
+    final items = await local.read();
+    final source = products;
+    if (items.isEmpty || source == null) return items;
+
+    final refreshed = await Future.wait(items.map((item) async {
+      try {
+        final detail = await source.getProductDetail(item.productId);
+        final p = detail.product;
+        return CartItemModel(
+          productId: item.productId,
+          name: p.name.isEmpty ? item.name : p.name,
+          imageUrl: p.imageUrl ?? item.imageUrl,
+          code: p.code ?? item.code,
+          price: p.price,
+          currency: p.currency ?? item.currency,
+          quantity: item.quantity,
+          stock: p.stock,
+        );
+      } catch (_) {
+        return item;
+      }
+    }));
+
+    await local.write(refreshed);
+    return refreshed;
+  }
 
   @override
   Future<Either<Failure, List<CartItemEntity>>> add(

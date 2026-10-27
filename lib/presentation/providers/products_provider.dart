@@ -4,10 +4,11 @@ import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
+import 'auth_aware_reload.dart';
 
 enum ProductsStatus { initial, loading, loaded, error }
 
-class ProductsProvider extends ChangeNotifier {
+class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   final GetProductsUseCase getProductsUseCase;
   final GetCategoriesUseCase getCategoriesUseCase;
 
@@ -39,6 +40,10 @@ class ProductsProvider extends ChangeNotifier {
   int get total => _total;
   bool get hasMore => _page < _lastPage;
   bool get isLoadingMore => _loadingMore;
+
+  /// Los precios dependen del cliente: al cambiar la sesión se recargan.
+  @override
+  Future<void> reloadForAuthChange() => loadProducts();
 
   /// Carga inicial: categorías y primera página de productos.
   Future<void> init() async {

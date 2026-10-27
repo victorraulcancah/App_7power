@@ -2,27 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/format_utils.dart';
+import '../../core/utils/stock_utils.dart';
 import '../../domain/entities/product_detail_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../components/components.dart';
 import '../providers/product_detail_provider.dart';
+import '../widgets/product_tile.dart';
 import 'cart_page.dart';
+import 'login_page.dart';
 
 /// Ficha de un producto: galería, precio, stock, descripción y agregar al
-/// carrito.
+/// carrito. Sigue las reglas de la web: precio oculto a invitados sin lista de
+/// precios, selector de moneda cuando hay más de una, y stock con umbrales.
 class ProductDetailPage extends StatefulWidget {
   final int productId;
 
-  /// Datos que ya se tienen del catálogo, para mostrar algo mientras carga.
-  final ProductEntity? preview;
-
-  const ProductDetailPage({super.key, required this.productId, this.preview});
+  const ProductDetailPage({super.key, required this.productId});
 
   /// Abre la ficha de [product].
   static Future<void> open(BuildContext context, ProductEntity product) =>
       Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) =>
-            ProductDetailPage(productId: product.id, preview: product),
+        builder: (_) => ProductDetailPage(productId: product.id),
       ));
 
   @override
@@ -31,6 +32,9 @@ class ProductDetailPage extends StatefulWidget {
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
   int _quantity = 1;
+
+  /// Moneda elegida en el selector; null = la que resolvió el servidor.
+  String? _currency;
 
   @override
   void initState() {
@@ -61,9 +65,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  /// El producto con el precio de la moneda elegida (si hay selector).
+  ProductEntity _selected(ProductDetailEntity detail) {
+    final option = detail.currencyOptions
+        .where((o) => o.currency == _currency)
+        .firstOrNull;
+    return option == null
+        ? detail.product
+        : detail.product.copyWith(price: option.price, currency: option.currency);
+  }
+
   Widget _content(ProductDetailEntity detail) {
-    final product = detail.product;
+    final product = _selected(detail);
     final theme = Theme.of(context);
+    final canBuy = product.priceVisible && product.isAvailable;
     final maxQuantity = product.stock > 0 ? product.stock : 1;
 
     return Column(
@@ -84,32 +99,42 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     const SizedBox(height: 4),
                     Text(product.name, style: theme.textTheme.titleLarge),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        if (product.code != null)
-                          Text('Código: ${product.code}',
-                              style: theme.textTheme.bodySmall),
-                        StatusTag(
-                          label: product.isAvailable
-                              ? 'En stock (${product.stock})'
-                              : 'Agotado',
-                          type: product.isAvailable
-                              ? StatusTagType.success
-                              : StatusTagType.error,
-                        ),
-                      ],
+                    if (product.code != null)
+                      Text('Código: ${product.code}',
+                          style: theme.textTheme.bodySmall),
+                    const SizedBox(height: 8),
+                    StockLabel(
+                      stock: product.stock,
+                      style: theme.textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 16),
-                    PriceText(
-                      price: product.price,
-                      currency: product.currency,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
+                    if (product.priceVisible &&
+                        detail.currencyOptions.length > 1)
+                      _CurrencySelector(
+                        options: detail.currencyOptions,
+                        selected: product.currency,
+                        onChanged: (c) => setState(() => _currency = c),
                       ),
-                    ),
+                    const SizedBox(height: 16),
+                    if (product.priceVisible)
+                      PriceText(
+                        price: product.price,
+                        currency: product.currency,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      )
+                    else
+                      const _LockedPriceBanner(),
+                    if (product.priceVisible && product.isAvailable)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          'Disponible: ${StockUtils.units(product.stock)}',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.outline),
+                        ),
+                      ),
                     for (final entry in detail.sections.entries)
                       _Section(title: entry.key, body: entry.value),
                   ],
@@ -118,7 +143,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               if (detail.related.isNotEmpty) ...[
                 const SectionHeader(title: 'Productos relacionados'),
                 SizedBox(
-                  height: 300,
+                  height: 330,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(
@@ -126,21 +151,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                     itemCount: detail.related.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 12),
-                    itemBuilder: (context, i) {
-                      final p = detail.related[i];
-                      return SizedBox(
-                        width: 170,
-                        child: ProductCard(
-                          name: p.name,
-                          brand: p.brand,
-                          imageUrl: p.imageUrl,
-                          price: p.price,
-                          currency: p.currency,
-                          outOfStock: !p.isAvailable,
-                          onTap: () => ProductDetailPage.open(context, p),
-                        ),
-                      );
-                    },
+                    itemBuilder: (context, i) => SizedBox(
+                      width: 170,
+                      child: ProductTile(product: detail.related[i]),
+                    ),
                   ),
                 ),
               ],
@@ -148,37 +162,120 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ],
           ),
         ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: Row(
-              children: [
-                if (product.isAvailable) ...[
-                  QuantitySelector(
-                    value: _quantity.clamp(1, maxQuantity),
-                    max: maxQuantity,
-                    onChanged: (v) => setState(() => _quantity = v),
+        // Con el precio oculto no hay compra posible: la web no muestra la
+        // cantidad ni el botón del carrito.
+        if (product.priceVisible)
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.defaultPadding),
+              child: Row(
+                children: [
+                  if (canBuy) ...[
+                    QuantitySelector(
+                      value: _quantity.clamp(1, maxQuantity),
+                      max: maxQuantity,
+                      onChanged: (v) => setState(() => _quantity = v),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: AppButton(
+                      label: canBuy ? 'Agregar al carrito' : 'Sin stock',
+                      icon: canBuy ? Icons.add_shopping_cart : Icons.block,
+                      onPressed: canBuy
+                          ? () => CartActions.add(
+                                context,
+                                product,
+                                quantity: _quantity,
+                              )
+                          : null,
+                    ),
                   ),
-                  const SizedBox(width: 12),
                 ],
-                Expanded(
-                  child: AppButton(
-                    label: product.isAvailable ? 'Agregar al carrito' : 'Agotado',
-                    icon: Icons.add_shopping_cart,
-                    onPressed: product.isAvailable
-                        ? () => CartActions.add(
-                              context,
-                              product,
-                              quantity: _quantity,
-                            )
-                        : null,
-                  ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _CurrencySelector extends StatelessWidget {
+  final List<CurrencyOption> options;
+  final String? selected;
+  final ValueChanged<String> onChanged;
+
+  const _CurrencySelector({
+    required this.options,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final current = FormatUtils.normalizeCurrency(selected);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          Text('Moneda', style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(width: 12),
+          SegmentedButton<String>(
+            showSelectedIcon: false,
+            segments: [
+              for (final o in options)
+                ButtonSegment(
+                  value: o.currency,
+                  label: Text(o.currency == 'd' ? 'US\$' : 'S/'),
                 ),
+            ],
+            selected: {current},
+            onSelectionChanged: (s) => onChanged(s.first),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Lo que ve un invitado cuando el precio está oculto: invita a iniciar sesión.
+class _LockedPriceBanner extends StatelessWidget {
+  const _LockedPriceBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.lock_outline, color: theme.colorScheme.error, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Precio solo para clientes',
+                    style: theme.textTheme.titleSmall),
+                Text('Inicia sesión para ver el precio y comprar.',
+                    style: theme.textTheme.bodySmall),
               ],
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: () => LoginPage.open(context),
+            child: const Text('Iniciar sesión'),
+          ),
+        ],
+      ),
     );
   }
 }

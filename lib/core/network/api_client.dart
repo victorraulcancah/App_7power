@@ -67,6 +67,17 @@ class ApiClient {
         headers: headers,
       );
 
+  Future<http.Response> patch(
+    String endpoint, {
+    Map<String, String>? headers,
+    Object? body,
+  }) =>
+      _send(
+        (uri, h) => _client.patch(uri, headers: h, body: _encode(body)),
+        endpoint,
+        headers: headers,
+      );
+
   Future<http.Response> delete(
     String endpoint, {
     Map<String, String>? headers,

@@ -2,9 +2,23 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/errors/failures.dart';
 import '../../core/utils/either.dart';
+import '../../core/utils/format_utils.dart';
 import '../../domain/entities/cart_item_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/usecases/cart_usecases.dart';
+
+/// Totales del carrito en una moneda ('s' o 'd').
+class CartCurrencySummary {
+  final String currency;
+  final int units;
+  final double total;
+
+  const CartCurrencySummary({
+    required this.currency,
+    required this.units,
+    required this.total,
+  });
+}
 
 class CartProvider extends ChangeNotifier {
   final GetCartUseCase getCartUseCase;
@@ -34,17 +48,26 @@ class CartProvider extends ChangeNotifier {
   /// Unidades en total (el número de la insignia del carrito).
   int get totalUnits => _items.fold(0, (sum, i) => sum + i.quantity);
 
-  /// Total por moneda: un carrito puede mezclar productos en soles y dólares,
-  /// y no se pueden sumar entre sí. Los productos sin precio no cuentan.
-  Map<String?, double> get totalsByCurrency {
-    final totals = <String?, double>{};
-    for (final item in _items.where((i) => i.hasPrice)) {
-      totals[item.currency] = (totals[item.currency] ?? 0) + item.subtotal;
+  /// Un resumen por moneda, soles primero (igual que la web): un carrito puede
+  /// mezclar productos en soles y dólares, y no se pueden sumar entre sí.
+  List<CartCurrencySummary> get summaries {
+    final result = <CartCurrencySummary>[];
+    for (final currency in const ['s', 'd']) {
+      final inCurrency = _items
+          .where((i) => FormatUtils.normalizeCurrency(i.currency) == currency)
+          .toList();
+      if (inCurrency.isEmpty) continue;
+      result.add(CartCurrencySummary(
+        currency: currency,
+        units: inCurrency.fold(0, (sum, i) => sum + i.quantity),
+        total: inCurrency.fold(0.0, (sum, i) => sum + i.subtotal),
+      ));
     }
-    return totals;
+    return result;
   }
 
-  bool get hasItemsWithoutPrice => _items.any((i) => !i.hasPrice);
+  /// Todos los productos tienen precio: un invitado solo ve el total así.
+  bool get allItemsPriced => _items.isNotEmpty && _items.every((i) => i.hasPrice);
 
   /// Reacciona a los cambios de sesión: al iniciar sesión el carrito de
   /// invitado pasa al servidor; al cerrarla se vuelve al carrito local.

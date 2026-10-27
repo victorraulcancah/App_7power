@@ -12,6 +12,8 @@ class AuthProvider extends ChangeNotifier {
   final LoginUseCase loginUseCase;
   final LogoutUseCase logoutUseCase;
   final RestoreSessionUseCase restoreSessionUseCase;
+  final RefreshProfileUseCase refreshProfileUseCase;
+  final UpdatePhoneUseCase updatePhoneUseCase;
   final AuthRepository repository;
 
   StreamSubscription<void>? _expiredSub;
@@ -20,6 +22,8 @@ class AuthProvider extends ChangeNotifier {
     required this.loginUseCase,
     required this.logoutUseCase,
     required this.restoreSessionUseCase,
+    required this.refreshProfileUseCase,
+    required this.updatePhoneUseCase,
     required this.repository,
   }) {
     _expiredSub = repository.onSessionExpired.listen((_) {
@@ -75,6 +79,30 @@ class AuthProvider extends ChangeNotifier {
     );
     notifyListeners();
     return ok;
+  }
+
+  /// Actualiza los datos del cliente desde el servidor (sin mostrar error si
+  /// falla: se siguen usando los guardados).
+  Future<void> refreshProfile() async {
+    if (!isAuthenticated) return;
+    final result = await refreshProfileUseCase();
+    result.fold((_) {}, (user) {
+      _user = user;
+      notifyListeners();
+    });
+  }
+
+  /// Devuelve null si se guardó, o el motivo por el que no se pudo.
+  Future<String?> updatePhone(String phone) async {
+    final result = await updatePhoneUseCase(phone);
+    return result.fold(
+      (failure) => failure.message,
+      (user) {
+        _user = user;
+        notifyListeners();
+        return null;
+      },
+    );
   }
 
   Future<void> logout() async {

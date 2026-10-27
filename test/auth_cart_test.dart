@@ -313,13 +313,15 @@ void main() {
 
       expect(find.text('Mi carrito'), findsOneWidget);
       expect(find.text('Driver 400W'), findsOneWidget);
-      expect(find.text('S/ 180.00'), findsOneWidget); // 120 + 30 x 2
-      expect(find.text('Inicia sesión para comprar'), findsOneWidget);
+      // Subtotal y total: 120 + 30 x 2.
+      expect(find.text('S/ 180.00'), findsNWidgets(2));
+      expect(find.text('Subtotal (3 items)'), findsOneWidget);
+      expect(find.text('Inicia sesión para pagar'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.delete_outline).first);
       await tester.pumpAndSettle();
       expect(find.text('Driver 400W'), findsNothing);
-      expect(find.text('S/ 60.00'), findsOneWidget);
+      expect(find.text('S/ 60.00'), findsWidgets);
     });
 
     testWidgets('carrito vacío ofrece seguir comprando', (tester) async {
@@ -350,7 +352,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Producto'), findsOneWidget);
-      expect(find.text('En stock (9)'), findsOneWidget);
+      expect(find.text('Stock: 9 unidades'), findsOneWidget);
       // La ficha es una lista: las secciones largas quedan bajo el pliegue.
       await tester.scrollUntilVisible(
         find.text('Descripción de Driver 400W'),
