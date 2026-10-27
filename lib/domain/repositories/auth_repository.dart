@@ -16,6 +16,13 @@ abstract class AuthRepository {
   /// Cambia el celular del cliente (9 dígitos, empieza con 9).
   Future<Either<Failure, UserEntity>> updatePhone(String phone);
 
+  /// Cambia la contraseña. La sesión actual sigue abierta.
+  Future<Either<Failure, void>> changePassword({
+    required String current,
+    required String next,
+    required String confirmation,
+  });
+
   Future<void> logout();
 
   /// Emite cuando el servidor rechaza el token guardado (venció o se abrió

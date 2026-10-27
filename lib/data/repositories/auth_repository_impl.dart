@@ -82,6 +82,18 @@ class AuthRepositoryImpl implements AuthRepository {
         return updated;
       });
 
+  @override
+  Future<Either<Failure, void>> changePassword({
+    required String current,
+    required String next,
+    required String confirmation,
+  }) =>
+      guardRequest(() => remote.changePassword(
+            current: current,
+            next: next,
+            confirmation: confirmation,
+          ));
+
   Future<void> _saveUser(UserModel user) async {
     final token = apiClient.authToken;
     if (token != null) await local.saveSession(token, user);

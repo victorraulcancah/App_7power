@@ -22,6 +22,12 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> getProfile();
 
   Future<void> updatePhone(String phone);
+
+  Future<void> changePassword({
+    required String current,
+    required String next,
+    required String confirmation,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -69,5 +75,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> updatePhone(String phone) async {
     await client.patch(ApiConstants.phoneEndpoint, body: {'telefono': phone});
+  }
+
+  @override
+  Future<void> changePassword({
+    required String current,
+    required String next,
+    required String confirmation,
+  }) async {
+    await client.post(ApiConstants.changePasswordEndpoint, body: {
+      'current_password': current,
+      'new_password': next,
+      'new_password_confirmation': confirmation,
+    });
   }
 }

@@ -14,6 +14,7 @@ class AuthProvider extends ChangeNotifier {
   final RestoreSessionUseCase restoreSessionUseCase;
   final RefreshProfileUseCase refreshProfileUseCase;
   final UpdatePhoneUseCase updatePhoneUseCase;
+  final ChangePasswordUseCase changePasswordUseCase;
   final AuthRepository repository;
 
   StreamSubscription<void>? _expiredSub;
@@ -24,6 +25,7 @@ class AuthProvider extends ChangeNotifier {
     required this.restoreSessionUseCase,
     required this.refreshProfileUseCase,
     required this.updatePhoneUseCase,
+    required this.changePasswordUseCase,
     required this.repository,
   }) {
     _expiredSub = repository.onSessionExpired.listen((_) {
@@ -103,6 +105,20 @@ class AuthProvider extends ChangeNotifier {
         return null;
       },
     );
+  }
+
+  /// Devuelve null si se cambió, o el motivo por el que no se pudo.
+  Future<String?> changePassword({
+    required String current,
+    required String next,
+    required String confirmation,
+  }) async {
+    final result = await changePasswordUseCase(
+      current: current,
+      next: next,
+      confirmation: confirmation,
+    );
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   Future<void> logout() async {

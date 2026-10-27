@@ -51,6 +51,48 @@ class UpdatePhoneUseCase {
   }
 }
 
+/// Qué le falta a una contraseña nueva, con las reglas del backend: 8
+/// caracteres, mayúscula, minúscula y número. Null si cumple.
+String? validateNewPassword(String value) {
+  if (value.length < 8) return 'Debe tener al menos 8 caracteres';
+  if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Debe incluir una mayúscula';
+  if (!RegExp(r'[a-z]').hasMatch(value)) return 'Debe incluir una minúscula';
+  if (!RegExp(r'\d').hasMatch(value)) return 'Debe incluir un número';
+  return null;
+}
+
+class ChangePasswordUseCase {
+  final AuthRepository repository;
+
+  ChangePasswordUseCase(this.repository);
+
+  Future<Either<Failure, void>> call({
+    required String current,
+    required String next,
+    required String confirmation,
+  }) {
+    if (current.isEmpty) {
+      return Future.value(Either.left(
+        const ValidationFailure('Ingresa tu contraseña actual'),
+      ));
+    }
+    final weak = validateNewPassword(next);
+    if (weak != null) {
+      return Future.value(Either.left(ValidationFailure(weak)));
+    }
+    if (next != confirmation) {
+      return Future.value(Either.left(
+        const ValidationFailure('Las contraseñas no coinciden'),
+      ));
+    }
+    return repository.changePassword(
+      current: current,
+      next: next,
+      confirmation: confirmation,
+    );
+  }
+}
+
 class LogoutUseCase {
   final AuthRepository repository;
 

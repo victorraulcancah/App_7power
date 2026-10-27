@@ -59,6 +59,7 @@ class ApiConstants {
   // Mi cuenta (requieren token de cliente)
   static const String profileEndpoint = '/user';
   static const String phoneEndpoint = '/user/telefono';
+  static const String changePasswordEndpoint = '/user/change-password';
   static const String favoritesEndpoint = '/favoritos';
   static const String onlinePurchasesEndpoint = '/pago-en-linea';
   static const String storePurchasesEndpoint = '/compras/mis-compras-erp';

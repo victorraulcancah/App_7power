@@ -330,6 +330,23 @@ class FakeAuthRemote implements AuthRemoteDataSource {
     }
     savedPhone = phone;
   }
+
+  /// Contraseña vigente del cliente en el "servidor" y los cambios recibidos.
+  String currentPassword = 'secreto';
+  final List<Map<String, String>> passwordChanges = [];
+
+  @override
+  Future<void> changePassword({
+    required String current,
+    required String next,
+    required String confirmation,
+  }) async {
+    if (current != currentPassword) {
+      throw const ValidationException('La contraseña actual es incorrecta');
+    }
+    passwordChanges.add({'current': current, 'next': next, 'confirmation': confirmation});
+    currentPassword = next;
+  }
 }
 
 class FakeAuthLocal implements AuthLocalDataSource {
@@ -781,6 +798,7 @@ class TestEnv {
             restoreSessionUseCase: RestoreSessionUseCase(authRepo),
             refreshProfileUseCase: RefreshProfileUseCase(authRepo),
             updatePhoneUseCase: UpdatePhoneUseCase(authRepo),
+            changePasswordUseCase: ChangePasswordUseCase(authRepo),
             repository: authRepo,
           )..restore(),
         ),

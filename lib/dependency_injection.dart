@@ -132,6 +132,7 @@ class DependencyInjection {
             restoreSessionUseCase: RestoreSessionUseCase(_authRepository),
             refreshProfileUseCase: RefreshProfileUseCase(_authRepository),
             updatePhoneUseCase: UpdatePhoneUseCase(_authRepository),
+            changePasswordUseCase: ChangePasswordUseCase(_authRepository),
             repository: _authRepository,
           )..restore(),
         ),
