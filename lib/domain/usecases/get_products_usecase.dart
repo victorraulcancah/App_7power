@@ -12,10 +12,12 @@ class GetProductsUseCase {
     int page = 1,
     String? search,
     int? categoryId,
+    int? limit,
   }) =>
       repository.getProducts(
         page: page,
         search: (search == null || search.isEmpty) ? null : search,
         categoryId: categoryId,
+        limit: limit,
       );
 }

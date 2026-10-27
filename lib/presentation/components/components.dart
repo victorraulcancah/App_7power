@@ -1,7 +1,9 @@
 export 'app_button.dart';
+export 'app_footer.dart';
 export 'app_search_field.dart';
 export 'app_snackbar.dart';
 export 'app_text_field.dart';
+export 'banner_carousel.dart';
 export 'loading_indicator.dart';
 export 'price_text.dart';
 export 'product_card.dart';

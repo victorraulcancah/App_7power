@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import 'core/constants/app_constants.dart';
 import 'dependency_injection.dart';
-import 'presentation/pages/products_page.dart';
-import 'theme/app_theme.dart';
+import 'presentation/pages/main_shell.dart';
+import 'presentation/providers/company_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,11 +22,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: providers,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: AppConstants.appName,
-        theme: AppTheme.lightTheme,
-        home: const ProductsPage(),
+      // El tema depende de la empresa (color del navbar/footer): se reconstruye
+      // cuando llegan sus datos desde el backend.
+      child: Consumer<CompanyProvider>(
+        builder: (context, company, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: AppConstants.appName,
+          theme: company.theme,
+          home: const MainShell(),
+        ),
       ),
     );
   }

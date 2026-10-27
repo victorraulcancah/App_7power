@@ -18,6 +18,11 @@ class ApiConstants {
     'Accept': 'application/json',
   };
 
+  // Tienda
+  static const String empresaInfoEndpoint = '/empresa-info/publica';
+  static const String bannersEndpoint = '/banners/publicos';
+  static const String menusEndpoint = '/menus/publicos';
+
   // Catálogo público
   static const String productosEndpoint = '/productos-publicos';
   static const String productoDetalleEndpoint = '/productos-publicos/{id}';

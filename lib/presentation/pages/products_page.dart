@@ -5,7 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../components/components.dart';
 import '../providers/products_provider.dart';
 
-/// Catálogo de productos de la tienda.
+/// Catálogo de productos de la tienda (pestaña "Tienda").
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
 
@@ -41,19 +41,15 @@ class _ProductsPageState extends State<ProductsPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<ProductsProvider>();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text(AppConstants.appName)),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: AppSearchField(onSearch: provider.search),
-          ),
-          if (provider.categories.isNotEmpty)
-            _CategoryFilter(provider: provider),
-          Expanded(child: _body(provider)),
-        ],
-      ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          child: AppSearchField(onSearch: provider.search),
+        ),
+        if (provider.categories.isNotEmpty) _CategoryFilter(provider: provider),
+        Expanded(child: _body(provider)),
+      ],
     );
   }
 

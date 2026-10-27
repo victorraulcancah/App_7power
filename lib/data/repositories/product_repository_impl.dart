@@ -1,5 +1,5 @@
-import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
+import '../../core/network/request_guard.dart';
 import '../../core/utils/either.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/products_page_entity.dart';
@@ -16,29 +16,16 @@ class ProductRepositoryImpl implements ProductRepository {
     int page = 1,
     String? search,
     int? categoryId,
+    int? limit,
   }) =>
-      _guard(() => remoteDataSource.getProducts(
+      guardRequest(() => remoteDataSource.getProducts(
             page: page,
             search: search,
             categoryId: categoryId,
+            limit: limit,
           ));
 
   @override
   Future<Either<Failure, List<CategoryEntity>>> getCategories() =>
-      _guard(remoteDataSource.getCategories);
-
-  /// Traduce las excepciones de la capa de datos a fallos del dominio.
-  Future<Either<Failure, T>> _guard<T>(Future<T> Function() call) async {
-    try {
-      return Either.right(await call());
-    } on NetworkException catch (e) {
-      return Either.left(NetworkFailure(e.message));
-    } on AuthException catch (e) {
-      return Either.left(AuthenticationFailure(e.message));
-    } on AppException catch (e) {
-      return Either.left(ServerFailure(e.message));
-    } catch (_) {
-      return Either.left(const ServerFailure('Respuesta inválida del servidor'));
-    }
-  }
+      guardRequest(remoteDataSource.getCategories);
 }

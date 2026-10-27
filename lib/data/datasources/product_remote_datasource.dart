@@ -11,6 +11,7 @@ abstract class ProductRemoteDataSource {
     required int page,
     String? search,
     int? categoryId,
+    int? limit,
   });
 
   Future<List<CategoryModel>> getCategories();
@@ -26,11 +27,13 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     required int page,
     String? search,
     int? categoryId,
+    int? limit,
   }) async {
     final response = await client.get(
       ApiConstants.productosEndpoint,
       queryParameters: {
-        'page': '$page',
+        // El backend solo respeta `per_page` cuando NO se manda `page`.
+        if (limit != null) 'per_page': '$limit' else 'page': '$page',
         'search': ?search,
         if (categoryId != null) 'categoria': '$categoryId',
       },
