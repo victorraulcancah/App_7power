@@ -23,6 +23,11 @@ class ApiConstants {
   static const String bannersEndpoint = '/banners/publicos';
   static const String menusEndpoint = '/menus/publicos';
 
+  // Sesión y carrito (requieren token, salvo /login)
+  static const String loginEndpoint = '/login';
+  static const String logoutEndpoint = '/logout';
+  static const String cartEndpoint = '/cart';
+
   // Catálogo público
   static const String productosEndpoint = '/productos-publicos';
   static const String productoDetalleEndpoint = '/productos-publicos/{id}';

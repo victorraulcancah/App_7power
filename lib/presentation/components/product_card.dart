@@ -5,7 +5,7 @@ import 'product_image.dart';
 
 /// Tarjeta de producto para grillas y listas. No conoce la entidad de dominio:
 /// recibe datos primitivos para poder reutilizarse en catálogo, favoritos,
-/// carrito, etc.
+/// carrito, etc. Necesita una altura acotada (celda de grilla, `SizedBox`).
 class ProductCard extends StatelessWidget {
   final String name;
   final String? brand;
@@ -44,8 +44,9 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
+            // La imagen ocupa lo que sobre: así la tarjeta no desborda sea cual
+            // sea la altura que le dé la grilla o la lista.
+            Expanded(
               child: Stack(
                 fit: StackFit.expand,
                 children: [

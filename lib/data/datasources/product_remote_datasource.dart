@@ -4,6 +4,7 @@ import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../domain/entities/products_page_entity.dart';
 import '../models/category_model.dart';
+import '../models/product_detail_model.dart';
 import '../models/product_model.dart';
 
 abstract class ProductRemoteDataSource {
@@ -15,6 +16,8 @@ abstract class ProductRemoteDataSource {
   });
 
   Future<List<CategoryModel>> getCategories();
+
+  Future<ProductDetailModel> getProductDetail(int id);
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
@@ -60,6 +63,16 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
         .cast<Map<String, dynamic>>()
         .map(CategoryModel.fromJson)
         .toList();
+  }
+
+  @override
+  Future<ProductDetailModel> getProductDetail(int id) async {
+    final response = await client.get(
+      ApiConstants.productoDetalleEndpoint.replaceFirst('{id}', '$id'),
+    );
+    return ProductDetailModel.fromJson(
+      _decode(response.bodyBytes) as Map<String, dynamic>,
+    );
   }
 
   /// El backend no declara charset: se decodifica como UTF-8 a mano para

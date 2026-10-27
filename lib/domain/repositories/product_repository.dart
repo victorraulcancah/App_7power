@@ -1,6 +1,7 @@
 import '../../core/errors/failures.dart';
 import '../../core/utils/either.dart';
 import '../entities/category_entity.dart';
+import '../entities/product_detail_entity.dart';
 import '../entities/products_page_entity.dart';
 
 abstract class ProductRepository {
@@ -14,4 +15,6 @@ abstract class ProductRepository {
   });
 
   Future<Either<Failure, List<CategoryEntity>>> getCategories();
+
+  Future<Either<Failure, ProductDetailEntity>> getProductDetail(int id);
 }

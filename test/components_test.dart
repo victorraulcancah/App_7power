@@ -65,6 +65,7 @@ void main() {
     var added = 0;
     await tester.pumpWidget(_wrap(SizedBox(
       width: 200,
+      height: 330,
       child: ProductCard(
         name: 'Taladro percutor',
         brand: 'Bosch',

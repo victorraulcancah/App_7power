@@ -1,153 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'package:appecommerce/core/errors/failures.dart';
 import 'package:appecommerce/core/utils/color_utils.dart';
-import 'package:appecommerce/core/utils/either.dart';
 import 'package:appecommerce/data/models/banner_model.dart';
 import 'package:appecommerce/data/models/category_model.dart';
 import 'package:appecommerce/data/models/company_info_model.dart';
+import 'package:appecommerce/data/models/product_detail_model.dart';
 import 'package:appecommerce/data/models/product_model.dart';
-import 'package:appecommerce/domain/entities/banner_entity.dart';
-import 'package:appecommerce/domain/entities/category_entity.dart';
 import 'package:appecommerce/domain/entities/company_info_entity.dart';
-import 'package:appecommerce/domain/entities/product_entity.dart';
-import 'package:appecommerce/domain/entities/products_page_entity.dart';
-import 'package:appecommerce/domain/repositories/product_repository.dart';
-import 'package:appecommerce/domain/repositories/store_repository.dart';
-import 'package:appecommerce/domain/usecases/get_banners_usecase.dart';
-import 'package:appecommerce/domain/usecases/get_categories_usecase.dart';
-import 'package:appecommerce/domain/usecases/get_company_info_usecase.dart';
-import 'package:appecommerce/domain/usecases/get_products_usecase.dart';
-import 'package:appecommerce/main.dart';
-import 'package:appecommerce/presentation/providers/company_provider.dart';
-import 'package:appecommerce/presentation/providers/home_provider.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
+import 'package:provider/provider.dart';
 
-/// Repositorio falso: filtra en memoria como lo haría el backend y devuelve
-/// los resultados en páginas de [pageSize].
-class _FakeRepo implements ProductRepository {
-  final List<ProductEntity> products;
-  final Failure? failure;
-  final int pageSize;
-  final List<int> requestedPages = [];
-
-  _FakeRepo(this.products, {this.failure, this.pageSize = 20});
-
-  @override
-  Future<Either<Failure, ProductsPageEntity>> getProducts({
-    int page = 1,
-    String? search,
-    int? categoryId,
-    int? limit,
-  }) async {
-    requestedPages.add(page);
-    if (failure != null) return Either.left(failure!);
-
-    final filtered = products.where((p) {
-      if (categoryId != null && p.categoryId != categoryId) return false;
-      if (search != null &&
-          !p.name.toLowerCase().contains(search.toLowerCase())) {
-        return false;
-      }
-      return true;
-    }).toList();
-
-    if (limit != null) {
-      final items = filtered.take(limit).toList();
-      return Either.right(ProductsPageEntity(
-        items: items,
-        currentPage: 1,
-        lastPage: 1,
-        total: items.length,
-      ));
-    }
-
-    final start = (page - 1) * pageSize;
-    final items = filtered.skip(start).take(pageSize).toList();
-    return Either.right(ProductsPageEntity(
-      items: items,
-      currentPage: page,
-      lastPage: (filtered.length / pageSize).ceil().clamp(1, 9999),
-      total: filtered.length,
-    ));
-  }
-
-  @override
-  Future<Either<Failure, List<CategoryEntity>>> getCategories() async =>
-      Either.right(const [
-        CategoryEntity(id: 1, name: 'DRIVER'),
-        CategoryEntity(id: 2, name: 'RCA'),
-      ]);
-}
-
-class _FakeStore implements StoreRepository {
-  final CompanyInfoEntity? company;
-
-  _FakeStore({this.company});
-
-  @override
-  Future<Either<Failure, CompanyInfoEntity>> getCompanyInfo() async =>
-      company == null
-          ? Either.left(const NetworkFailure('Sin conexión'))
-          : Either.right(company!);
-
-  @override
-  Future<Either<Failure, List<BannerEntity>>> getBanners() async =>
-      Either.right(const [
-        BannerEntity(id: 1, imageUrl: 'http://api.test/banner.png'),
-      ]);
-}
-
-const _empresa = CompanyInfoEntity(
-  name: '7power',
-  email: 'ventas@7power.pe',
-  address: 'CERCADO DE LIMA',
-  navbarColor: '#112233',
-  social: {SocialNetwork.facebook: 'https://facebook.com/x'},
-  paymentMethods: [PaymentMethodEntity(id: 1, name: 'Plin')],
-);
-
-Widget _app(_FakeRepo repo, {_FakeStore? store}) {
-  final storeRepo = store ?? _FakeStore(company: _empresa);
-  return MyApp(providers: [
-    ChangeNotifierProvider<CompanyProvider>(
-      create: (_) => CompanyProvider(
-        getCompanyInfoUseCase: GetCompanyInfoUseCase(storeRepo),
-      )..load(),
-    ),
-    ChangeNotifierProvider<HomeProvider>(
-      create: (_) => HomeProvider(
-        getBannersUseCase: GetBannersUseCase(storeRepo),
-        getProductsUseCase: GetProductsUseCase(repo),
-      ),
-    ),
-    ChangeNotifierProvider<ProductsProvider>(
-      create: (_) => ProductsProvider(
-        getProductsUseCase: GetProductsUseCase(repo),
-        getCategoriesUseCase: GetCategoriesUseCase(repo),
-      ),
-    ),
-  ]);
-}
-
-ProductEntity _p(int id, String name,
-        {int categoryId = 1, double price = 10, int stock = 5}) =>
-    ProductEntity(
-      id: id,
-      name: name,
-      categoryId: categoryId,
-      price: price,
-      currency: 's',
-      stock: stock,
-    );
+import 'support/fakes.dart';
 
 /// Pasa a la pestaña "Tienda".
 Future<void> _goToShop(WidgetTester tester) async {
   await tester.tap(find.text('Tienda'));
   await tester.pumpAndSettle();
 }
+
+BuildContext _context(WidgetTester tester) =>
+    tester.element(find.byType(NavigationBar));
 
 void main() {
   test('ProductModel interpreta la respuesta de /productos-publicos', () {
@@ -187,6 +61,50 @@ void main() {
     expect(p.isAvailable, isFalse);
   });
 
+  test('ProductDetailModel arma galería, secciones y relacionados', () {
+    final d = ProductDetailModel.fromJson({
+      'producto': {
+        'id': 635,
+        'nombre': 'DRIVER',
+        'codigo_producto': 'DRV2',
+        'stock': 92,
+        'precio_venta': '100.00',
+        'imagen_url': 'https://api.7power.pe/storage/productos/a.jpg',
+        'categoria': {'id': 46, 'nombre': 'DRIVER'},
+        'marca': {'id': 25, 'nombre': '7POWER'},
+      },
+      'moneda': 'd',
+      'detalles': {
+        'descripcion_detallada': 'Un driver potente',
+        'garantia': '  ',
+        'imagenes': '["b.png","c.png"]',
+      },
+      'productos_relacionados': [
+        {
+          'id': 619,
+          'nombre': 'DIFUSOR',
+          'stock': 0,
+          'precio_venta': '15.00',
+          'moneda': 's',
+          'imagen_url': 'https://api.7power.pe/storage/productos/d.jpg',
+        },
+      ],
+    });
+
+    expect(d.product.price, 100);
+    expect(d.product.currency, 'd');
+    expect(d.product.brand, '7POWER');
+    expect(d.images, [
+      'https://api.7power.pe/storage/productos/a.jpg',
+      endsWith('/storage/productos/detalles/b.png'),
+      endsWith('/storage/productos/detalles/c.png'),
+    ]);
+    // La garantía vacía no genera sección.
+    expect(d.sections.keys, ['Descripción']);
+    expect(d.related.single.name, 'DIFUSOR');
+    expect(d.related.single.isAvailable, isFalse);
+  });
+
   test('CategoryModel interpreta /categorias/publicas', () {
     final c = CategoryModel.fromJson({
       'id': 38,
@@ -220,8 +138,7 @@ void main() {
     expect(c.navbarColor, '#000000');
     expect(c.phone, isNull);
     expect(c.mobile, isNull);
-    expect(c.social.keys,
-        [SocialNetwork.facebook, SocialNetwork.instagram]);
+    expect(c.social.keys, [SocialNetwork.facebook, SocialNetwork.instagram]);
     expect(c.paymentMethods.single.name, 'Plin');
   });
 
@@ -247,28 +164,43 @@ void main() {
   });
 
   testWidgets('El navbar toma el color que define el backend', (tester) async {
-    await tester.pumpWidget(_app(_FakeRepo([_p(1, 'Driver')])));
+    final env = TestEnv(catalog: [product(1, 'Driver')]);
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
-    final appBar = tester.widget<AppBar>(find.byType(AppBar));
-    final material = Theme.of(tester.element(find.byType(AppBar)));
-    expect(material.appBarTheme.backgroundColor, const Color(0xFF112233));
-    expect(appBar.title, isNotNull);
+    final theme = Theme.of(tester.element(find.byType(AppBar)));
+    expect(theme.appBarTheme.backgroundColor, const Color(0xFF112233));
   });
 
   testWidgets('Sin datos de empresa usa el color por defecto', (tester) async {
-    await tester.pumpWidget(
-      _app(_FakeRepo([_p(1, 'Driver')]), store: _FakeStore()),
-    );
+    final env = TestEnv(catalog: [product(1, 'Driver')], company: null);
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
     final theme = Theme.of(tester.element(find.byType(AppBar)));
     expect(theme.appBarTheme.backgroundColor, const Color(0xFF9B1C1C));
   });
 
+  testWidgets('El logo de la empresa sigue en el navbar', (tester) async {
+    const conLogo = CompanyInfoEntity(
+      name: '7power',
+      logoUrl: 'http://api.test/logo.png',
+      navbarColor: '#112233',
+    );
+    final env = TestEnv(catalog: [product(1, 'Driver')], company: conLogo);
+    await tester.pumpWidget(env.app());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: find.byType(Image)),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('La portada muestra categorías y productos, sin footer',
       (tester) async {
-    await tester.pumpWidget(_app(_FakeRepo([_p(1, 'Driver 400W')])));
+    final env = TestEnv(catalog: [product(1, 'Driver 400W')]);
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
     expect(find.text('Categorías'), findsOneWidget);
@@ -283,36 +215,17 @@ void main() {
     );
     expect(find.text('Driver 400W'), findsOneWidget);
 
-    // El contacto y los métodos de pago ya no se muestran en la portada.
     expect(find.text('Escríbenos a: ventas@7power.pe'), findsNothing);
     expect(find.text('Métodos de pago'), findsNothing);
   });
 
-  testWidgets('El logo de la empresa sigue en el navbar', (tester) async {
-    final empresaConLogo = CompanyInfoEntity(
-      name: _empresa.name,
-      logoUrl: 'http://api.test/logo.png',
-      navbarColor: _empresa.navbarColor,
-    );
-    await tester.pumpWidget(_app(
-      _FakeRepo([_p(1, 'Driver 400W')]),
-      store: _FakeStore(company: empresaConLogo),
-    ));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.descendant(of: find.byType(AppBar), matching: find.byType(Image)),
-      findsOneWidget,
-    );
-  });
-
   testWidgets('Tocar una categoría de la portada abre la tienda filtrada',
       (tester) async {
-    final repo = _FakeRepo([
-      _p(1, 'Driver 400W'),
-      _p(2, 'Cable RCA', categoryId: 2),
+    final env = TestEnv(catalog: [
+      product(1, 'Driver 400W'),
+      product(2, 'Cable RCA', categoryId: 2),
     ]);
-    await tester.pumpWidget(_app(repo));
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(ActionChip, 'RCA'));
@@ -325,12 +238,12 @@ void main() {
 
   testWidgets('Tienda lista productos, marca agotados y sin precio',
       (tester) async {
-    final repo = _FakeRepo([
-      _p(1, 'Driver 400W', price: 120),
-      _p(2, 'Cable RCA', categoryId: 2, price: 0),
-      _p(3, 'Parlante', stock: 0),
+    final env = TestEnv(catalog: [
+      product(1, 'Driver 400W', price: 120),
+      product(2, 'Cable RCA', categoryId: 2, price: 0),
+      product(3, 'Parlante', stock: 0),
     ]);
-    await tester.pumpWidget(_app(repo));
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
     await _goToShop(tester);
 
@@ -344,18 +257,18 @@ void main() {
 
   testWidgets('Buscar y elegir categoría consultan al servidor',
       (tester) async {
-    final repo = _FakeRepo([
-      _p(1, 'Driver 400W'),
-      _p(2, 'Cable RCA', categoryId: 2),
+    final env = TestEnv(catalog: [
+      product(1, 'Driver 400W'),
+      product(2, 'Cable RCA', categoryId: 2),
     ]);
-    await tester.pumpWidget(_app(repo));
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
     await _goToShop(tester);
 
     await tester.tap(find.widgetWithText(ChoiceChip, 'RCA'));
     await tester.pumpAndSettle();
     expect(
-      context(tester).read<ProductsProvider>().products.map((p) => p.name),
+      _context(tester).read<ProductsProvider>().products.map((p) => p.name),
       ['Cable RCA'],
     );
 
@@ -365,35 +278,34 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
     expect(
-      context(tester).read<ProductsProvider>().products.map((p) => p.name),
+      _context(tester).read<ProductsProvider>().products.map((p) => p.name),
       ['Driver 400W'],
     );
   });
 
   testWidgets('Al llegar al final carga la siguiente página', (tester) async {
-    final repo = _FakeRepo(
-      [for (var i = 1; i <= 6; i++) _p(i, 'Producto $i')],
+    final env = TestEnv(
+      catalog: [for (var i = 1; i <= 6; i++) product(i, 'Producto $i')],
       pageSize: 2,
     );
-    await tester.pumpWidget(_app(repo));
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
-    expect(repo.requestedPages, contains(1));
+    expect(env.products.requestedPages, contains(1));
 
-    final provider = context(tester).read<ProductsProvider>();
+    final provider = _context(tester).read<ProductsProvider>();
     expect(provider.hasMore, isTrue);
 
     await provider.loadMore();
     await tester.pumpAndSettle();
 
-    expect(repo.requestedPages, contains(2));
+    expect(env.products.requestedPages, contains(2));
     expect(provider.products.length, 4);
   });
 
   testWidgets('La tienda muestra el error y permite reintentar',
       (tester) async {
-    final repo =
-        _FakeRepo(const [], failure: const NetworkFailure('Sin conexión'));
-    await tester.pumpWidget(_app(repo));
+    final env = TestEnv(catalogFailure: const NetworkFailure('Sin conexión'));
+    await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
     await _goToShop(tester);
 
@@ -401,6 +313,3 @@ void main() {
     expect(find.text('Reintentar'), findsOneWidget);
   });
 }
-
-BuildContext context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar));

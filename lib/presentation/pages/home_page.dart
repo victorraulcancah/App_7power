@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../components/components.dart';
 import '../providers/home_provider.dart';
 import '../providers/products_provider.dart';
+import 'product_detail_page.dart';
 
 /// Portada: banners, categorías y productos. No lleva footer: en la app esa
 /// función la cumple la barra de navegación inferior.
@@ -96,6 +97,8 @@ class _HomePageState extends State<HomePage> {
                       price: p.price,
                       currency: p.currency,
                       outOfStock: !p.isAvailable,
+                      onTap: () => ProductDetailPage.open(context, p),
+                      onAddToCart: () => CartActions.add(context, p),
                     ),
                   );
                 },

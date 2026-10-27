@@ -1,13 +1,15 @@
 import '../constants/app_constants.dart';
 
 class Validators {
-  static String? required(String? value, [String field = 'Este campo']) {
-    if (value == null || value.trim().isEmpty) return '$field es requerido';
+  /// [field] va precedido de su artículo ("tu correo", "tu contraseña") para
+  /// que el mensaje concuerde en género: "Ingresa tu correo".
+  static String? required(String? value, [String field = 'este dato']) {
+    if (value == null || value.trim().isEmpty) return 'Ingresa $field';
     return null;
   }
 
   static String? email(String? value) {
-    final empty = required(value, 'El correo');
+    final empty = required(value, 'tu correo');
     if (empty != null) return empty;
     final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     if (!regex.hasMatch(value!.trim())) return 'Correo no válido';
@@ -15,7 +17,7 @@ class Validators {
   }
 
   static String? password(String? value) {
-    final empty = required(value, 'La contraseña');
+    final empty = required(value, 'tu contraseña');
     if (empty != null) return empty;
     if (value!.length < AppConstants.minPasswordLength) {
       return 'Mínimo ${AppConstants.minPasswordLength} caracteres';

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../components/components.dart';
 import '../providers/products_provider.dart';
+import 'product_detail_page.dart';
 
 /// Catálogo de productos de la tienda (pestaña "Tienda").
 class ProductsPage extends StatefulWidget {
@@ -98,6 +99,8 @@ class _ProductsPageState extends State<ProductsPage> {
                       price: p.price,
                       currency: p.currency,
                       outOfStock: !p.isAvailable,
+                      onTap: () => ProductDetailPage.open(context, p),
+                      onAddToCart: () => CartActions.add(context, p),
                     );
                   },
                 ),

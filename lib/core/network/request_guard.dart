@@ -11,6 +11,10 @@ Future<Either<Failure, T>> guardRequest<T>(Future<T> Function() call) async {
     return Either.left(NetworkFailure(e.message));
   } on AuthException catch (e) {
     return Either.left(AuthenticationFailure(e.message));
+  } on ValidationException catch (e) {
+    return Either.left(ValidationFailure(e.message));
+  } on CacheException catch (e) {
+    return Either.left(CacheFailure(e.message));
   } on AppException catch (e) {
     return Either.left(ServerFailure(e.message));
   } catch (_) {

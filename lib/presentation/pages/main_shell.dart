@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../components/components.dart';
 import '../providers/company_provider.dart';
 import '../providers/products_provider.dart';
+import 'account_page.dart';
+import 'cart_page.dart';
 import 'home_page.dart';
 import 'products_page.dart';
 
@@ -34,6 +35,7 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
+        actions: const [CartButton()],
         title: company?.logoUrl != null
             ? Image.network(
                 company!.logoUrl!,
@@ -47,11 +49,7 @@ class _MainShellState extends State<MainShell> {
         children: [
           HomePage(onOpenShop: _openShop),
           const ProductsPage(),
-          const EmptyState(
-            icon: Icons.person_outline,
-            title: 'Mi cuenta',
-            message: 'Pronto podrás iniciar sesión y ver tus pedidos.',
-          ),
+          const AccountPage(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
