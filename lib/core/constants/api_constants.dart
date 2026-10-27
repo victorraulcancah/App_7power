@@ -28,6 +28,13 @@ class ApiConstants {
   static const String logoutEndpoint = '/logout';
   static const String cartEndpoint = '/cart';
 
+  // Registro y recuperación de contraseña (públicos)
+  static const String registerEndpoint = '/register';
+  static const String documentTypesEndpoint = '/document-types';
+  static const String captchaChallengeEndpoint = '/captcha/desafio';
+  static const String captchaVerifyEndpoint = '/captcha/verificar';
+  static const String forgotPasswordEndpoint = '/forgot-password';
+
   // Información de la empresa (públicos)
   static const String aboutEndpoint = '/sobre-nosotros/publico';
   static const String shippingStepsEndpoint = '/pasos-envio';
@@ -79,5 +86,4 @@ class ApiConstants {
   static const String productosEndpoint = '/productos-publicos';
   static const String productoDetalleEndpoint = '/productos-publicos/{id}';
   static const String categoriasEndpoint = '/categorias/publicas';
-  static const String marcasEndpoint = '/marcas/publicas';
-}
+  static const String marcasEndpoint = '/marcas/publicas';}

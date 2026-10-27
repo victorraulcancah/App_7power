@@ -3,6 +3,7 @@ import '../../core/network/request_guard.dart';
 import '../../core/utils/either.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/product_detail_entity.dart';
+import '../../domain/entities/product_filters.dart';
 import '../../domain/entities/products_page_entity.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../datasources/product_remote_datasource.dart';
@@ -18,13 +19,19 @@ class ProductRepositoryImpl implements ProductRepository {
     String? search,
     int? categoryId,
     int? limit,
+    ProductFilters filters = ProductFilters.none,
   }) =>
       guardRequest(() => remoteDataSource.getProducts(
             page: page,
             search: search,
             categoryId: categoryId,
             limit: limit,
+            filters: filters,
           ));
+
+  @override
+  Future<Either<Failure, List<BrandEntity>>> getBrands() =>
+      guardRequest(remoteDataSource.getBrands);
 
   @override
   Future<Either<Failure, List<CategoryEntity>>> getCategories() =>

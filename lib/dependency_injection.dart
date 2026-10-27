@@ -6,6 +6,11 @@ import 'core/network/api_client.dart';
 
 // Data Layer
 import 'data/datasources/addresses_remote_datasource.dart';
+import 'data/datasources/registration_remote_datasource.dart';
+import 'data/repositories/registration_repository_impl.dart';
+import 'domain/repositories/registration_repository.dart';
+import 'domain/usecases/registration_usecases.dart';
+import 'presentation/providers/registration_provider.dart';
 import 'data/datasources/info_remote_datasource.dart';
 import 'data/repositories/info_repository_impl.dart';
 import 'domain/repositories/info_repository.dart';
@@ -50,6 +55,7 @@ import 'domain/repositories/store_repository.dart';
 import 'domain/usecases/auth_usecases.dart';
 import 'domain/usecases/cart_usecases.dart';
 import 'domain/usecases/get_banners_usecase.dart';
+import 'domain/usecases/get_brands_usecase.dart';
 import 'domain/usecases/get_categories_usecase.dart';
 import 'domain/usecases/get_company_info_usecase.dart';
 import 'domain/usecases/get_product_detail_usecase.dart';
@@ -113,6 +119,9 @@ class DependencyInjection {
   static final InfoRepository _infoRepository =
       InfoRepositoryImpl(InfoRemoteDataSourceImpl(_apiClient));
 
+  static final RegistrationRepository _registrationRepository =
+      RegistrationRepositoryImpl(RegistrationRemoteDataSourceImpl(_apiClient));
+
   /// Providers globales de la app. Cada feature nueva registra aquí su
   /// provider con sus casos de uso (datasource -> repository -> usecase).
   static List<SingleChildWidget> get providers => [
@@ -160,6 +169,7 @@ class DependencyInjection {
           () => ProductsProvider(
             getProductsUseCase: GetProductsUseCase(_productRepository),
             getCategoriesUseCase: GetCategoriesUseCase(_productRepository),
+            getBrandsUseCase: GetBrandsUseCase(_productRepository),
           ),
         ),
         authAware<ProductDetailProvider>(
@@ -198,6 +208,16 @@ class DependencyInjection {
           () => QuotesProvider(
             getQuotesUseCase: GetQuotesUseCase(_quotesRepository),
             cancelQuoteUseCase: CancelQuoteUseCase(_quotesRepository),
+          ),
+        ),
+        ChangeNotifierProvider<RegistrationProvider>(
+          create: (_) => RegistrationProvider(
+            getDocumentTypesUseCase:
+                GetDocumentTypesUseCase(_registrationRepository),
+            getCaptchaUseCase: GetCaptchaUseCase(_registrationRepository),
+            verifyCaptchaUseCase: VerifyCaptchaUseCase(_registrationRepository),
+            registerUseCase: RegisterUseCase(_registrationRepository),
+            forgotPasswordUseCase: ForgotPasswordUseCase(_registrationRepository),
           ),
         ),
         ChangeNotifierProvider<InfoProvider>(

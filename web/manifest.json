@@ -1,11 +1,11 @@
 {
-    "name": "appecommerce",
-    "short_name": "appecommerce",
+    "name": "7Power",
+    "short_name": "7Power",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Tienda 7Power: audio automotriz, multimedia, seguridad y energía.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

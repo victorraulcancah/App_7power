@@ -1,0 +1,8 @@
+# Copia este archivo como `key.properties` (en esta misma carpeta, android/) y
+# completa los datos de TU clave de firma. `key.properties` y el .jks están en
+# .gitignore: nunca se suben a git.
+storePassword=CAMBIAR
+keyPassword=CAMBIAR
+keyAlias=sevenpower
+# Ruta al .jks, relativa a android/app. Ejemplo: ../sevenpower-release.jks
+storeFile=../sevenpower-release.jks

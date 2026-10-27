@@ -31,6 +31,8 @@ import 'package:appecommerce/domain/usecases/get_company_info_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_product_detail_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_products_usecase.dart';
 import 'package:appecommerce/core/utils/format_utils.dart';
+import 'package:appecommerce/domain/entities/product_filters.dart';
+import 'package:appecommerce/domain/usecases/get_brands_usecase.dart';
 import 'package:appecommerce/data/datasources/info_remote_datasource.dart';
 import 'package:appecommerce/data/models/info_model.dart';
 import 'package:appecommerce/data/repositories/info_repository_impl.dart';
@@ -89,6 +91,17 @@ class FakeProductRepo implements ProductRepository {
   /// Opciones de moneda por producto para la ficha.
   final Map<int, List<CurrencyOption>> currencyOptions = {};
 
+  /// Marcas del filtro. Se relacionan con los productos por el nombre.
+  List<BrandEntity> brands = const [];
+
+  /// Si es true la respuesta trae los topes del deslizador de precio (un
+  /// cliente con lista de precios); si no, vienen null como con un invitado.
+  bool priceBounds = false;
+
+  /// Lo último que se pidió, para revisar lo que mandó la app.
+  ProductFilters lastFilters = ProductFilters.none;
+  final List<ProductFilters> filtersHistory = [];
+
   FakeProductRepo(this.products, {this.failure, this.pageSize = 20});
 
   @override
@@ -97,18 +110,50 @@ class FakeProductRepo implements ProductRepository {
     String? search,
     int? categoryId,
     int? limit,
+    ProductFilters filters = ProductFilters.none,
   }) async {
     requestedPages.add(page);
+    lastFilters = filters;
+    filtersHistory.add(filters);
     if (failure != null) return Either.left(failure!);
 
-    final filtered = products.where((p) {
+    final brandNames = {
+      for (final b in brands)
+        if (filters.brandIds.contains(b.id)) b.name,
+    };
+
+    // Los topes se calculan antes de aplicar el rango de precio elegido.
+    final beforePrice = products.where((p) {
       if (categoryId != null && p.categoryId != categoryId) return false;
       if (search != null &&
           !p.name.toLowerCase().contains(search.toLowerCase())) {
         return false;
       }
+      if (brandNames.isNotEmpty && !brandNames.contains(p.brand)) return false;
       return true;
     }).toList();
+
+    final filtered = beforePrice.where((p) {
+      if (filters.minPrice != null && p.price < filters.minPrice!) return false;
+      if (filters.maxPrice != null && p.price > filters.maxPrice!) return false;
+      return true;
+    }).toList();
+
+    switch (filters.sort) {
+      case ProductSort.nameAsc:
+        filtered.sort((a, b) => a.name.compareTo(b.name));
+      case ProductSort.stockDesc:
+        filtered.sort((a, b) => b.stock.compareTo(a.stock));
+      case ProductSort.relevance:
+        break;
+    }
+
+    final prices = [
+      for (final p in beforePrice)
+        if (p.price > 0) p.price,
+    ]..sort();
+    final double? priceMin = priceBounds && prices.isNotEmpty ? prices.first : null;
+    final double? priceMax = priceBounds && prices.isNotEmpty ? prices.last : null;
 
     if (limit != null) {
       final items = filtered.take(limit).toList();
@@ -127,6 +172,8 @@ class FakeProductRepo implements ProductRepository {
       currentPage: page,
       lastPage: (filtered.length / pageSize).ceil().clamp(1, 9999),
       total: filtered.length,
+      priceMin: priceMin,
+      priceMax: priceMax,
     ));
   }
 
@@ -136,6 +183,10 @@ class FakeProductRepo implements ProductRepository {
         CategoryEntity(id: 1, name: 'DRIVER'),
         CategoryEntity(id: 2, name: 'RCA'),
       ]);
+
+  @override
+  Future<Either<Failure, List<BrandEntity>>> getBrands() async =>
+      Either.right(brands);
 
   @override
   Future<Either<Failure, ProductDetailEntity>> getProductDetail(int id) async {
@@ -196,10 +247,12 @@ ProductEntity product(
   int stock = 5,
   String currency = 's',
   bool priceVisible = true,
+  String? brand,
 }) =>
     ProductEntity(
       id: id,
       name: name,
+      brand: brand,
       categoryId: categoryId,
       price: price,
       currency: currency,
@@ -225,11 +278,15 @@ class FakeProductRemote implements ProductRemoteDataSource {
     String? search,
     int? categoryId,
     int? limit,
+    ProductFilters filters = ProductFilters.none,
   }) =>
       throw UnimplementedError();
 
   @override
   Future<List<CategoryModel>> getCategories() => throw UnimplementedError();
+
+  @override
+  Future<List<BrandEntity>> getBrands() => throw UnimplementedError();
 }
 
 /// Resultado de login configurable.
@@ -694,6 +751,7 @@ class TestEnv {
           () => ProductsProvider(
             getProductsUseCase: GetProductsUseCase(products),
             getCategoriesUseCase: GetCategoriesUseCase(products),
+            getBrandsUseCase: GetBrandsUseCase(products),
           ),
         ),
         DependencyInjection.authAware<ProductDetailProvider>(
