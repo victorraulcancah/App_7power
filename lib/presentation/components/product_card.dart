@@ -10,8 +10,9 @@ class ProductCard extends StatelessWidget {
   final String name;
   final String? brand;
   final String? imageUrl;
-  final double price;
+  final double? price;
   final double? oldPrice;
+  final String? currency;
   final bool outOfStock;
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
@@ -23,6 +24,7 @@ class ProductCard extends StatelessWidget {
     this.brand,
     this.imageUrl,
     this.oldPrice,
+    this.currency,
     this.outOfStock = false,
     this.onTap,
     this.onAddToCart,
@@ -83,7 +85,13 @@ class ProductCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Expanded(child: PriceText(price: price, oldPrice: oldPrice)),
+                      Expanded(
+                        child: PriceText(
+                          price: price,
+                          oldPrice: oldPrice,
+                          currency: currency,
+                        ),
+                      ),
                       if (onAddToCart != null)
                         IconButton.filled(
                           visualDensity: VisualDensity.compact,
