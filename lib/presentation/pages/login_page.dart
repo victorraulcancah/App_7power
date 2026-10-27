@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/validators.dart';
 import '../components/components.dart';
 import '../providers/auth_provider.dart';
-import '../providers/company_provider.dart';
+import 'register_page.dart';
 
 /// Formulario de inicio de sesión. Se usa dentro de la pestaña Cuenta y, como
 /// pantalla aparte, desde el carrito.
@@ -47,20 +46,15 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
-  /// Registro y recuperación de contraseña se hacen en la web de la tienda
-  /// (el registro exige resolver un captcha).
-  Future<void> _openWeb(String path) async {
-    final website = context.read<CompanyProvider>().info?.website;
-    if (website == null) return;
-    final base = website.endsWith('/') ? website : '$website/';
-    await launchUrl(Uri.parse('$base$path'), mode: LaunchMode.externalApplication);
+  /// Tras crear la cuenta se deja escrito el correo para iniciar sesión.
+  Future<void> _register() async {
+    final email = await RegisterPage.open(context);
+    if (email != null && mounted) _email.text = email;
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final hasWebsite =
-        context.select<CompanyProvider, bool>((c) => c.info?.website != null);
 
     return Form(
       key: _formKey,
@@ -97,19 +91,18 @@ class _LoginFormState extends State<LoginForm> {
             isLoading: auth.isLoading,
             onPressed: _submit,
           ),
-          if (hasWebsite) ...[
-            const SizedBox(height: 8),
-            AppButton(
-              label: '¿Olvidaste tu contraseña?',
-              variant: AppButtonVariant.text,
-              onPressed: () => _openWeb('forgot-password'),
-            ),
-            AppButton(
-              label: 'Crear una cuenta',
-              variant: AppButtonVariant.outline,
-              onPressed: () => _openWeb('register'),
-            ),
-          ],
+          const SizedBox(height: 8),
+          AppButton(
+            label: '¿Olvidaste tu contraseña?',
+            variant: AppButtonVariant.text,
+            onPressed: () =>
+                ForgotPasswordPage.open(context, email: _email.text),
+          ),
+          AppButton(
+            label: 'Crear una cuenta',
+            variant: AppButtonVariant.outline,
+            onPressed: _register,
+          ),
         ],
       ),
     );

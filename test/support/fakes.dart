@@ -68,6 +68,11 @@ import 'package:appecommerce/presentation/providers/favorites_provider.dart';
 import 'package:appecommerce/presentation/providers/purchases_provider.dart';
 import 'package:appecommerce/presentation/providers/quotes_provider.dart';
 import 'package:appecommerce/data/models/category_model.dart';
+import 'package:appecommerce/data/datasources/registration_remote_datasource.dart';
+import 'package:appecommerce/data/repositories/registration_repository_impl.dart';
+import 'package:appecommerce/domain/entities/register_entity.dart';
+import 'package:appecommerce/domain/usecases/registration_usecases.dart';
+import 'package:appecommerce/presentation/providers/registration_provider.dart';
 import 'package:appecommerce/data/models/product_detail_model.dart';
 import 'package:appecommerce/dependency_injection.dart';
 import 'package:appecommerce/main.dart';
@@ -671,6 +676,63 @@ class FakeCheckoutRemote implements CheckoutRemoteDataSource {
   }
 }
 
+/// Registro y recuperación de contraseña en memoria. El rompecabezas se
+/// resuelve cuando todas las piezas quedan en su hueco (orden 0, 1, 2…).
+class FakeRegistrationRemote implements RegistrationRemoteDataSource {
+  List<DocumentTypeEntity> types = const [
+    DocumentTypeEntity(id: 1, name: 'DNI'),
+    DocumentTypeEntity(id: 6, name: 'RUC'),
+  ];
+  CaptchaChallenge challenge = const CaptchaChallenge(
+    token: 'tok-1',
+    imagePath: 'storage/captcha/a.png',
+    order: [1, 0],
+    columns: 2,
+    rows: 1,
+  );
+
+  Exception? registerFailure;
+  Exception? forgotFailure;
+  int captchasAsked = 0;
+  final List<List<int>> verified = [];
+  final List<RegisterDraft> registered = [];
+  final List<String> registeredTokens = [];
+  final List<String> forgotten = [];
+
+  @override
+  Future<List<DocumentTypeEntity>> getDocumentTypes() async => types;
+
+  @override
+  Future<CaptchaChallenge> getCaptcha() async {
+    captchasAsked++;
+    return challenge;
+  }
+
+  @override
+  Future<void> verifyCaptcha(String token, List<int> order) async {
+    verified.add(order);
+    final solved = [for (var i = 0; i < order.length; i++) i];
+    if (order.toString() != solved.toString()) {
+      throw const ValidationException('Las piezas no están en el orden correcto.');
+    }
+  }
+
+  @override
+  Future<String> register(RegisterDraft draft, String captchaToken) async {
+    if (registerFailure != null) throw registerFailure!;
+    registered.add(draft);
+    registeredTokens.add(captchaToken);
+    return 'Usuario registrado exitosamente.';
+  }
+
+  @override
+  Future<String> forgotPassword(String email) async {
+    if (forgotFailure != null) throw forgotFailure!;
+    forgotten.add(email);
+    return 'Te enviamos un correo para cambiar tu contraseña.';
+  }
+}
+
 /// Todo lo que necesita la app, con dobles en lugar de red y almacenamiento.
 class TestEnv {
   final FakeProductRepo products;
@@ -686,6 +748,7 @@ class TestEnv {
   final FakeQuotesRemote quotesRemote = FakeQuotesRemote();
   final FakeCheckoutRemote checkoutRemote = FakeCheckoutRemote();
   final FakeInfoRemote infoRemote = FakeInfoRemote();
+  final FakeRegistrationRemote registrationRemote = FakeRegistrationRemote();
   final ApiClient apiClient = ApiClient(isConnected: () async => true);
 
   late final AuthRepositoryImpl authRepo = AuthRepositoryImpl(
@@ -789,6 +852,16 @@ class TestEnv {
           return QuotesProvider(
             getQuotesUseCase: GetQuotesUseCase(repo),
             cancelQuoteUseCase: CancelQuoteUseCase(repo),
+          );
+        }),
+        ChangeNotifierProvider<RegistrationProvider>(create: (_) {
+          final repo = RegistrationRepositoryImpl(registrationRemote);
+          return RegistrationProvider(
+            getDocumentTypesUseCase: GetDocumentTypesUseCase(repo),
+            getCaptchaUseCase: GetCaptchaUseCase(repo),
+            verifyCaptchaUseCase: VerifyCaptchaUseCase(repo),
+            registerUseCase: RegisterUseCase(repo),
+            forgotPasswordUseCase: ForgotPasswordUseCase(repo),
           );
         }),
         ChangeNotifierProvider<InfoProvider>(create: (_) {
