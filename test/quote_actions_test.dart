@@ -193,9 +193,10 @@ void main() {
     testWidgets('sin editar, una cotización nueva no reemplaza nada', (tester) async {
       final env = await _openQuote(tester, _quote());
       // Se entra al checkout desde el carrito, sin pasar por "Editar".
-      await tester.pageBack();
+      // (No se usa `pageBack`: busca el tooltip "Back" y la app está en español.)
+      await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
-      await tester.pageBack();
+      await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();

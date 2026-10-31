@@ -317,9 +317,12 @@ class FakeAuthRemote implements AuthRemoteDataSource {
     return LoginResult(
       userType: userType,
       token: 'token-$userType',
-      client: userType == 'cliente' ? testUser : null,
+      client: userType == 'cliente' ? loginUser : null,
     );
   }
+
+  /// El cliente que devuelve el login.
+  UserModel loginUser = testUser;
 
   @override
   Future<void> logout(String token) async => loggedOutTokens.add(token);

@@ -84,6 +84,18 @@ class _StatementPageState extends State<StatementPage> {
   Widget _content(BuildContext context, StatementProvider statement) {
     final movements = statement.movements;
 
+    // Si lo cargado no llena la pantalla no hay scroll que pida más (por
+    // ejemplo, con una búsqueda que deja pocas filas): se piden las páginas
+    // que falten hasta llenarla.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      if (_scroll.position.maxScrollExtent <= 0 &&
+          statement.hasMore &&
+          !statement.isLoadingMore) {
+        statement.loadMore();
+      }
+    });
+
     return RefreshIndicator(
       onRefresh: statement.reload,
       child: ListView.builder(
