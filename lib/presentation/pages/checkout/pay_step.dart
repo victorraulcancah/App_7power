@@ -105,6 +105,8 @@ class _PayStepState extends State<PayStep> {
             builder: (_) => PaymentSuccessPage(
               result: payment,
               displayedTotal: displayed,
+              customerName: delivery.recipientName,
+              customerEmail: delivery.email,
             ),
           ));
         } else {

@@ -643,6 +643,10 @@ void main() {
 
     testWidgets('pago aprobado: muestra la compra y recarga el carrito',
         (tester) async {
+      // Pantalla alta para ver el recibo entero (es una lista).
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final env = await _openCart(tester);
       env.checkoutRemote.holderPhone = '951127833';
       await tester.tap(find.text('Pagar'));
@@ -668,10 +672,69 @@ void main() {
       expect(order.currency, isNull); // carrito de una sola moneda
       expect(order.delivery.address.fullAddress, 'Av. Larco 123');
 
+      // La pantalla es la misma de la web.
       expect(find.text('¡Compra realizada!'), findsOneWidget);
+      expect(find.text('Gracias, Ana Pérez. Recibimos tu pago.'), findsOneWidget);
+      expect(find.textContaining('Te enviamos la confirmación a ana@correo.com'),
+          findsOneWidget);
+      expect(find.text('N° de compra'), findsOneWidget);
       expect(find.text('PAGO-2026-00001'), findsOneWidget);
-      expect(find.text('Visa •••• 1111'), findsOneWidget);
-      expect(find.textContaining('no se realizó ningún cobro'), findsOneWidget);
+      expect(find.text('N° de operación'), findsOneWidget);
+      expect(find.text('SIM-ABC123'), findsOneWidget);
+      expect(find.text('Método de pago'), findsOneWidget);
+      expect(find.text('Visa terminada en 1111'), findsOneWidget);
+      expect(find.text('Total pagado'), findsOneWidget);
+      expect(find.text('S/ 100.00'), findsWidgets);
+      // Los productos: nombre, "cantidad × precio" y subtotal.
+      expect(find.text('Driver'), findsOneWidget);
+      expect(find.text('1 × S/ 100.00'), findsOneWidget);
+      // La entrega, con su aviso.
+      expect(find.text('Entrega a domicilio'), findsOneWidget);
+      expect(find.textContaining('Av. Larco 123'), findsOneWidget);
+      expect(find.textContaining('te los confirmaremos por teléfono o WhatsApp'),
+          findsOneWidget);
+      // El aviso de pasarela de prueba y los dos botones.
+      expect(find.textContaining('Compra de prueba'), findsOneWidget);
+      expect(find.textContaining('sin cobro real'), findsOneWidget);
+      expect(find.text('Seguir comprando'), findsOneWidget);
+      expect(find.text('Ir al inicio'), findsOneWidget);
+    });
+
+    /// Paga y toca [button] en la pantalla de compra realizada; devuelve la
+    /// pestaña en la que queda la app.
+    Future<int> payAndTap(WidgetTester tester, String button) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final env = await _openCart(tester);
+      env.checkoutRemote.holderPhone = '951127833';
+      await tester.tap(find.text('Pagar'));
+      await tester.pumpAndSettle();
+      await _goToPayment(tester);
+      await _enter(tester, 'Titular de la tarjeta', 'ANA PEREZ');
+      await _enter(tester, 'Número de tarjeta', '4111111111111111');
+      await _enter(tester, 'Vencimiento (MM/AA)', '1230');
+      await _enter(tester, 'CVV', '123');
+      await _reveal(tester, find.text('Pagar S/ 100.00'));
+      await tester.tap(find.text('Pagar S/ 100.00'));
+      await tester.pumpAndSettle();
+      expect(find.text('¡Compra realizada!'), findsOneWidget);
+
+      await tester.tap(find.text(button));
+      await tester.pumpAndSettle();
+      return tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
+    }
+
+    testWidgets('"Seguir comprando" lleva a la tienda', (tester) async {
+      expect(await payAndTap(tester, 'Seguir comprando'), 1);
+      // Ya no está la pantalla de compra: se volvió a la principal.
+      expect(find.text('¡Compra realizada!'), findsNothing);
+    });
+
+    testWidgets('"Ir al inicio" lleva al inicio', (tester) async {
+      expect(await payAndTap(tester, 'Ir al inicio'), 0);
+      expect(find.text('¡Compra realizada!'), findsNothing);
+      expect(find.byKey(const Key('home-search')), findsOneWidget);
     });
 
     testWidgets('pago rechazado: avisa y se queda en el formulario',

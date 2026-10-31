@@ -16,6 +16,12 @@ import 'products_page.dart';
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
+  static final ValueNotifier<int?> _tabRequest = ValueNotifier<int?>(null);
+
+  /// Pide que la pantalla principal cambie de pestaña (0 inicio, 1 tienda,
+  /// 2 cuenta, 3 más); por ejemplo, desde la pantalla de compra realizada.
+  static void requestTab(int tab) => _tabRequest.value = tab;
+
   @override
   State<MainShell> createState() => _MainShellState();
 }
@@ -25,6 +31,25 @@ class _MainShellState extends State<MainShell> {
   static const int _shopTab = 1;
 
   int _tab = _homeTab;
+
+  @override
+  void initState() {
+    super.initState();
+    MainShell._tabRequest.addListener(_onTabRequest);
+  }
+
+  @override
+  void dispose() {
+    MainShell._tabRequest.removeListener(_onTabRequest);
+    super.dispose();
+  }
+
+  void _onTabRequest() {
+    final tab = MainShell._tabRequest.value;
+    if (tab == null) return;
+    MainShell._tabRequest.value = null;
+    setState(() => _tab = tab);
+  }
 
   void _openShop({int? categoryId}) {
     context.read<ProductsProvider>().selectCategory(categoryId);
