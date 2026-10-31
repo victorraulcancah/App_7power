@@ -765,6 +765,50 @@ void main() {
       expect(find.text('Pagar S/ 100.00'), findsOneWidget);
     });
 
+    testWidgets('modo de prueba: "Rellenar aprobada" llena el formulario y paga',
+        (tester) async {
+      final env = await _openCart(tester);
+      await tester.tap(find.text('Pagar'));
+      await tester.pumpAndSettle();
+      await _goToPayment(tester);
+
+      await _reveal(tester, find.text('Rellenar aprobada'));
+      await tester.tap(find.text('Rellenar aprobada'));
+      await tester.pumpAndSettle();
+
+      // El número queda agrupado, como si se hubiera escrito.
+      await _reveal(tester, find.widgetWithText(TextFormField, 'Número de tarjeta'));
+      expect(find.text('4111 1111 1111 1111'), findsOneWidget);
+
+      await _reveal(tester, find.text('Pagar S/ 100.00'));
+      await tester.tap(find.text('Pagar S/ 100.00'));
+      await tester.pumpAndSettle();
+
+      expect(env.checkoutRemote.lastPayment!.card.token, 'tok_test_aprobado');
+    });
+
+    testWidgets('modo de prueba: "Rellenar rechazada" usa la tarjeta que se rechaza',
+        (tester) async {
+      final env = await _openCart(tester);
+      env.checkoutRemote.declineMessage = 'Tarjeta rechazada.';
+      await tester.tap(find.text('Pagar'));
+      await tester.pumpAndSettle();
+      await _goToPayment(tester);
+
+      await _reveal(tester, find.text('Rellenar rechazada'));
+      await tester.tap(find.text('Rellenar rechazada'));
+      await tester.pumpAndSettle();
+      await _reveal(tester, find.widgetWithText(TextFormField, 'Número de tarjeta'));
+      expect(find.text('4000 0000 0000 0002'), findsOneWidget);
+
+      await _reveal(tester, find.text('Pagar S/ 100.00'));
+      await tester.tap(find.text('Pagar S/ 100.00'));
+      await tester.pumpAndSettle();
+
+      expect(env.checkoutRemote.lastPayment!.card.token, 'tok_test_rechazado');
+      expect(find.text('Pago rechazado'), findsOneWidget);
+    });
+
     testWidgets('valida la tarjeta: vencimiento vencido y CVV', (tester) async {
       final env = await _openCart(tester);
       await tester.tap(find.text('Pagar'));

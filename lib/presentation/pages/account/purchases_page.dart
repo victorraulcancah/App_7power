@@ -76,34 +76,28 @@ class _OnlineList extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: purchases.load,
-      child: ListView.separated(
+      child: ListView.builder(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         itemCount: purchases.online.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, i) {
           final p = purchases.online[i];
-          return Card(
-            child: ListTile(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => PurchaseDetailPage(purchase: p),
-              )),
-              title: Text(p.code),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (p.date != null) Text(FormatUtils.dateTime(p.date!)),
-                    const SizedBox(height: 6),
-                    StatusTag(label: p.stage.label, type: _tagType(p.stage)),
-                  ],
+          return DataCard(
+            icon: Icons.receipt_long_outlined,
+            badge: p.code,
+            trailing: StatusTag(label: p.stage.label, type: _tagType(p.stage)),
+            fields: [
+              if (p.date != null) DataField('Fecha', FormatUtils.dateTime(p.date!)),
+              if (p.items.isNotEmpty)
+                DataField(
+                  'Productos',
+                  '${p.items.fold<int>(0, (n, i) => n + i.quantity)}',
                 ),
-              ),
-              trailing: Text(
-                FormatUtils.money(p.total, currency: p.currency),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
+            ],
+            footerLabel: 'Total',
+            footerValue: FormatUtils.money(p.total, currency: p.currency),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => PurchaseDetailPage(purchase: p),
+            )),
           );
         },
       ),
@@ -143,37 +137,24 @@ class _StoreList extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: purchases.load,
-      child: ListView.separated(
+      child: ListView.builder(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         itemCount: purchases.store.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, i) {
           final sale = purchases.store[i];
-          return Card(
-            child: ListTile(
-              onTap: () => _showSale(context, sale),
-              title: Text(sale.document),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (sale.date != null) Text(sale.date!),
-                    const SizedBox(height: 6),
-                    StatusTag(
-                      label: sale.cancelled ? 'Anulada' : 'Emitida',
-                      type: sale.cancelled
-                          ? StatusTagType.error
-                          : StatusTagType.success,
-                    ),
-                  ],
-                ),
-              ),
-              trailing: Text(
-                FormatUtils.money(sale.total, currency: sale.currency),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
+          return DataCard(
+            icon: Icons.storefront_outlined,
+            badge: sale.document,
+            trailing: StatusTag(
+              label: sale.cancelled ? 'Anulada' : 'Emitida',
+              type: sale.cancelled ? StatusTagType.error : StatusTagType.success,
             ),
+            fields: [
+              if (sale.date != null) DataField('Fecha', sale.date!),
+            ],
+            footerLabel: 'Total',
+            footerValue: FormatUtils.money(sale.total, currency: sale.currency),
+            onTap: () => _showSale(context, sale),
           );
         },
       ),

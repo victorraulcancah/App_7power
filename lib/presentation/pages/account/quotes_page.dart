@@ -55,47 +55,43 @@ class _QuotesPageState extends State<QuotesPage> {
               )
             : RefreshIndicator(
                 onRefresh: quotes.load,
-                child: ListView.separated(
+                child: ListView.builder(
                   padding: const EdgeInsets.all(AppConstants.defaultPadding),
                   itemCount: quotes.items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, i) {
                     final q = quotes.items[i];
-                    return Card(
-                      child: ListTile(
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => QuoteDetailPage(quote: q),
+                    return DataCard(
+                      icon: Icons.description_outlined,
+                      badge: 'Cotización ${q.code}',
+                      trailing: Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          StatusTag(label: q.status, type: _tagType(q)),
+                          if (q.inAttention)
+                            const StatusTag(label: 'En atención'),
+                          if (q.expired && !q.isCancelled)
+                            const StatusTag(
+                              label: 'Vencida',
+                              type: StatusTagType.error,
+                            ),
+                        ],
+                      ),
+                      fields: [
+                        if (q.date != null)
+                          DataField('Fecha', FormatUtils.date(q.date!)),
+                        if (q.items.isNotEmpty)
+                          DataField(
+                            'Productos',
+                            '${q.items.fold<int>(0, (n, i) => n + i.quantity)}',
                           ),
-                        ),
-                        title: Text('Cotización ${q.code}'),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (q.date != null)
-                                Text(FormatUtils.date(q.date!)),
-                              const SizedBox(height: 6),
-                              Wrap(
-                                spacing: 6,
-                                children: [
-                                  StatusTag(label: q.status, type: _tagType(q)),
-                                  if (q.inAttention)
-                                    const StatusTag(label: 'En atención'),
-                                  if (q.expired && !q.isCancelled)
-                                    const StatusTag(
-                                      label: 'Vencida',
-                                      type: StatusTagType.error,
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        trailing: Text(
-                          FormatUtils.money(q.total, currency: q.currency),
-                          style: Theme.of(context).textTheme.titleSmall,
+                      ],
+                      footerLabel: 'Total',
+                      footerValue: FormatUtils.money(q.total, currency: q.currency),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => QuoteDetailPage(quote: q),
                         ),
                       ),
                     );

@@ -18,6 +18,68 @@ void main() {
     expect(FormatUtils.toDouble(null), 0);
   });
 
+  group('DataCard', () {
+    testWidgets('muestra cabecera, filas dato/valor, contenido extra y pie',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const DataCard(
+        icon: Icons.receipt_long_outlined,
+        badge: 'PD-0016',
+        trailing: StatusTag(label: 'Pendiente', type: StatusTagType.warning),
+        fields: [
+          DataField('Cliente', 'G-GLADIS PUCHOC'),
+          DataField('Fecha', '22/10/2026'),
+        ],
+        footerLabel: 'Total',
+        footerValue: 'S/ 51.50',
+        children: [Text('Contenido extra')],
+      )));
+
+      expect(find.byIcon(Icons.receipt_long_outlined), findsOneWidget);
+      expect(find.text('PD-0016'), findsOneWidget);
+      expect(find.text('Pendiente'), findsOneWidget);
+      for (final text in ['Cliente', 'G-GLADIS PUCHOC', 'Fecha', '22/10/2026']) {
+        expect(find.text(text), findsOneWidget, reason: text);
+      }
+      expect(find.text('Contenido extra'), findsOneWidget);
+      expect(find.text('Total'), findsOneWidget);
+      expect(find.text('S/ 51.50'), findsOneWidget);
+    });
+
+    testWidgets('sin pie ni cabecera no dibuja separador ni espacio de más',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const DataCard(
+        fields: [DataField('Tipo', 'Reclamo')],
+      )));
+
+      expect(find.byType(Divider), findsNothing);
+      expect(find.byType(CircleAvatar), findsNothing);
+      expect(find.text('Reclamo'), findsOneWidget);
+    });
+
+    testWidgets('un valor largo se recorta en las líneas pedidas', (tester) async {
+      await tester.pumpWidget(_wrap(DataCard(
+        fields: [DataField('Descripción', 'palabra ' * 80, maxLines: 2)],
+      )));
+
+      final text = tester.widget<Text>(find.textContaining('palabra').last);
+      expect(text.maxLines, 2);
+      expect(text.overflow, TextOverflow.ellipsis);
+    });
+
+    testWidgets('con onTap responde al toque', (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(_wrap(DataCard(
+        badge: 'REC-1',
+        fields: const [DataField('Tipo', 'Queja')],
+        onTap: () => taps++,
+      )));
+
+      await tester.tap(find.text('Queja'));
+
+      expect(taps, 1);
+    });
+  });
+
   testWidgets('AppButton muestra spinner y no responde cuando carga',
       (tester) async {
     var taps = 0;

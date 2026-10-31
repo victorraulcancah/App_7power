@@ -6,6 +6,7 @@ export 'app_text_field.dart';
 export 'banner_carousel.dart';
 export 'brand_logo.dart';
 export 'cart_actions.dart';
+export 'data_card.dart';
 export 'loading_indicator.dart';
 export 'menu_group.dart';
 export 'price_text.dart';

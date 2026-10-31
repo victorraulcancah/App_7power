@@ -61,6 +61,7 @@ class _StatementPageState extends State<StatementPage> {
     final statement = context.watch<StatementProvider>();
 
     return Scaffold(
+      backgroundColor: AppThemeSurface.canvas,
       appBar: AppBar(title: const Text('Estado de cuenta')),
       body: switch (statement.status) {
         LoadStatus.initial || LoadStatus.loading => const LoadingIndicator(),
@@ -107,11 +108,16 @@ class _StatementPageState extends State<StatementPage> {
         itemBuilder: (context, i) {
           if (i == 0) return _Header(onPickRange: _pickRange);
           if (i == movements.length + 1) return _Footer(statement: statement);
-          return _MovementTile(movement: movements[i - 1]);
+          return _MovementCard(movement: movements[i - 1]);
         },
       ),
     );
   }
+}
+
+/// Fondo gris muy claro de las pantallas con tarjetas.
+class AppThemeSurface {
+  static const Color canvas = Color(0xFFF6F6F7);
 }
 
 class _Header extends StatelessWidget {
@@ -124,55 +130,123 @@ class _Header extends StatelessWidget {
     final statement = context.watch<StatementProvider>();
     final s = statement.summary;
     final theme = Theme.of(context);
-    final range = '${FormatUtils.date(statement.from)} - '
+    final range = 'Del ${FormatUtils.date(statement.from)} al '
         '${FormatUtils.date(statement.to)}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        _BalanceCard(summary: s),
+        const SizedBox(height: 12),
+        Row(
           children: [
-            _Stat('Línea de crédito', FormatUtils.money(s.creditLimit)),
-            _Stat(
-              'Crédito disponible',
-              FormatUtils.money(s.creditAvailable),
-              negative: s.creditAvailable < 0,
+            Expanded(
+              child: _MiniStat(
+                icon: Icons.credit_card_outlined,
+                label: 'Línea de crédito',
+                value: FormatUtils.money(s.creditLimit),
+              ),
             ),
-            _Stat('Línea utilizada', FormatUtils.money(s.creditUsed)),
-            _Stat('Deuda en soles', FormatUtils.money(s.debtSoles)),
-            _Stat(
-              'Deuda en dólares',
-              FormatUtils.money(s.debtDollars, currency: 'd'),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MiniStat(
+                icon: Icons.account_balance_wallet_outlined,
+                label: 'Crédito disponible',
+                value: FormatUtils.money(s.creditAvailable),
+                negative: s.creditAvailable < 0,
+              ),
             ),
           ],
         ),
         if (s.hasPreviousDebt)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Text(
-              'Deuda anterior: ${FormatUtils.money(s.previousDebtSoles)}'
-              '${s.previousDebtDollars > 0 ? ' · ${FormatUtils.money(s.previousDebtDollars, currency: 'd')}' : ''}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.error,
-                fontWeight: FontWeight.w600,
-              ),
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.history, color: theme.colorScheme.error, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Deuda anterior: ${FormatUtils.money(s.previousDebtSoles)}'
+                    '${s.previousDebtDollars > 0 ? ' · ${FormatUtils.money(s.previousDebtDollars, currency: 'd')}' : ''}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        const SizedBox(height: 16),
-        OutlinedButton.icon(
-          onPressed: onPickRange,
-          icon: const Icon(Icons.date_range_outlined),
-          label: Text(range),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                onChanged: statement.setSearch,
+                decoration: InputDecoration(
+                  hintText: 'Buscar en la descripción',
+                  prefixIcon: const Icon(Icons.search),
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFE2E2E6)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFE2E2E6)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.outlined(
+              tooltip: 'Elegir fechas',
+              onPressed: onPickRange,
+              icon: const Icon(Icons.date_range_outlined),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white,
+                minimumSize: const Size(48, 48),
+                side: const BorderSide(color: Color(0xFFE2E2E6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        TextField(
-          onChanged: statement.setSearch,
-          decoration: const InputDecoration(
-            hintText: 'Buscar en la descripción',
-            prefixIcon: Icon(Icons.search),
-            isDense: true,
+        const SizedBox(height: 10),
+        InkWell(
+          onTap: onPickRange,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Icon(Icons.event_outlined, size: 16, color: theme.colorScheme.outline),
+                const SizedBox(width: 6),
+                Text(
+                  range,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.outline),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          statement.total == 1 ? '1 movimiento' : '${statement.total} movimientos',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.outline,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 8),
@@ -186,34 +260,153 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _Stat extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool negative;
+/// Tarjeta principal: lo que se debe hoy y cuánta línea de crédito se usó.
+class _BalanceCard extends StatelessWidget {
+  final AccountSummary summary;
 
-  const _Stat(this.label, this.value, {this.negative = false});
+  const _BalanceCard({required this.summary});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final on = theme.colorScheme.onPrimary;
+    final used = summary.creditLimit > 0
+        ? (summary.creditUsed / summary.creditLimit).clamp(0.0, 1.0)
+        : 0.0;
 
     return Container(
-      constraints: const BoxConstraints(minWidth: 140),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        color: theme.colorScheme.primary,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: theme.textTheme.bodySmall),
-          const SizedBox(height: 2),
+          Row(
+            children: [
+              Icon(Icons.receipt_long_outlined, color: on.withValues(alpha: 0.8), size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Deuda total',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: on.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
           Text(
-            value,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: negative ? theme.colorScheme.error : null,
+            FormatUtils.money(summary.debtSoles),
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: on,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (summary.debtDollars > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                FormatUtils.money(summary.debtDollars, currency: 'd'),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: on.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: used,
+              minHeight: 8,
+              backgroundColor: on.withValues(alpha: 0.18),
+              valueColor: AlwaysStoppedAnimation(
+                used >= 0.9 ? const Color(0xFFFFB74D) : on,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                'Línea utilizada',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: on.withValues(alpha: 0.8)),
+              ),
+              const Spacer(),
+              Text(
+                '${FormatUtils.money(summary.creditUsed)}  ·  ${(used * 100).round()}%',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: on,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool negative;
+
+  const _MiniStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.negative = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = negative ? theme.colorScheme.error : theme.colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE9E9EC)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: accent.withValues(alpha: 0.10),
+            foregroundColor: accent,
+            child: Icon(icon, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall
+                      ?.copyWith(color: theme.colorScheme.outline),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: negative ? theme.colorScheme.error : null,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -222,49 +415,46 @@ class _Stat extends StatelessWidget {
   }
 }
 
-class _MovementTile extends StatelessWidget {
+/// Un movimiento como tarjeta: documento y tipo arriba, y debajo los datos en
+/// filas "dato / valor" con el monto al final.
+class _MovementCard extends StatelessWidget {
   final AccountMovement movement;
 
-  const _MovementTile({required this.movement});
+  const _MovementCard({required this.movement});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final m = movement;
-    final color = m.isRed ? theme.colorScheme.error : null;
     final inDollars = m.dollars > 0;
 
-    return Column(
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(
-            m.description,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(color: color),
-          ),
-          subtitle: Text(
-            [
-              if (m.date != null) FormatUtils.date(m.date!.toLocal()),
-              if (m.document != '-') m.document,
-              if (m.quantity != null) 'Cant. ${m.quantity}',
-              if (m.isVoided) 'Anulada',
-            ].join(' · '),
-            style: theme.textTheme.bodySmall,
-          ),
-          trailing: Text(
-            inDollars
-                ? FormatUtils.money(m.dollars, currency: 'd')
-                : FormatUtils.money(m.soles),
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const Divider(height: 1),
+    final (label, tagType, icon, tint) = m.isVoided
+        ? ('Anulada', StatusTagType.error, Icons.block, theme.colorScheme.error)
+        : m.isPayment
+            ? ('Pago', StatusTagType.success, Icons.payments_outlined, Colors.green.shade700)
+            : ('Venta', StatusTagType.info, Icons.shopping_bag_outlined, Colors.blue.shade700);
+    // Un pago baja la deuda: va en verde; una venta anulada, en rojo.
+    final amountColor = m.isVoided
+        ? theme.colorScheme.error
+        : m.isPayment
+            ? Colors.green.shade700
+            : null;
+
+    return DataCard(
+      icon: icon,
+      iconColor: tint,
+      badge: m.document == '-' ? null : m.document,
+      trailing: StatusTag(label: label, type: tagType),
+      fields: [
+        if (m.date != null) DataField('Fecha', FormatUtils.date(m.date!.toLocal())),
+        DataField('Descripción', m.description, maxLines: 3),
+        if (m.quantity != null) DataField('Cantidad', '${m.quantity}'),
       ],
+      footerLabel: 'Monto',
+      footerValue: inDollars
+          ? FormatUtils.money(m.dollars, currency: 'd')
+          : FormatUtils.money(m.soles),
+      footerColor: amountColor,
     );
   }
 }

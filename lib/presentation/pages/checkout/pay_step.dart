@@ -14,6 +14,9 @@ import 'checkout_result_page.dart';
 /// Tarjeta que acepta la pasarela de prueba.
 const approvedTestCard = '4111111111111111';
 
+/// Tarjeta que la pasarela de prueba rechaza.
+const rejectedTestCard = '4000000000000002';
+
 /// Token que espera el backend para la pasarela simulada.
 String tokenForCard(String digits) =>
     digits == approvedTestCard ? 'tok_test_aprobado' : 'tok_test_rechazado';
@@ -58,6 +61,23 @@ class _PayStepState extends State<PayStep> {
     _cvv.dispose();
     _coupon.dispose();
     super.dispose();
+  }
+
+  /// Modo de prueba: rellena el formulario con una tarjeta de prueba para no
+  /// escribirla a mano en cada intento. El vencimiento es siempre futuro (dos
+  /// años desde hoy), así que no caduca con el tiempo.
+  void _fillTestCard(String digits) {
+    final grouped = [
+      for (var i = 0; i < digits.length; i += 4) digits.substring(i, i + 4),
+    ].join(' ');
+    final year = (DateTime.now().year + 2) % 100;
+
+    setState(() {
+      _holder.text = 'TITULAR DE PRUEBA';
+      _number.text = grouped;
+      _expiry.text = '12/${year.toString().padLeft(2, '0')}';
+      _cvv.text = '123';
+    });
   }
 
   Future<void> _applyCoupon(double solesTotal) async {
@@ -173,11 +193,35 @@ class _PayStepState extends State<PayStep> {
                     const Icon(Icons.science_outlined),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        'Modo de prueba: no se realiza ningún cobro. Usa la '
-                        'tarjeta 4111 1111 1111 1111 para una compra '
-                        'aprobada o 4000 0000 0000 0002 para una rechazada.',
-                        style: theme.textTheme.bodySmall,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Modo de prueba: no se realiza ningún cobro. Usa la '
+                            'tarjeta 4111 1111 1111 1111 para una compra '
+                            'aprobada o 4000 0000 0000 0002 para una rechazada.',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 8),
+                          // Atajo para probar rápido: llena titular, número,
+                          // vencimiento y CVV de una vez.
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              ActionChip(
+                                avatar: const Icon(Icons.check_circle_outline, size: 18),
+                                label: const Text('Rellenar aprobada'),
+                                onPressed: () => _fillTestCard(approvedTestCard),
+                              ),
+                              ActionChip(
+                                avatar: const Icon(Icons.cancel_outlined, size: 18),
+                                label: const Text('Rellenar rechazada'),
+                                onPressed: () => _fillTestCard(rejectedTestCard),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],

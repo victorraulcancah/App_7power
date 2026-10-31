@@ -52,10 +52,9 @@ class _MyClaimsPageState extends State<MyClaimsPage> {
               )
             : RefreshIndicator(
                 onRefresh: info.loadClaims,
-                child: ListView.separated(
+                child: ListView.builder(
                   padding: const EdgeInsets.all(AppConstants.defaultPadding),
                   itemCount: info.claims.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, i) => _ClaimCard(claim: info.claims[i]),
                 ),
               ),
@@ -81,74 +80,56 @@ class _ClaimCard extends StatelessWidget {
     final answered = claim.response != null;
     final type = _typeLabel(claim.requestType);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return DataCard(
+      icon: Icons.menu_book_outlined,
+      badge: claim.number,
+      trailing: StatusTag(
+        label: claimStatusLabel(claim.status),
+        type: claimStatusTagType(claim.status),
+      ),
+      fields: [
+        if (type.isNotEmpty) DataField('Tipo', type),
+        if (claim.createdAt != null)
+          DataField('Fecha', FormatUtils.date(claim.createdAt!)),
+        if (claim.productName != null)
+          DataField('Producto', claim.productName!, maxLines: 2, bold: true),
+        if (claim.detail != null)
+          DataField('Detalle', claim.detail!, maxLines: 3),
+      ],
+      children: [
+        if (!answered && claim.deadline != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Respuesta hasta el ${FormatUtils.date(claim.deadline!)}',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.outline),
+            ),
+          ),
+        if (answered)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    claim.number,
-                    style: theme.textTheme.titleMedium,
+                Text('Respuesta de la empresa', style: theme.textTheme.titleSmall),
+                if (claim.responseDate != null)
+                  Text(
+                    FormatUtils.date(claim.responseDate!),
+                    style: theme.textTheme.bodySmall,
                   ),
-                ),
-                StatusTag(
-                  label: claimStatusLabel(claim.status),
-                  type: claimStatusTagType(claim.status),
-                ),
+                const SizedBox(height: 4),
+                Text(claim.response!),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              [
-                if (type.isNotEmpty) type,
-                if (claim.createdAt != null) FormatUtils.date(claim.createdAt!),
-              ].join(' · '),
-              style: theme.textTheme.bodySmall,
-            ),
-            if (claim.productName != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                claim.productName!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-            if (claim.detail != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                claim.detail!,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
-            if (!answered && claim.deadline != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Respuesta hasta el ${FormatUtils.date(claim.deadline!)}',
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
-            if (answered) ...[
-              const Divider(height: 24),
-              Text('Respuesta de la empresa', style: theme.textTheme.titleSmall),
-              if (claim.responseDate != null)
-                Text(
-                  FormatUtils.date(claim.responseDate!),
-                  style: theme.textTheme.bodySmall,
-                ),
-              const SizedBox(height: 4),
-              Text(claim.response!),
-            ],
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 }
