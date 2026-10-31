@@ -82,10 +82,15 @@ class QuoteOrder {
   final DeliveryInfo delivery;
   final List<PaymentLine> payments;
 
+  /// Cotización que esta reemplaza (flujo "Editar"): el backend la sustituye
+  /// conservando su código.
+  final int? replacesQuoteId;
+
   const QuoteOrder({
     required this.items,
     required this.delivery,
     required this.payments,
+    this.replacesQuoteId,
   });
 }
 

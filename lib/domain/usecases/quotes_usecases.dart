@@ -17,3 +17,11 @@ class CancelQuoteUseCase {
   Future<Either<Failure, void>> call(int id, {String? reason}) =>
       repository.cancel(id, reason: reason);
 }
+
+class ConvertQuoteToPurchaseUseCase {
+  final QuotesRepository repository;
+  ConvertQuoteToPurchaseUseCase(this.repository);
+
+  Future<Either<Failure, String>> call(int id) =>
+      repository.convertToPurchase(id);
+}

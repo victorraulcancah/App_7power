@@ -7,4 +7,7 @@ abstract class QuotesRepository {
 
   /// Cancela la cotización (no la borra: queda como "Cancelado").
   Future<Either<Failure, void>> cancel(int id, {String? reason});
+
+  /// Envía la cotización para convertirla en compra; devuelve el mensaje.
+  Future<Either<Failure, String>> convertToPurchase(int id);
 }

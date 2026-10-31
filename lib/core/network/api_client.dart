@@ -28,10 +28,18 @@ class ApiClient {
 
   final Future<bool> Function() _isConnected;
 
+  /// Raíz de la API a la que apunta este cliente (por defecto, la de la
+  /// tienda; el ERP tiene su propia).
+  final String _baseUrl;
+
   /// [isConnected] se puede sustituir en los tests para no depender de la red.
-  ApiClient({http.Client? client, Future<bool> Function()? isConnected})
-      : _client = client ?? http.Client(),
-        _isConnected = isConnected ?? (() => NetworkInfo.isConnected);
+  ApiClient({
+    http.Client? client,
+    Future<bool> Function()? isConnected,
+    String? baseUrl,
+  })  : _client = client ?? http.Client(),
+        _isConnected = isConnected ?? (() => NetworkInfo.isConnected),
+        _baseUrl = baseUrl ?? ApiConstants.baseUrl;
 
   Future<http.Response> get(
     String endpoint, {
@@ -119,7 +127,7 @@ class ApiClient {
       (body is Map || body is List) ? jsonEncode(body) : body;
 
   Uri _buildUri(String endpoint, [Map<String, String>? queryParameters]) {
-    final fullUrl = ApiConstants.baseUrl + endpoint;
+    final fullUrl = _baseUrl + endpoint;
 
     if (queryParameters != null && queryParameters.isNotEmpty) {
       return Uri.parse(fullUrl).replace(queryParameters: queryParameters);

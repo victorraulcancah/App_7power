@@ -11,6 +11,7 @@ class InfoProvider extends ChangeNotifier {
   final SendContactUseCase sendContactUseCase;
   final SubmitClaimUseCase submitClaimUseCase;
   final FindClaimUseCase findClaimUseCase;
+  final GetMyClaimsUseCase getMyClaimsUseCase;
 
   InfoProvider({
     required this.getAboutUseCase,
@@ -18,7 +19,37 @@ class InfoProvider extends ChangeNotifier {
     required this.sendContactUseCase,
     required this.submitClaimUseCase,
     required this.findClaimUseCase,
+    required this.getMyClaimsUseCase,
   });
+
+  LoadStatus _claimsStatus = LoadStatus.initial;
+  List<ClaimStatus> _claims = const [];
+  String _claimsError = '';
+
+  LoadStatus get claimsStatus => _claimsStatus;
+  List<ClaimStatus> get claims => _claims;
+  String get claimsError => _claimsError;
+
+  /// Los reclamos del cliente con sesión. Se vacían antes de pedirlos para no
+  /// enseñar los de otra cuenta mientras llegan.
+  Future<void> loadClaims() async {
+    _claims = const [];
+    _claimsStatus = LoadStatus.loading;
+    notifyListeners();
+
+    final result = await getMyClaimsUseCase();
+    result.fold(
+      (f) {
+        _claimsError = f.message;
+        _claimsStatus = LoadStatus.error;
+      },
+      (claims) {
+        _claims = claims;
+        _claimsStatus = LoadStatus.loaded;
+      },
+    );
+    notifyListeners();
+  }
 
   LoadStatus _aboutStatus = LoadStatus.initial;
   AboutEntity? _about;

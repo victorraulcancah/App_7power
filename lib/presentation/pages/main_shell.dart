@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../domain/entities/product_filters.dart';
 import '../components/components.dart';
 import '../providers/company_provider.dart';
 import '../providers/products_provider.dart';
@@ -30,6 +31,14 @@ class _MainShellState extends State<MainShell> {
     setState(() => _tab = _shopTab);
   }
 
+  /// La tienda con solo esa marca (sin categoría ni otros filtros de antes).
+  void _openBrand(BrandEntity brand) {
+    final products = context.read<ProductsProvider>();
+    products.selectCategory(null);
+    products.applyFilters(ProductFilters(brandIds: {brand.id}));
+    setState(() => _tab = _shopTab);
+  }
+
   @override
   Widget build(BuildContext context) {
     final company = context.watch<CompanyProvider>().info;
@@ -46,7 +55,7 @@ class _MainShellState extends State<MainShell> {
           HomePage(onOpenShop: _openShop),
           const ProductsPage(),
           const AccountPage(),
-          const MorePage(),
+          MorePage(onOpenBrand: _openBrand),
         ],
       ),
       bottomNavigationBar: NavigationBar(

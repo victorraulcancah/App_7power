@@ -165,6 +165,7 @@ class CheckoutRemoteDataSourceImpl implements CheckoutRemoteDataSource {
         'provincia_nombre': a.province,
         'distrito_nombre': a.district,
         'ubicacion_completa': a.location,
+        'reemplaza_cotizacion_id': ?order.replacesQuoteId,
       },
     );
 

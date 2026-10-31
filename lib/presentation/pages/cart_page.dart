@@ -7,6 +7,7 @@ import '../../domain/entities/cart_item_entity.dart';
 import '../components/components.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
+import '../providers/checkout_provider.dart';
 import 'checkout/checkout_page.dart';
 import 'login_page.dart';
 
@@ -105,6 +106,7 @@ class _CartPageState extends State<CartPage> {
             )
           : Column(
               children: [
+                const _EditingQuoteBanner(),
                 Expanded(
                   child: ListView.separated(
                     padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -140,6 +142,48 @@ class _CartPageState extends State<CartPage> {
       ),
     );
     if (confirmed == true) await cart.clear();
+  }
+}
+
+/// Mientras se edita una cotización: recuerda que al cotizar de nuevo la
+/// reemplaza, y deja desistir.
+class _EditingQuoteBanner extends StatelessWidget {
+  const _EditingQuoteBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final checkout = context.watch<CheckoutProvider>();
+    if (!checkout.isEditingQuote) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.colorScheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.defaultPadding,
+          vertical: 8,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.edit_note, color: theme.colorScheme.onSecondaryContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Editando la cotización ${checkout.editingQuoteCode}. Al '
+                'cotizar, la nueva la reemplaza.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSecondaryContainer,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: checkout.stopEditingQuote,
+              child: const Text('Dejar de editar'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

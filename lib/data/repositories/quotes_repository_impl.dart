@@ -17,4 +17,8 @@ class QuotesRepositoryImpl implements QuotesRepository {
   @override
   Future<Either<Failure, void>> cancel(int id, {String? reason}) =>
       guardRequest(() => remote.cancel(id, reason: reason));
+
+  @override
+  Future<Either<Failure, String>> convertToPurchase(int id) =>
+      guardRequest(() => remote.convertToPurchase(id));
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -30,6 +31,10 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: AppConstants.appName,
           theme: company.theme,
+          // La tienda es peruana: calendario y diálogos del sistema en español.
+          locale: const Locale('es', 'PE'),
+          supportedLocales: const [Locale('es', 'PE'), Locale('es')],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
           home: const MainShell(),
         ),
       ),

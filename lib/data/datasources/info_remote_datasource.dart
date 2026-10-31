@@ -15,6 +15,8 @@ abstract class InfoRemoteDataSource {
   Future<ClaimReceipt> submitClaim(ClaimDraft claim);
 
   Future<ClaimStatus> findClaim(String number);
+
+  Future<List<ClaimStatus>> getMyClaims();
 }
 
 class InfoRemoteDataSourceImpl implements InfoRemoteDataSource {
@@ -107,5 +109,15 @@ class InfoRemoteDataSourceImpl implements InfoRemoteDataSource {
     return claimStatusFromJson(
       _map(response.bodyBytes)['reclamo'] as Map<String, dynamic>,
     );
+  }
+
+  @override
+  Future<List<ClaimStatus>> getMyClaims() async {
+    final response = await client.get(ApiConstants.myClaimsEndpoint);
+    // La respuesta trae también un `debug` con datos del usuario: se ignora.
+    return ((_map(response.bodyBytes)['reclamos'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(claimStatusFromJson)
+        .toList();
   }
 }

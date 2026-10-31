@@ -68,6 +68,16 @@ import 'package:appecommerce/presentation/providers/favorites_provider.dart';
 import 'package:appecommerce/presentation/providers/purchases_provider.dart';
 import 'package:appecommerce/presentation/providers/quotes_provider.dart';
 import 'package:appecommerce/data/models/category_model.dart';
+import 'package:appecommerce/data/datasources/statement_remote_datasource.dart';
+import 'package:appecommerce/data/repositories/statement_repository_impl.dart';
+import 'package:appecommerce/domain/entities/statement_entity.dart';
+import 'package:appecommerce/domain/usecases/statement_usecases.dart';
+import 'package:appecommerce/presentation/providers/statement_provider.dart';
+import 'package:appecommerce/data/datasources/promotions_remote_datasource.dart';
+import 'package:appecommerce/data/repositories/promotions_repository_impl.dart';
+import 'package:appecommerce/domain/entities/promotion_entity.dart';
+import 'package:appecommerce/domain/usecases/promotions_usecases.dart';
+import 'package:appecommerce/presentation/providers/promotions_provider.dart';
 import 'package:appecommerce/data/datasources/registration_remote_datasource.dart';
 import 'package:appecommerce/data/repositories/registration_repository_impl.dart';
 import 'package:appecommerce/domain/entities/register_entity.dart';
@@ -525,6 +535,16 @@ class FakeQuotesRemote implements QuotesRemoteDataSource {
   final List<int> cancelled = [];
   Exception? cancelFailure;
 
+  final List<int> converted = [];
+  Exception? convertFailure;
+
+  @override
+  Future<String> convertToPurchase(int id) async {
+    if (convertFailure != null) throw convertFailure!;
+    converted.add(id);
+    return 'Cotización enviada para aprobación de compra (COMP-1)';
+  }
+
   @override
   Future<List<QuoteModel>> getQuotes() async => List.of(items);
 
@@ -554,6 +574,15 @@ class FakeInfoRemote implements InfoRemoteDataSource {
   final List<ContactMessage> contacts = [];
   final List<ClaimDraft> claims = [];
   ClaimStatus? claimToFind;
+
+  /// Lo que devuelve `GET /reclamos/mis-reclamos`.
+  List<ClaimStatus> myClaims = const [];
+
+  @override
+  Future<List<ClaimStatus>> getMyClaims() async {
+    if (failure != null) throw failure!;
+    return myClaims;
+  }
 
   @override
   Future<AboutModel> getAbout() async {
@@ -693,6 +722,64 @@ class FakeCheckoutRemote implements CheckoutRemoteDataSource {
   }
 }
 
+/// Estado de cuenta en memoria: reparte [movements] en páginas de [pageSize].
+class FakeStatementRemote implements StatementRemoteDataSource {
+  AccountSummary summary = const AccountSummary(
+    creditLimit: 15000,
+    creditUsed: 7450,
+    creditAvailable: 7550,
+    debtSoles: 7450,
+  );
+  List<AccountMovement> movements = const [];
+  int pageSize = 2;
+  Exception? failure;
+
+  /// Lo último que se pidió.
+  String? lastCode;
+  DateTime? lastFrom;
+  DateTime? lastTo;
+  final List<int> pagesAsked = [];
+
+  @override
+  Future<AccountStatementPage> getStatement({
+    required String erpCode,
+    required DateTime from,
+    required DateTime to,
+    int page = 1,
+  }) async {
+    if (failure != null) throw failure!;
+    lastCode = erpCode;
+    lastFrom = from;
+    lastTo = to;
+    pagesAsked.add(page);
+    final start = (page - 1) * pageSize;
+    return AccountStatementPage(
+      summary: summary,
+      movements: movements.skip(start).take(pageSize).toList(),
+      total: movements.length,
+    );
+  }
+}
+
+/// Cupones y ofertas en memoria.
+class FakePromotionsRemote implements PromotionsRemoteDataSource {
+  List<CouponOffer> coupons = const [];
+  OfferBanner offers = const OfferBanner();
+  Exception? failure;
+
+  @override
+  Future<List<CouponOffer>> getActiveCoupons() async {
+    if (failure != null) throw failure!;
+    return coupons;
+  }
+
+  @override
+  Future<OfferBanner> getOffers() async {
+    if (failure != null) throw failure!;
+    return offers;
+  }
+}
+
 /// Registro y recuperación de contraseña en memoria. El rompecabezas se
 /// resuelve cuando todas las piezas quedan en su hueco (orden 0, 1, 2…).
 class FakeRegistrationRemote implements RegistrationRemoteDataSource {
@@ -766,6 +853,8 @@ class TestEnv {
   final FakeCheckoutRemote checkoutRemote = FakeCheckoutRemote();
   final FakeInfoRemote infoRemote = FakeInfoRemote();
   final FakeRegistrationRemote registrationRemote = FakeRegistrationRemote();
+  final FakePromotionsRemote promotionsRemote = FakePromotionsRemote();
+  final FakeStatementRemote statementRemote = FakeStatementRemote();
   final ApiClient apiClient = ApiClient(isConnected: () async => true);
 
   late final AuthRepositoryImpl authRepo = AuthRepositoryImpl(
@@ -870,6 +959,21 @@ class TestEnv {
           return QuotesProvider(
             getQuotesUseCase: GetQuotesUseCase(repo),
             cancelQuoteUseCase: CancelQuoteUseCase(repo),
+            convertQuoteUseCase: ConvertQuoteToPurchaseUseCase(repo),
+          );
+        }),
+        DependencyInjection.authAware<StatementProvider>(
+          () => StatementProvider(
+            getStatementUseCase:
+                GetStatementUseCase(StatementRepositoryImpl(statementRemote)),
+            available: true,
+          ),
+        ),
+        ChangeNotifierProvider<PromotionsProvider>(create: (_) {
+          final repo = PromotionsRepositoryImpl(promotionsRemote);
+          return PromotionsProvider(
+            getActiveCouponsUseCase: GetActiveCouponsUseCase(repo),
+            getOffersUseCase: GetOffersUseCase(repo),
           );
         }),
         ChangeNotifierProvider<RegistrationProvider>(create: (_) {
@@ -890,6 +994,7 @@ class TestEnv {
             sendContactUseCase: SendContactUseCase(repo),
             submitClaimUseCase: SubmitClaimUseCase(repo),
             findClaimUseCase: FindClaimUseCase(repo),
+            getMyClaimsUseCase: GetMyClaimsUseCase(repo),
           );
         }),
         ChangeNotifierProvider<CheckoutProvider>(create: (_) {

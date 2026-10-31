@@ -29,4 +29,8 @@ class InfoRepositoryImpl implements InfoRepository {
   @override
   Future<Either<Failure, ClaimStatus>> findClaim(String number) =>
       guardRequest(() => remote.findClaim(number));
+
+  @override
+  Future<Either<Failure, List<ClaimStatus>>> getMyClaims() =>
+      guardRequest(remote.getMyClaims);
 }

@@ -36,6 +36,29 @@ class CheckoutProvider extends ChangeNotifier {
   PaymentPlan _plan = PaymentPlan();
   CouponEntity? _coupon;
   bool _busy = false;
+  String? _editingQuoteCode;
+  int? _editingQuoteId;
+
+  /// Cotización que se está editando (sus productos volvieron al carrito). Al
+  /// confirmar el pedido en el checkout, la nueva la reemplaza.
+  int? get editingQuoteId => _editingQuoteId;
+  String? get editingQuoteCode => _editingQuoteCode;
+  bool get isEditingQuote => _editingQuoteId != null;
+
+  /// A diferencia de lo demás, esto sobrevive a `open`: se llega al checkout
+  /// desde el carrito, después de empezar a editar.
+  void startEditingQuote({required int id, required String code}) {
+    _editingQuoteId = id;
+    _editingQuoteCode = code;
+    notifyListeners();
+  }
+
+  void stopEditingQuote() {
+    if (_editingQuoteId == null) return;
+    _editingQuoteId = null;
+    _editingQuoteCode = null;
+    notifyListeners();
+  }
 
   LoadStatus get status => _status;
   String get errorMessage => _errorMessage;
@@ -130,7 +153,15 @@ class CheckoutProvider extends ChangeNotifier {
       _busyWhile(() => verifyStockUseCase(items));
 
   Future<Either<Failure, List<CreatedQuote>>> createQuotes(QuoteOrder order) =>
-      _busyWhile(() => createQuotesUseCase(order));
+      _busyWhile(() async {
+        final result = await createQuotesUseCase(order);
+        // Ya la reemplazó el backend: se suelta la referencia.
+        if (result.isRight) {
+          _editingQuoteId = null;
+          _editingQuoteCode = null;
+        }
+        return result;
+      });
 
   Future<Either<Failure, PaymentResult>> pay(PaymentOrder order) =>
       _busyWhile(() => payOnlineUseCase(order));

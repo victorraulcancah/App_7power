@@ -141,3 +141,10 @@ class FindClaimUseCase {
     return repository.findClaim(number.trim());
   }
 }
+
+class GetMyClaimsUseCase {
+  final InfoRepository repository;
+  GetMyClaimsUseCase(this.repository);
+
+  Future<Either<Failure, List<ClaimStatus>>> call() => repository.getMyClaims();
+}

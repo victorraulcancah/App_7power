@@ -6,17 +6,24 @@ import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/color_utils.dart';
 import '../../domain/entities/company_info_entity.dart';
+import '../../domain/entities/product_filters.dart';
 import '../components/components.dart';
 import '../providers/company_provider.dart';
 import '../utils/open_url.dart';
+import 'brands_page.dart';
 import 'more/about_page.dart';
 import 'more/claim_book_page.dart';
 import 'more/contact_page.dart';
 import 'more/shipping_steps_page.dart';
+import 'promotions/coupons_page.dart';
+import 'promotions/offers_page.dart';
 
 /// Pestaña "Más": información de la empresa, atención al cliente y legal.
 class MorePage extends StatelessWidget {
-  const MorePage({super.key});
+  /// Se llama al elegir una marca en "Marcas": abre la tienda con ese filtro.
+  final ValueChanged<BrandEntity> onOpenBrand;
+
+  const MorePage({super.key, required this.onOpenBrand});
 
   static FaIconData _icon(SocialNetwork network) => switch (network) {
         SocialNetwork.facebook => FontAwesomeIcons.facebookF,
@@ -40,6 +47,26 @@ class MorePage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _BrandCard(info: info, color: company.brandColor),
+        MenuGroup(title: 'Compra en 7power', children: [
+          MenuItem(
+            icon: Icons.local_fire_department_outlined,
+            title: 'Ofertas',
+            subtitle: 'Productos con descuento',
+            onTap: () => _open(context, const OffersPage()),
+          ),
+          MenuItem(
+            icon: Icons.local_offer_outlined,
+            title: 'Cupones',
+            subtitle: 'Códigos de descuento vigentes',
+            onTap: () => _open(context, const CouponsPage()),
+          ),
+          MenuItem(
+            icon: Icons.verified_outlined,
+            title: 'Marcas',
+            subtitle: 'Explora el catálogo por marca',
+            onTap: () => _open(context, BrandsPage(onSelected: onOpenBrand)),
+          ),
+        ]),
         MenuGroup(title: 'Conoce 7power', children: [
           MenuItem(
             icon: Icons.business_outlined,

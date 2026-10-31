@@ -82,6 +82,11 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
               id: (b['id'] as num).toInt(),
               name: b['nombre']?.toString() ?? '',
               productsCount: (b['productos_count'] as num?)?.toInt() ?? 0,
+              imageUrl: (b['imagen_url']?.toString().isEmpty ?? true)
+                  ? null
+                  : b['imagen_url'].toString(),
+              inShowcase: b['mostrar_en_vitrina'] == true,
+              showcaseOrder: (b['orden_vitrina'] as num?)?.toInt() ?? 0,
             ))
         // Una marca sin productos no sirve como filtro.
         .where((b) => b.productsCount > 0)

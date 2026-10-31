@@ -2,11 +2,22 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 // Core
+import 'core/constants/api_constants.dart';
 import 'core/network/api_client.dart';
 
 // Data Layer
 import 'data/datasources/addresses_remote_datasource.dart';
+import 'data/datasources/promotions_remote_datasource.dart';
+import 'data/datasources/statement_remote_datasource.dart';
+import 'data/repositories/statement_repository_impl.dart';
+import 'domain/repositories/statement_repository.dart';
+import 'domain/usecases/statement_usecases.dart';
+import 'presentation/providers/statement_provider.dart';
 import 'data/datasources/registration_remote_datasource.dart';
+import 'data/repositories/promotions_repository_impl.dart';
+import 'domain/repositories/promotions_repository.dart';
+import 'domain/usecases/promotions_usecases.dart';
+import 'presentation/providers/promotions_provider.dart';
 import 'data/repositories/registration_repository_impl.dart';
 import 'domain/repositories/registration_repository.dart';
 import 'domain/usecases/registration_usecases.dart';
@@ -119,6 +130,17 @@ class DependencyInjection {
   static final InfoRepository _infoRepository =
       InfoRepositoryImpl(InfoRemoteDataSourceImpl(_apiClient));
 
+  /// El ERP es otro servidor: su cliente HTTP apunta a `ERP_API_URL` y no lleva
+  /// el token de la tienda.
+  static final ApiClient _erpClient =
+      ApiClient(baseUrl: ApiConstants.erpBaseUrl);
+
+  static final StatementRepository _statementRepository =
+      StatementRepositoryImpl(StatementRemoteDataSourceImpl(_erpClient));
+
+  static final PromotionsRepository _promotionsRepository =
+      PromotionsRepositoryImpl(PromotionsRemoteDataSourceImpl(_apiClient));
+
   static final RegistrationRepository _registrationRepository =
       RegistrationRepositoryImpl(RegistrationRemoteDataSourceImpl(_apiClient));
 
@@ -209,6 +231,7 @@ class DependencyInjection {
           () => QuotesProvider(
             getQuotesUseCase: GetQuotesUseCase(_quotesRepository),
             cancelQuoteUseCase: CancelQuoteUseCase(_quotesRepository),
+            convertQuoteUseCase: ConvertQuoteToPurchaseUseCase(_quotesRepository),
           ),
         ),
         ChangeNotifierProvider<RegistrationProvider>(
@@ -221,6 +244,18 @@ class DependencyInjection {
             forgotPasswordUseCase: ForgotPasswordUseCase(_registrationRepository),
           ),
         ),
+        authAware<StatementProvider>(
+          () => StatementProvider(
+            getStatementUseCase: GetStatementUseCase(_statementRepository),
+            available: ApiConstants.erpConfigured,
+          ),
+        ),
+        ChangeNotifierProvider<PromotionsProvider>(
+          create: (_) => PromotionsProvider(
+            getActiveCouponsUseCase: GetActiveCouponsUseCase(_promotionsRepository),
+            getOffersUseCase: GetOffersUseCase(_promotionsRepository),
+          ),
+        ),
         ChangeNotifierProvider<InfoProvider>(
           create: (_) => InfoProvider(
             getAboutUseCase: GetAboutUseCase(_infoRepository),
@@ -228,6 +263,7 @@ class DependencyInjection {
             sendContactUseCase: SendContactUseCase(_infoRepository),
             submitClaimUseCase: SubmitClaimUseCase(_infoRepository),
             findClaimUseCase: FindClaimUseCase(_infoRepository),
+            getMyClaimsUseCase: GetMyClaimsUseCase(_infoRepository),
           ),
         ),
         // Checkout: se reinicia al abrirlo, no depende de la sesión.

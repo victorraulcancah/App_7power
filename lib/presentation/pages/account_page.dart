@@ -5,9 +5,12 @@ import '../../core/constants/app_constants.dart';
 import '../../domain/entities/user_entity.dart';
 import '../components/components.dart';
 import '../providers/auth_provider.dart';
+import '../providers/statement_provider.dart';
 import 'account/addresses_page.dart';
 import 'account/favorites_page.dart';
+import 'account/my_claims_page.dart';
 import 'account/personal_data_page.dart';
+import 'account/statement_page.dart';
 import 'account/purchases_page.dart';
 import 'account/quotes_page.dart';
 import 'cart_page.dart';
@@ -106,6 +109,17 @@ class _AccountMenu extends StatelessWidget {
             icon: Icons.location_on_outlined,
             title: 'Direcciones',
             onTap: () => _open(context, const AddressesPage()),
+          ),
+          if (context.select<StatementProvider, bool>((s) => s.available))
+            MenuItem(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'Estado de cuenta',
+              onTap: () => _open(context, const StatementPage()),
+            ),
+          MenuItem(
+            icon: Icons.menu_book_outlined,
+            title: 'Mis reclamos',
+            onTap: () => _open(context, const MyClaimsPage()),
           ),
           MenuItem(
             icon: Icons.shopping_cart_outlined,

@@ -13,4 +13,7 @@ abstract class InfoRepository {
   Future<Either<Failure, ClaimReceipt>> submitClaim(ClaimDraft claim);
 
   Future<Either<Failure, ClaimStatus>> findClaim(String number);
+
+  /// Los reclamos del cliente con sesión, del más nuevo al más antiguo.
+  Future<Either<Failure, List<ClaimStatus>>> getMyClaims();
 }

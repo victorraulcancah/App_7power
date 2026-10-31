@@ -35,12 +35,27 @@ class ApiConstants {
   static const String captchaVerifyEndpoint = '/captcha/verificar';
   static const String forgotPasswordEndpoint = '/forgot-password';
 
+  /// API del ERP (7Power), donde está el estado de cuenta del cliente. No es la
+  /// de la tienda: se define al compilar y, mientras esté vacía, el app no
+  /// ofrece "Estado de cuenta".
+  ///   flutter build apk --dart-define=ERP_API_URL=https://.../api
+  static const String erpBaseUrl = String.fromEnvironment('ERP_API_URL');
+  static bool get erpConfigured => erpBaseUrl.isNotEmpty;
+  static const String statementEndpoint = '/ecommerce/estado-de-cuenta';
+
+  // Promociones (públicas)
+  static const String activeCouponsEndpoint = '/cupones/activos';
+  static const String activeOffersEndpoint = '/banners-ofertas/activo';
+
   // Información de la empresa (públicos)
   static const String aboutEndpoint = '/sobre-nosotros/publico';
   static const String shippingStepsEndpoint = '/pasos-envio';
   static const String contactEndpoint = '/contacto';
   static const String claimCreateEndpoint = '/reclamos/crear';
   static const String claimLookupEndpoint = '/reclamos/buscar';
+
+  /// Los reclamos del cliente con sesión (requiere token).
+  static const String myClaimsEndpoint = '/reclamos/mis-reclamos';
 
   /// Sitio web de la tienda: de ahí salen los PDF legales y las páginas de
   /// registro y recuperación de contraseña.

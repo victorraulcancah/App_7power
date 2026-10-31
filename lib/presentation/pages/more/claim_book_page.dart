@@ -574,6 +574,21 @@ class ClaimReceiptPage extends StatelessWidget {
   }
 }
 
+/// Cómo se muestra el estado de un reclamo (`pendiente`, `en_proceso`, ...).
+String claimStatusLabel(String status) => switch (status) {
+      'pendiente' => 'Pendiente',
+      'en_proceso' => 'En proceso',
+      'resuelto' => 'Resuelto',
+      'cerrado' => 'Cerrado',
+      final other => other,
+    };
+
+StatusTagType claimStatusTagType(String status) => switch (status) {
+      'resuelto' => StatusTagType.success,
+      'cerrado' => StatusTagType.info,
+      _ => StatusTagType.warning,
+    };
+
 /// Consulta el estado de un reclamo por su número.
 Future<void> showClaimLookup(BuildContext context) =>
     showModalBottomSheet<void>(
@@ -601,14 +616,6 @@ class _ClaimLookupSheetState extends State<_ClaimLookupSheet> {
     _number.dispose();
     super.dispose();
   }
-
-  static String _statusLabel(String status) => switch (status) {
-        'pendiente' => 'Pendiente',
-        'en_proceso' => 'En proceso',
-        'resuelto' => 'Resuelto',
-        'cerrado' => 'Cerrado',
-        final other => other,
-      };
 
   Future<void> _search() async {
     final info = context.read<InfoProvider>();
@@ -674,10 +681,8 @@ class _ClaimLookupSheetState extends State<_ClaimLookupSheet> {
                     Text(status.number, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 6),
                     StatusTag(
-                      label: _statusLabel(status.status),
-                      type: status.status == 'resuelto'
-                          ? StatusTagType.success
-                          : StatusTagType.warning,
+                      label: claimStatusLabel(status.status),
+                      type: claimStatusTagType(status.status),
                     ),
                     if (status.deadline != null)
                       Padding(

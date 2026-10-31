@@ -322,6 +322,29 @@ void main() {
       expect(sent.containsKey('cupon_codigo'), isFalse);
       expect(quotes.single.code, '2026-00001');
       expect(quotes.single.total, 100);
+      // Sin "Editar" no se manda qué cotización reemplazar.
+      expect(sent.containsKey('reemplaza_cotizacion_id'), isFalse);
+    });
+
+    test('al editar una cotización manda el id de la que reemplaza', () async {
+      final remote = source((_) => json({
+            'cotizaciones': [
+              {'codigo_cotizacion': '2026-00025', 'moneda': 's', 'total': '100.00'},
+            ],
+          }, 201));
+
+      await remote.createQuotes(QuoteOrder(
+        items: const [
+          CartItemModel(productId: 7, name: 'Driver', price: 100, quantity: 1, stock: 9),
+        ],
+        delivery: _delivery(),
+        payments: const [
+          PaymentLine(type: 'transferencia', currency: 's', amount: 100),
+        ],
+        replacesQuoteId: 25,
+      ));
+
+      expect(sent['reemplaza_cotizacion_id'], 25);
     });
 
     test('el pago envía solo token, marca y últimos 4 de la tarjeta', () async {

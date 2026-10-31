@@ -8,10 +8,12 @@ import 'load_status.dart';
 class QuotesProvider extends ChangeNotifier with AuthAwareReload {
   final GetQuotesUseCase getQuotesUseCase;
   final CancelQuoteUseCase cancelQuoteUseCase;
+  final ConvertQuoteToPurchaseUseCase convertQuoteUseCase;
 
   QuotesProvider({
     required this.getQuotesUseCase,
     required this.cancelQuoteUseCase,
+    required this.convertQuoteUseCase,
   });
 
   LoadStatus _status = LoadStatus.initial;
@@ -55,5 +57,20 @@ class QuotesProvider extends ChangeNotifier with AuthAwareReload {
     if (error != null) return error;
     await load();
     return null;
+  }
+
+  /// Envía la cotización para convertirla en compra. Devuelve el mensaje del
+  /// servidor en `message`, o el motivo por el que no se pudo en `error`.
+  Future<({String? message, String? error})> convertToPurchase(
+    QuoteEntity quote,
+  ) async {
+    final result = await convertQuoteUseCase(quote.id);
+    return await result.fold(
+      (f) async => (message: null, error: f.message),
+      (message) async {
+        await load();
+        return (message: message, error: null);
+      },
+    );
   }
 }

@@ -55,7 +55,8 @@ ClaimReceipt claimReceiptFromJson(Map<String, dynamic> json) => ClaimReceipt(
       deadline: DateTime.tryParse(json['fecha_limite_respuesta']?.toString() ?? ''),
     );
 
-/// `reclamo` de `GET /reclamos/buscar/{numero}`.
+/// `reclamo` de `GET /reclamos/buscar/{numero}` y cada elemento de `reclamos`
+/// en `GET /reclamos/mis-reclamos` (este trae además el bien y el detalle).
 ClaimStatus claimStatusFromJson(Map<String, dynamic> json) => ClaimStatus(
       number: json['numero_reclamo']?.toString() ?? '',
       status: _text(json['estado']) ?? 'pendiente',
@@ -64,4 +65,7 @@ ClaimStatus claimStatusFromJson(Map<String, dynamic> json) => ClaimStatus(
       response: _text(json['respuesta_proveedor']),
       responseDate: DateTime.tryParse(json['fecha_respuesta']?.toString() ?? ''),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
+      goodType: _text(json['tipo_bien']),
+      productName: _text(json['nombre_producto']) ?? _text(json['descripcion_bien']),
+      detail: _text(json['detalle_reclamo']),
     );

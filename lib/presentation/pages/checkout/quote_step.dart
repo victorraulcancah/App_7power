@@ -38,6 +38,7 @@ class _QuoteStepState extends State<QuoteStep> {
       items: cart.items,
       delivery: delivery,
       payments: checkout.plan.effectiveLines,
+      replacesQuoteId: checkout.editingQuoteId,
     ));
     if (!mounted) return;
     setState(() => _creating = false);

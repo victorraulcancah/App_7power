@@ -151,6 +151,11 @@ class ClaimStatus {
   final DateTime? responseDate;
   final DateTime? createdAt;
 
+  /// Solo vienen en "Mis reclamos" (la consulta por número no los devuelve).
+  final String? goodType;
+  final String? productName;
+  final String? detail;
+
   const ClaimStatus({
     required this.number,
     required this.status,
@@ -159,5 +164,8 @@ class ClaimStatus {
     this.response,
     this.responseDate,
     this.createdAt,
+    this.goodType,
+    this.productName,
+    this.detail,
   });
 }

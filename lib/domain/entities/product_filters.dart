@@ -15,16 +15,24 @@ enum ProductSort {
   const ProductSort(this.apiValue, this.label);
 }
 
-/// Marca para el filtro del catálogo.
+/// Marca para el filtro del catálogo y la pantalla "Marcas".
 class BrandEntity {
   final int id;
   final String name;
   final int productsCount;
+  final String? imageUrl;
+
+  /// La empresa elige qué marcas van en la vitrina y en qué orden.
+  final bool inShowcase;
+  final int showcaseOrder;
 
   const BrandEntity({
     required this.id,
     required this.name,
     this.productsCount = 0,
+    this.imageUrl,
+    this.inShowcase = false,
+    this.showcaseOrder = 0,
   });
 }
 
