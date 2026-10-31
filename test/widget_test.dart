@@ -198,12 +198,19 @@ void main() {
 
   testWidgets('La portada muestra categorías y productos, sin footer',
       (tester) async {
+    // Pantalla alta: con el buscador arriba, las categorías ya no caben en
+    // la pantalla de prueba por defecto.
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final env = TestEnv(catalog: [product(1, 'Driver 400W')]);
     await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
     expect(find.text('Categorías'), findsOneWidget);
-    expect(find.text('Driver'), findsOneWidget);
+    // "Driver" es la categoría y también su pestaña en "Recomendado para ti".
+    expect(find.text('Driver'), findsNWidgets(2));
+    expect(find.text('Recomendado para ti'), findsOneWidget);
 
     // La portada es una lista: lo que queda fuera de pantalla no se construye
     // hasta hacer scroll.

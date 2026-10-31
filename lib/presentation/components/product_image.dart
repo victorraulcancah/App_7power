@@ -64,8 +64,11 @@ class ProductImage extends StatelessWidget {
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
-                  final drawnWidth = width ??
-                      (constraints.hasBoundedWidth ? constraints.maxWidth : null);
+                  // Con ancho "infinito" (a todo el ancho) se usa el que da el
+                  // padre, para decodificar a ese tamaño.
+                  final drawnWidth = (width != null && width!.isFinite)
+                      ? width
+                      : (constraints.hasBoundedWidth ? constraints.maxWidth : null);
                   final pixelRatio = MediaQuery.devicePixelRatioOf(context);
 
                   return CachedNetworkImage(

@@ -56,7 +56,12 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
           child: Row(
             children: [
-              Expanded(child: AppSearchField(onSearch: provider.search)),
+              Expanded(
+                child: AppSearchField(
+                  onSearch: provider.search,
+                  initialValue: provider.query,
+                ),
+              ),
               const SizedBox(width: 8),
               _FilterButton(provider: provider),
             ],

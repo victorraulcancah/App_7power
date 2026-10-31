@@ -27,6 +27,19 @@ class _AppSearchFieldState extends State<AppSearchField> {
       TextEditingController(text: widget.initialValue);
   Timer? _timer;
 
+  /// Si el texto cambia desde fuera (una búsqueda hecha en el inicio), el
+  /// campo lo muestra. Lo que el usuario escribe aquí no se pisa: coincide con
+  /// lo que ya se notificó.
+  @override
+  void didUpdateWidget(AppSearchField old) {
+    super.didUpdateWidget(old);
+    final value = widget.initialValue ?? '';
+    if (widget.initialValue != old.initialValue &&
+        value != _controller.text.trim()) {
+      _controller.text = value;
+    }
+  }
+
   void _onChanged(String value) {
     _timer?.cancel();
     _timer = Timer(widget.debounce, () => widget.onSearch(value.trim()));

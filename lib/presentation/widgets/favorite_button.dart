@@ -7,11 +7,15 @@ import '../pages/login_page.dart';
 import '../providers/auth_provider.dart';
 import '../providers/favorites_provider.dart';
 
-/// Corazón para guardar un producto en "Mis listas". Sin sesión pide iniciarla.
+/// Corazón para guardar un producto en "Favoritos". Sin sesión pide iniciarla.
+///
+/// Con [compact] es un círculo blanco chico, para ir sobre la imagen de una
+/// tarjeta de producto.
 class FavoriteButton extends StatelessWidget {
   final ProductEntity product;
+  final bool compact;
 
-  const FavoriteButton({super.key, required this.product});
+  const FavoriteButton({super.key, required this.product, this.compact = false});
 
   Future<void> _toggle(BuildContext context) async {
     final loggedIn = context.read<AuthProvider>().isAuthenticated;
@@ -31,7 +35,7 @@ class FavoriteButton extends StatelessWidget {
     } else {
       AppSnackbar.success(
         context,
-        adding ? 'Guardado en mis listas' : 'Quitado de mis listas',
+        adding ? 'Guardado en favoritos' : 'Quitado de favoritos',
       );
     }
   }
@@ -40,10 +44,28 @@ class FavoriteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFavorite = context
         .select<FavoritesProvider, bool>((f) => f.isFavorite(product.id));
+    final theme = Theme.of(context);
+    final tooltip = isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos';
+    final icon = Icon(isFavorite ? Icons.favorite : Icons.favorite_border);
 
-    return IconButton(
-      tooltip: isFavorite ? 'Quitar de mis listas' : 'Guardar en mis listas',
-      icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+    if (!compact) {
+      return IconButton(
+        tooltip: tooltip,
+        icon: icon,
+        onPressed: () => _toggle(context),
+      );
+    }
+
+    return IconButton.filled(
+      tooltip: tooltip,
+      icon: icon,
+      iconSize: 18,
+      visualDensity: VisualDensity.compact,
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.white.withValues(alpha: 0.92),
+        foregroundColor:
+            isFavorite ? theme.colorScheme.error : const Color(0xFF26262B),
+      ),
       onPressed: () => _toggle(context),
     );
   }

@@ -23,6 +23,9 @@ class ProductCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
 
+  /// Acción sobre la esquina de la imagen (el corazón de favoritos).
+  final Widget? topAction;
+
   const ProductCard({
     super.key,
     required this.name,
@@ -35,6 +38,7 @@ class ProductCard extends StatelessWidget {
     this.priceVisible = true,
     this.onTap,
     this.onAddToCart,
+    this.topAction,
   });
 
   @override
@@ -61,6 +65,8 @@ class ProductCard extends StatelessWidget {
                   ProductImage(url: imageUrl),
                   if (!available)
                     Container(color: Colors.white.withValues(alpha: 0.55)),
+                  if (topAction != null)
+                    Positioned(top: 4, right: 4, child: topAction!),
                 ],
               ),
             ),

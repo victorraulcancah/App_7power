@@ -31,6 +31,12 @@ class _MainShellState extends State<MainShell> {
     setState(() => _tab = _shopTab);
   }
 
+  /// La tienda con los resultados de lo buscado en el inicio.
+  void _openSearch(String query) {
+    context.read<ProductsProvider>().searchEverywhere(query);
+    setState(() => _tab = _shopTab);
+  }
+
   /// La tienda con solo esa marca (sin categoría ni otros filtros de antes).
   void _openBrand(BrandEntity brand) {
     final products = context.read<ProductsProvider>();
@@ -52,7 +58,11 @@ class _MainShellState extends State<MainShell> {
       body: IndexedStack(
         index: _tab,
         children: [
-          HomePage(onOpenShop: _openShop, onOpenBrand: _openBrand),
+          HomePage(
+            onOpenShop: _openShop,
+            onOpenBrand: _openBrand,
+            onSearch: _openSearch,
+          ),
           const ProductsPage(),
           const AccountPage(),
           MorePage(onOpenBrand: _openBrand),

@@ -20,10 +20,14 @@ class HomePage extends StatefulWidget {
   /// Abre la pestaña de tienda con esa marca filtrada.
   final ValueChanged<BrandEntity> onOpenBrand;
 
+  /// Abre la tienda con los resultados de lo que se buscó.
+  final ValueChanged<String> onSearch;
+
   const HomePage({
     super.key,
     required this.onOpenShop,
     required this.onOpenBrand,
+    required this.onSearch,
   });
 
   @override
@@ -71,6 +75,69 @@ class _CategoryBubble extends StatelessWidget {
               style: theme.textTheme.labelSmall,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Buscador de la portada, como el de la web: al enviar el texto se abre la
+/// tienda con los resultados (no busca mientras se escribe).
+class _HomeSearch extends StatefulWidget {
+  final ValueChanged<String> onSearch;
+
+  const _HomeSearch({required this.onSearch});
+
+  @override
+  State<_HomeSearch> createState() => _HomeSearchState();
+}
+
+class _HomeSearchState extends State<_HomeSearch> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final query = _controller.text.trim();
+    if (query.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    // Queda vacío para la próxima vez que se vuelva al inicio.
+    _controller.clear();
+    widget.onSearch(query);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        12,
+      ),
+      child: TextField(
+        key: const Key('home-search'),
+        controller: _controller,
+        textInputAction: TextInputAction.search,
+        onSubmitted: (_) => _submit(),
+        decoration: InputDecoration(
+          hintText: 'Buscar productos, marcas o códigos',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: IconButton(
+            tooltip: 'Buscar',
+            icon: const Icon(Icons.arrow_forward_rounded),
+            onPressed: _submit,
+          ),
+          filled: true,
+          fillColor: const Color(0xFFF3F3F5),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -288,6 +355,7 @@ class _HomePageState extends State<HomePage> {
       onRefresh: home.load,
       child: ListView(
         children: [
+          _HomeSearch(onSearch: widget.onSearch),
           BannerCarousel(
             banners: home.banners,
             // Los banners apuntan a rutas de la web; por ahora solo se

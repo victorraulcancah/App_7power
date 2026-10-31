@@ -45,6 +45,9 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   List<CategoryEntity> get categories => _categories;
   List<BrandEntity> get brands => _brands;
   int? get selectedCategoryId => _categoryId;
+
+  /// Texto buscado (lo que muestra el buscador de la tienda).
+  String get query => _query;
   ProductFilters get filters => _filters;
   String get errorMessage => _errorMessage;
   int get total => _total;
@@ -148,6 +151,15 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   Future<void> search(String query) {
     if (query == _query) return Future.value();
     _query = query;
+    return loadProducts();
+  }
+
+  /// Búsqueda desde el inicio: en todo el catálogo, sin la categoría ni los
+  /// filtros que hubiera de antes (una sola consulta).
+  Future<void> searchEverywhere(String query) {
+    _query = query.trim();
+    _categoryId = null;
+    _filters = ProductFilters.none;
     return loadProducts();
   }
 

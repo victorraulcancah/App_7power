@@ -51,6 +51,27 @@ Future<void> _openFilters(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Abre el selector de marcas, marca las [names] y confirma con "Listo".
+Future<void> _pickBrands(WidgetTester tester, List<String> names) async {
+  await tester.tap(find.byKey(const Key('filter-brands')));
+  await tester.pumpAndSettle();
+  for (final name in names) {
+    await tester.tap(find.widgetWithText(CheckboxListTile, name));
+    await tester.pump();
+  }
+  await tester.tap(find.textContaining('Listo'));
+  await tester.pumpAndSettle();
+}
+
+/// Elige [label] en el desplegable de orden.
+Future<void> _pickSort(WidgetTester tester, String label) async {
+  await tester.tap(find.byKey(const Key('filter-sort')));
+  await tester.pumpAndSettle();
+  // El valor elegido también se ve en el campo: la opción es la última.
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('ProductFilters', () {
     test('cuenta los filtros en uso', () {
@@ -182,14 +203,94 @@ void main() {
       await _openFilters(tester);
 
       expect(find.text('Filtros'), findsWidgets);
-      for (final label in ['Relevancia', 'Nombre (A-Z)', 'Mayor stock']) {
-        expect(find.text(label), findsOneWidget, reason: label);
-      }
-      expect(find.text('7POWER (404)'), findsOneWidget);
-      expect(find.text('BLAUPUNKT (12)'), findsOneWidget);
+      // El orden es un desplegable (muestra el elegido) y las marcas, un
+      // selector: ya no son una lista de botones.
+      expect(find.byKey(const Key('filter-sort')), findsOneWidget);
+      expect(find.text('Relevancia'), findsOneWidget);
+      expect(find.text('Nombre (A-Z)'), findsNothing);
+      expect(find.byKey(const Key('filter-brands')), findsOneWidget);
+      expect(find.text('Todas las marcas'), findsOneWidget);
+      expect(find.byType(FilterChip), findsNothing);
       // Sin lista de precios no hay deslizador.
       expect(find.byType(RangeSlider), findsNothing);
       expect(find.text('Ver productos'), findsOneWidget);
+
+      // El desplegable ofrece los tres órdenes.
+      await tester.tap(find.byKey(const Key('filter-sort')));
+      await tester.pumpAndSettle();
+      for (final label in ['Nombre (A-Z)', 'Mayor stock']) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+    });
+
+    testWidgets('el selector de marcas busca, cuenta y resume lo elegido',
+        (tester) async {
+      await _openShop(tester, _env());
+      await _openFilters(tester);
+
+      await tester.tap(find.byKey(const Key('filter-brands')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('brand-option-25')), findsOneWidget);
+      expect(find.text('404'), findsOneWidget);
+
+      // El buscador deja solo las que coinciden.
+      await tester.enterText(find.byKey(const Key('brand-search')), 'jb');
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(CheckboxListTile, 'JBL'), findsOneWidget);
+      expect(find.widgetWithText(CheckboxListTile, '7POWER'), findsNothing);
+      await tester.enterText(find.byKey(const Key('brand-search')), 'zzz');
+      await tester.pumpAndSettle();
+      expect(find.text('No hay marcas con ese nombre.'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('brand-search')), '');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(CheckboxListTile, '7POWER'));
+      await tester.tap(find.widgetWithText(CheckboxListTile, 'JBL'));
+      await tester.pump();
+      expect(find.text('Listo (2)'), findsOneWidget);
+      await tester.tap(find.text('Listo (2)'));
+      await tester.pumpAndSettle();
+
+      // Con una o dos marcas el campo dice sus nombres.
+      expect(find.text('7POWER, JBL'), findsOneWidget);
+      expect(find.text('Aplicar (1)'), findsOneWidget);
+
+      // Con más de dos resume la cantidad y las muestra como etiquetas.
+      await tester.tap(find.byKey(const Key('filter-brands')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CheckboxListTile, 'BLAUPUNKT'));
+      await tester.pump();
+      await tester.tap(find.text('Listo (3)'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 marcas'), findsOneWidget);
+      expect(find.widgetWithText(Chip, 'BLAUPUNKT'), findsOneWidget);
+    });
+
+    testWidgets('"Ninguna" vacía la selección y cerrar sin "Listo" no cambia nada',
+        (tester) async {
+      await _openShop(tester, _env());
+      await _openFilters(tester);
+      await _pickBrands(tester, ['JBL']);
+      // "JBL" también es la marca de un producto de la lista: se mira solo el campo.
+      final field = find.byKey(const Key('filter-brands'));
+      expect(find.descendant(of: field, matching: find.text('JBL')), findsOneWidget);
+
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ninguna'));
+      await tester.pump();
+      // Se cierra tocando fuera de la hoja, sin confirmar.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(find.descendant(of: field, matching: find.text('JBL')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('filter-brands')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ninguna'));
+      await tester.pump();
+      await tester.tap(find.text('Listo'));
+      await tester.pumpAndSettle();
+      expect(find.text('Todas las marcas'), findsOneWidget);
     });
 
     testWidgets('el rango de precio aparece cuando el cliente tiene lista',
@@ -209,8 +310,7 @@ void main() {
       expect(find.text('4 productos'), findsOneWidget);
 
       await _openFilters(tester);
-      await tester.tap(find.text('7POWER (404)'));
-      await tester.pump();
+      await _pickBrands(tester, ['7POWER']);
       expect(find.text('Aplicar (1)'), findsOneWidget);
       await tester.tap(find.text('Aplicar (1)'));
       await tester.pumpAndSettle();
@@ -228,9 +328,7 @@ void main() {
       await _openShop(tester, env);
 
       await _openFilters(tester);
-      await tester.tap(find.text('7POWER (404)'));
-      await tester.tap(find.text('JBL (7)'));
-      await tester.pump();
+      await _pickBrands(tester, ['7POWER', 'JBL']);
       await tester.tap(find.text('Aplicar (1)'));
       await tester.pumpAndSettle();
 
@@ -243,8 +341,7 @@ void main() {
       await _openShop(tester, env);
 
       await _openFilters(tester);
-      await tester.tap(find.text('Nombre (A-Z)'));
-      await tester.pump();
+      await _pickSort(tester, 'Nombre (A-Z)');
       await tester.tap(find.text('Aplicar (1)'));
       await tester.pumpAndSettle();
 
@@ -262,8 +359,7 @@ void main() {
       final env = _env();
       await _openShop(tester, env);
       await _openFilters(tester);
-      await tester.tap(find.text('JBL (7)'));
-      await tester.pump();
+      await _pickBrands(tester, ['JBL']);
       await tester.tap(find.text('Aplicar (1)'));
       await tester.pumpAndSettle();
       expect(find.text('1 producto'), findsOneWidget);
@@ -284,9 +380,8 @@ void main() {
       final env = _env();
       await _openShop(tester, env);
       await _openFilters(tester);
-      await tester.tap(find.text('7POWER (404)'));
-      await tester.tap(find.text('Mayor stock'));
-      await tester.pump();
+      await _pickBrands(tester, ['7POWER']);
+      await _pickSort(tester, 'Mayor stock');
       await tester.tap(find.text('Aplicar (2)'));
       await tester.pumpAndSettle();
       expect(env.products.lastFilters.activeCount, 2);
@@ -309,8 +404,7 @@ void main() {
         tester.widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Limpiar')).onPressed,
         isNull,
       );
-      await tester.tap(find.text('JBL (7)'));
-      await tester.pump();
+      await _pickBrands(tester, ['JBL']);
       await tester.tap(find.text('Limpiar'));
       await tester.pump();
       await tester.tap(find.text('Ver productos'));

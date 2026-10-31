@@ -78,6 +78,50 @@ void main() {
     });
   });
 
+  group('Buscador del inicio', () {
+    testWidgets('al enviar abre la tienda con los resultados y el texto escrito',
+        (tester) async {
+      await _openHome(tester);
+      expect(find.byKey(const Key('home-search')), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('home-search')), 'rca');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+
+      expect(_selectedTab(tester), 1);
+      expect(_context(tester).read<ProductsProvider>().query, 'rca');
+      // El buscador de la tienda muestra lo buscado.
+      expect(find.widgetWithText(TextField, 'rca'), findsOneWidget);
+      expect(find.text('1 producto'), findsOneWidget);
+    });
+
+    testWidgets('busca en todo el catálogo: quita la categoría y los filtros de antes',
+        (tester) async {
+      await _openHome(tester);
+      final provider = _context(tester).read<ProductsProvider>();
+      await provider.selectCategory(2);
+      await provider.applyFilters(const ProductFilters(brandIds: {25}));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('home-search')), 'parlante');
+      await tester.tap(find.byTooltip('Buscar'));
+      await tester.pumpAndSettle();
+
+      expect(provider.selectedCategoryId, isNull);
+      expect(provider.filters, ProductFilters.none);
+      expect(provider.query, 'parlante');
+    });
+
+    testWidgets('con el campo vacío no hace nada', (tester) async {
+      await _openHome(tester);
+
+      await tester.tap(find.byTooltip('Buscar'));
+      await tester.pumpAndSettle();
+
+      expect(_selectedTab(tester), 0);
+    });
+  });
+
   group('Recomendado para ti', () {
     testWidgets('muestra pestañas por categoría y la cuadrícula de productos',
         (tester) async {

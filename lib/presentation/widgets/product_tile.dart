@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/product_entity.dart';
 import '../components/components.dart';
 import '../pages/product_detail_page.dart';
+import 'favorite_button.dart';
 
 /// Tarjeta de un producto con su comportamiento estándar: abre la ficha al
 /// tocarla y agrega al carrito desde el botón.
@@ -23,6 +24,7 @@ class ProductTile extends StatelessWidget {
       priceVisible: product.priceVisible,
       onTap: () => ProductDetailPage.open(context, product),
       onAddToCart: () => CartActions.add(context, product),
+      topAction: FavoriteButton(product: product, compact: true),
     );
   }
 }

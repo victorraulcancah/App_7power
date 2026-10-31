@@ -279,7 +279,7 @@ void main() {
       for (final entry in [
         'Compras',
         'Cotizaciones',
-        'Mis listas',
+        'Favoritos',
         'Datos personales',
         'Direcciones',
         'Mi carrito',
@@ -326,7 +326,32 @@ void main() {
     });
   });
 
-  group('Mis listas', () {
+  group('Favoritos', () {
+    testWidgets('el acceso muestra cuántos hay, como en la web', (tester) async {
+      final env = TestEnv();
+      env.favoritesRemote.items = [
+        _favorite(1, 'Driver 400W'),
+        _favorite(2, 'Parlante'),
+        _favorite(3, 'Cable RCA'),
+        _favorite(4, 'Tweeter'),
+      ];
+      await _openAccount(tester, env);
+
+      expect(find.text('Favoritos (4)'), findsOneWidget);
+
+      await _openSection(tester, 'Favoritos (4)');
+      // La pantalla también lo dice en su título.
+      expect(find.text('Favoritos (4)'), findsOneWidget);
+    });
+
+    testWidgets('sin favoritos el acceso no muestra número', (tester) async {
+      final env = TestEnv();
+      await _openAccount(tester, env);
+
+      expect(find.text('Favoritos'), findsOneWidget);
+      expect(find.textContaining('Favoritos ('), findsNothing);
+    });
+
     testWidgets('lista los favoritos con sus reglas de precio y stock',
         (tester) async {
       final env = TestEnv();
@@ -335,7 +360,7 @@ void main() {
         _favorite(2, 'Parlante', stock: 0),
       ];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis listas');
+      await _openSection(tester, 'Favoritos (2)');
 
       expect(find.text('Driver 400W'), findsOneWidget);
       expect(find.text('Parlante'), findsOneWidget);
@@ -347,7 +372,7 @@ void main() {
     testWidgets('sin favoritos muestra el estado vacío', (tester) async {
       final env = TestEnv();
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis listas');
+      await _openSection(tester, 'Favoritos');
 
       expect(find.text('Aún no tienes favoritos'), findsOneWidget);
     });
@@ -357,7 +382,7 @@ void main() {
       final env = TestEnv();
       env.favoritesRemote.items = [_favorite(11, 'Driver 400W')];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Mis listas');
+      await _openSection(tester, 'Favoritos (1)');
 
       await tester.tap(find.byIcon(Icons.favorite));
       await tester.pumpAndSettle();
@@ -383,7 +408,28 @@ void main() {
 
       expect(env.favoritesRemote.added, [5]);
       expect(find.byIcon(Icons.favorite), findsOneWidget);
-      expect(find.text('Guardado en mis listas'), findsOneWidget);
+      expect(find.text('Guardado en favoritos'), findsOneWidget);
+    });
+
+    testWidgets('cada tarjeta de producto tiene su corazón', (tester) async {
+      final env = TestEnv(catalog: [
+        product(5, 'Driver', stock: 9),
+        product(6, 'Parlante', stock: 9),
+      ]);
+      await env.authRepo.login('ana@correo.com', 'secreto');
+      await tester.pumpWidget(env.app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tienda'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Guardar en favoritos'), findsNWidgets(2));
+
+      await tester.tap(find.byTooltip('Guardar en favoritos').first);
+      await tester.pumpAndSettle();
+
+      expect(env.favoritesRemote.added, hasLength(1));
+      expect(find.byTooltip('Quitar de favoritos'), findsOneWidget);
+      expect(find.byTooltip('Guardar en favoritos'), findsOneWidget);
     });
 
     testWidgets('sin sesión el corazón pide iniciar sesión', (tester) async {

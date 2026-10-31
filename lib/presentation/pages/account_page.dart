@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../domain/entities/user_entity.dart';
 import '../components/components.dart';
 import '../providers/auth_provider.dart';
+import '../providers/favorites_provider.dart';
 import '../providers/statement_provider.dart';
 import 'account/addresses_page.dart';
 import 'account/favorites_page.dart';
@@ -67,6 +68,8 @@ class _AccountMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final favoritesCount =
+        context.select<FavoritesProvider, int>((f) => f.items.length);
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
@@ -93,7 +96,10 @@ class _AccountMenu extends StatelessWidget {
               const SizedBox(width: 12),
               _Quick(
                 icon: Icons.favorite_border,
-                label: 'Mis listas',
+                // Con la cantidad, como en la web: "Favoritos (4)".
+                label: favoritesCount > 0
+                    ? 'Favoritos ($favoritesCount)'
+                    : 'Favoritos',
                 onTap: () => _open(context, const FavoritesPage()),
               ),
             ],

@@ -8,7 +8,7 @@ import '../../providers/favorites_provider.dart';
 import '../cart_page.dart';
 import '../product_detail_page.dart';
 
-/// "Mis listas": los productos que el cliente guardó como favoritos.
+/// "Favoritos": los productos que el cliente guardó con el corazón.
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
 
@@ -30,7 +30,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
     final favorites = context.watch<FavoritesProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis listas'), actions: const [CartButton()]),
+      appBar: AppBar(
+        title: Text(
+          favorites.items.isEmpty
+              ? 'Favoritos'
+              : 'Favoritos (${favorites.items.length})',
+        ),
+        actions: const [CartButton()],
+      ),
       body: switch (favorites.status) {
         FavoritesStatus.initial ||
         FavoritesStatus.loading =>
@@ -118,7 +125,7 @@ class _FavoriteRow extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Quitar de mis listas',
+                          tooltip: 'Quitar de favoritos',
                           icon: const Icon(Icons.favorite),
                           color: theme.colorScheme.error,
                           onPressed: () => _remove(context),
@@ -140,7 +147,7 @@ class _FavoriteRow extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Quitar de mis listas'),
+        title: const Text('Quitar de favoritos'),
         content: Text('¿Quitar "${product.name}"?'),
         actions: [
           TextButton(
