@@ -17,6 +17,15 @@ apuntar a otro backend al compilar:
 flutter build apk --release --dart-define=API_DOMAIN=https://otro-dominio.pe
 ```
 
+El **estado de cuenta** viene del ERP, que es otro servidor: por defecto
+`https://novi-k.com/7power/public/api`. Para otro ERP (por ejemplo el local):
+
+```bash
+flutter build apk --release --dart-define=ERP_API_URL=http://10.0.2.2/api
+```
+
+Con `--dart-define=ERP_API_URL=` (vacío) el app oculta "Estado de cuenta".
+
 ## 2. Crear la clave de firma (una sola vez)
 
 ```bash

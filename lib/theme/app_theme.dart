@@ -95,13 +95,27 @@ class AppTheme {
         iconColor: Color(0xFF4A4A4F),
         contentPadding: EdgeInsets.symmetric(horizontal: 16),
       ),
+      // Pestañas y filtros: la elegida va rellena con el color de la marca; las
+      // demás, blancas con borde. El color del texto se fija a mano: sin él
+      // salía blanco sobre blanco.
       chipTheme: ChipThemeData(
         shape: const StadiumBorder(),
         side: const BorderSide(color: Color(0xFFDCDCE0)),
-        selectedColor: seed.withValues(alpha: 0.12),
-        checkmarkColor: seed,
-        labelStyle: const TextStyle(fontSize: 13),
         backgroundColor: Colors.white,
+        selectedColor: seed,
+        showCheckmark: false,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        labelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF26262B),
+        ),
+        // ChoiceChip usa este estilo cuando está elegida.
+        secondaryLabelStyle: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: onSeed,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

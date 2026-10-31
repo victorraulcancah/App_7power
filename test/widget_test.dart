@@ -231,7 +231,9 @@ void main() {
     await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('RCA'));
+    // "RCA" está en las categorías y también como pestaña de "Recomendado
+    // para ti": la primera es la categoría.
+    await tester.tap(find.text('RCA').first);
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(ChoiceChip, 'RCA'), findsOneWidget);

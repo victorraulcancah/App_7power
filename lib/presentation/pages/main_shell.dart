@@ -52,7 +52,7 @@ class _MainShellState extends State<MainShell> {
       body: IndexedStack(
         index: _tab,
         children: [
-          HomePage(onOpenShop: _openShop),
+          HomePage(onOpenShop: _openShop, onOpenBrand: _openBrand),
           const ProductsPage(),
           const AccountPage(),
           MorePage(onOpenBrand: _openBrand),

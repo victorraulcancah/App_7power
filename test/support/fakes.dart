@@ -116,6 +116,7 @@ class FakeProductRepo implements ProductRepository {
   /// Lo último que se pidió, para revisar lo que mandó la app.
   ProductFilters lastFilters = ProductFilters.none;
   final List<ProductFilters> filtersHistory = [];
+  int? lastCategoryId;
 
   FakeProductRepo(this.products, {this.failure, this.pageSize = 20});
 
@@ -129,6 +130,7 @@ class FakeProductRepo implements ProductRepository {
   }) async {
     requestedPages.add(page);
     lastFilters = filters;
+    lastCategoryId = categoryId;
     filtersHistory.add(filters);
     if (failure != null) return Either.left(failure!);
 

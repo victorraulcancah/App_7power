@@ -36,10 +36,14 @@ class ApiConstants {
   static const String forgotPasswordEndpoint = '/forgot-password';
 
   /// API del ERP (7Power), donde está el estado de cuenta del cliente. No es la
-  /// de la tienda: se define al compilar y, mientras esté vacía, el app no
-  /// ofrece "Estado de cuenta".
-  ///   flutter build apk --dart-define=ERP_API_URL=https://.../api
-  static const String erpBaseUrl = String.fromEnvironment('ERP_API_URL');
+  /// de la tienda. Por defecto es la de producción; para otro ERP (por ejemplo
+  /// el local) se cambia al compilar, y si queda vacía el app no ofrece
+  /// "Estado de cuenta":
+  ///   flutter run --dart-define=ERP_API_URL=http://10.0.2.2/api
+  static const String erpBaseUrl = String.fromEnvironment(
+    'ERP_API_URL',
+    defaultValue: 'https://novi-k.com/7power/public/api',
+  );
   static bool get erpConfigured => erpBaseUrl.isNotEmpty;
   static const String statementEndpoint = '/ecommerce/estado-de-cuenta';
 
