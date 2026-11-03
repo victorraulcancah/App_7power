@@ -1,19 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../errors/exceptions.dart';
-
-class NetworkInfo {
-  static Future<bool> get isConnected async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
-      return false;
-    }
-  }
-}
 
 class ApiClient {
   final http.Client _client;
@@ -26,19 +16,24 @@ class ApiClient {
   /// vencida, o abierta en otro dispositivo: el backend solo permite una).
   void Function()? onUnauthorized;
 
-  final Future<bool> Function() _isConnected;
+  final Future<bool> Function()? _isConnected;
 
   /// Raíz de la API a la que apunta este cliente (por defecto, la de la
   /// tienda; el ERP tiene su propia).
   final String _baseUrl;
 
-  /// [isConnected] se puede sustituir en los tests para no depender de la red.
+  /// Por defecto no se comprueba la conexión antes de cada petición: antes se
+  /// resolvía el DNS de google.com en cada una (cientos de milisegundos de más,
+  /// y falla en redes que no lo alcanzan). Si no hay red, la propia petición
+  /// falla y se avisa igual ("Sin conexión a internet"). [isConnected] permite
+  /// a los tests simular la falta de red.
   ApiClient({
     http.Client? client,
     Future<bool> Function()? isConnected,
     String? baseUrl,
   })  : _client = client ?? http.Client(),
-        _isConnected = isConnected ?? (() => NetworkInfo.isConnected),
+        // ignore: prefer_initializing_formals
+        _isConnected = isConnected,
         _baseUrl = baseUrl ?? ApiConstants.baseUrl;
 
   Future<http.Response> get(
@@ -102,7 +97,7 @@ class ApiClient {
     Map<String, String>? headers,
     Map<String, String>? queryParameters,
   }) async {
-    if (!await _isConnected()) {
+    if (_isConnected != null && !await _isConnected()) {
       throw const NetworkException('Sin conexión a internet');
     }
 
@@ -185,8 +180,10 @@ class ApiClient {
   Exception _handleError(dynamic error) {
     if (error is AppException) {
       return error;
-    } else if (error is SocketException) {
-      return const NetworkException('Error de conexión');
+    } else if (error is SocketException || error is http.ClientException) {
+      return const NetworkException('Sin conexión a internet');
+    } else if (error is TimeoutException) {
+      return const NetworkException('La conexión tardó demasiado. Intenta de nuevo');
     } else if (error is HttpException) {
       return NetworkException('Error HTTP: ${error.message}');
     } else {
