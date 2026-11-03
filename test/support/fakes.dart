@@ -26,6 +26,7 @@ import 'package:appecommerce/domain/repositories/store_repository.dart';
 import 'package:appecommerce/domain/usecases/auth_usecases.dart';
 import 'package:appecommerce/domain/usecases/cart_usecases.dart';
 import 'package:appecommerce/domain/usecases/get_banners_usecase.dart';
+import 'package:appecommerce/domain/usecases/get_cached_home_usecases.dart';
 import 'package:appecommerce/domain/usecases/get_categories_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_company_info_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_product_detail_usecase.dart';
@@ -205,6 +206,21 @@ class FakeProductRepo implements ProductRepository {
   Future<Either<Failure, List<BrandEntity>>> getBrands() async =>
       Either.right(brands);
 
+  /// Lo que "tiene guardado el equipo" al arrancar (null = nada guardado).
+  List<CategoryEntity>? cachedCategories;
+  List<BrandEntity>? cachedBrands;
+  ProductsPageEntity? cachedHome;
+
+  @override
+  Future<List<CategoryEntity>?> getCachedCategories() async => cachedCategories;
+
+  @override
+  Future<List<BrandEntity>?> getCachedBrands() async => cachedBrands;
+
+  @override
+  Future<ProductsPageEntity?> getCachedHomeProducts({required int limit}) async =>
+      cachedHome;
+
   @override
   Future<Either<Failure, ProductDetailEntity>> getProductDetail(int id) async {
     final product = products.where((p) => p.id == id).firstOrNull;
@@ -229,10 +245,16 @@ class FakeStoreRepo implements StoreRepository {
   /// Si se indica, la respuesta del backend no llega hasta que se complete.
   final Future<void>? delay;
 
-  FakeStoreRepo({this.company, this.cached, this.delay});
+  /// Banners que "tiene guardados el equipo" al arrancar.
+  final List<BannerEntity>? cachedBanners;
+
+  FakeStoreRepo({this.company, this.cached, this.delay, this.cachedBanners});
 
   @override
   Future<CompanyInfoEntity?> getCachedCompanyInfo() async => cached;
+
+  @override
+  Future<List<BannerEntity>?> getCachedBanners() async => cachedBanners;
 
   @override
   Future<Either<Failure, CompanyInfoEntity>> getCompanyInfo() async {
@@ -315,6 +337,16 @@ class FakeProductRemote implements ProductRemoteDataSource {
 
   @override
   Future<List<BrandEntity>> getBrands() => throw UnimplementedError();
+
+  @override
+  Future<List<CategoryModel>?> getCachedCategories() async => null;
+
+  @override
+  Future<List<BrandEntity>?> getCachedBrands() async => null;
+
+  @override
+  Future<ProductsPageEntity?> getCachedHomeProducts({required int limit}) async =>
+      null;
 }
 
 /// Resultado de login configurable.
@@ -893,10 +925,14 @@ class TestEnv {
     CompanyInfoEntity? company = testCompany,
     CompanyInfoEntity? cachedCompany,
     Future<void>? companyDelay,
+    List<BannerEntity>? cachedBanners,
   })  : products = FakeProductRepo(catalog,
             failure: catalogFailure, pageSize: pageSize),
         store = FakeStoreRepo(
-            company: company, cached: cachedCompany, delay: companyDelay);
+            company: company,
+            cached: cachedCompany,
+            delay: companyDelay,
+            cachedBanners: cachedBanners);
 
   Widget app() => MyApp(providers: [
         ChangeNotifierProvider<AuthProvider>(
@@ -935,6 +971,8 @@ class TestEnv {
           () => HomeProvider(
             getBannersUseCase: GetBannersUseCase(store),
             getProductsUseCase: GetProductsUseCase(products),
+            getCachedBannersUseCase: GetCachedBannersUseCase(store),
+            getCachedHomeProductsUseCase: GetCachedHomeProductsUseCase(products),
           ),
         ),
         DependencyInjection.authAware<ProductsProvider>(
@@ -942,6 +980,8 @@ class TestEnv {
             getProductsUseCase: GetProductsUseCase(products),
             getCategoriesUseCase: GetCategoriesUseCase(products),
             getBrandsUseCase: GetBrandsUseCase(products),
+            getCachedCategoriesUseCase: GetCachedCategoriesUseCase(products),
+            getCachedBrandsUseCase: GetCachedBrandsUseCase(products),
           ),
         ),
         DependencyInjection.authAware<ProductDetailProvider>(

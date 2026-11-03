@@ -4,6 +4,7 @@ import 'package:provider/single_child_widget.dart';
 // Core
 import 'core/constants/api_constants.dart';
 import 'core/network/api_client.dart';
+import 'core/storage/response_cache.dart';
 
 // Data Layer
 import 'data/datasources/addresses_remote_datasource.dart';
@@ -69,6 +70,7 @@ import 'domain/usecases/cart_usecases.dart';
 import 'domain/usecases/get_banners_usecase.dart';
 import 'domain/usecases/get_brands_usecase.dart';
 import 'domain/usecases/get_categories_usecase.dart';
+import 'domain/usecases/get_cached_home_usecases.dart';
 import 'domain/usecases/get_company_info_usecase.dart';
 import 'domain/usecases/get_product_detail_usecase.dart';
 import 'domain/usecases/get_products_usecase.dart';
@@ -105,12 +107,15 @@ class DependencyInjection {
     products: ProductRemoteDataSourceImpl(_apiClient),
   );
 
+  /// Lo último que respondió el servidor para la portada, guardado en el equipo.
+  static final ResponseCache _responseCache = ResponseCache();
+
   static final ProductRepository _productRepository = ProductRepositoryImpl(
-    ProductRemoteDataSourceImpl(_apiClient),
+    ProductRemoteDataSourceImpl(_apiClient, cache: _responseCache),
   );
 
   static final StoreRepository _storeRepository = StoreRepositoryImpl(
-    StoreRemoteDataSourceImpl(_apiClient),
+    StoreRemoteDataSourceImpl(_apiClient, cache: _responseCache),
     localDataSource: StoreLocalDataSourceImpl(),
   );
 
@@ -190,6 +195,9 @@ class DependencyInjection {
           () => HomeProvider(
             getBannersUseCase: GetBannersUseCase(_storeRepository),
             getProductsUseCase: GetProductsUseCase(_productRepository),
+            getCachedBannersUseCase: GetCachedBannersUseCase(_storeRepository),
+            getCachedHomeProductsUseCase:
+                GetCachedHomeProductsUseCase(_productRepository),
           ),
         ),
         authAware<ProductsProvider>(
@@ -197,6 +205,9 @@ class DependencyInjection {
             getProductsUseCase: GetProductsUseCase(_productRepository),
             getCategoriesUseCase: GetCategoriesUseCase(_productRepository),
             getBrandsUseCase: GetBrandsUseCase(_productRepository),
+            getCachedCategoriesUseCase:
+                GetCachedCategoriesUseCase(_productRepository),
+            getCachedBrandsUseCase: GetCachedBrandsUseCase(_productRepository),
           ),
         ),
         authAware<ProductDetailProvider>(

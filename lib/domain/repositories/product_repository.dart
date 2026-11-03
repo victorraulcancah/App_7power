@@ -21,4 +21,13 @@ abstract class ProductRepository {
   Future<Either<Failure, List<BrandEntity>>> getBrands();
 
   Future<Either<Failure, ProductDetailEntity>> getProductDetail(int id);
+
+  /// Lo guardado de la última vez (null si aún no hay), para armar la portada
+  /// al instante mientras llega lo nuevo.
+  Future<List<CategoryEntity>?> getCachedCategories();
+
+  Future<List<BrandEntity>?> getCachedBrands();
+
+  /// Los productos de la portada tal como los vio este mismo cliente.
+  Future<ProductsPageEntity?> getCachedHomeProducts({required int limit});
 }

@@ -40,4 +40,16 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, ProductDetailEntity>> getProductDetail(int id) =>
       guardRequest(() => remoteDataSource.getProductDetail(id));
+
+  @override
+  Future<List<CategoryEntity>?> getCachedCategories() =>
+      remoteDataSource.getCachedCategories();
+
+  @override
+  Future<List<BrandEntity>?> getCachedBrands() =>
+      remoteDataSource.getCachedBrands();
+
+  @override
+  Future<ProductsPageEntity?> getCachedHomeProducts({required int limit}) =>
+      remoteDataSource.getCachedHomeProducts(limit: limit);
 }

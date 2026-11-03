@@ -29,4 +29,8 @@ class StoreRepositoryImpl implements StoreRepository {
   @override
   Future<Either<Failure, List<BannerEntity>>> getBanners() =>
       guardRequest(remoteDataSource.getBanners);
+
+  @override
+  Future<List<BannerEntity>?> getCachedBanners() =>
+      remoteDataSource.getCachedBanners();
 }

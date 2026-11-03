@@ -4,6 +4,7 @@ import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/entities/product_filters.dart';
 import '../../domain/usecases/get_brands_usecase.dart';
+import '../../domain/usecases/get_cached_home_usecases.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
 import 'auth_aware_reload.dart';
@@ -15,10 +16,17 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   final GetCategoriesUseCase getCategoriesUseCase;
   final GetBrandsUseCase? getBrandsUseCase;
 
+  /// Lo guardado de la última vez: las categorías y marcas se muestran al
+  /// instante mientras llegan las actualizadas. Opcionales.
+  final GetCachedCategoriesUseCase? getCachedCategoriesUseCase;
+  final GetCachedBrandsUseCase? getCachedBrandsUseCase;
+
   ProductsProvider({
     required this.getProductsUseCase,
     required this.getCategoriesUseCase,
     this.getBrandsUseCase,
+    this.getCachedCategoriesUseCase,
+    this.getCachedBrandsUseCase,
   });
 
   ProductsStatus _status = ProductsStatus.initial;
@@ -71,6 +79,12 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   }
 
   Future<void> _loadCategories() async {
+    final cached = await getCachedCategoriesUseCase?.call();
+    if (cached != null && cached.isNotEmpty && _categories.isEmpty) {
+      _categories = cached;
+      notifyListeners();
+    }
+
     final result = await getCategoriesUseCase();
     result.fold((_) {}, (categories) => _categories = categories);
     notifyListeners();
@@ -80,6 +94,13 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   Future<void> _loadBrands() async {
     final useCase = getBrandsUseCase;
     if (useCase == null) return;
+
+    final cached = await getCachedBrandsUseCase?.call();
+    if (cached != null && cached.isNotEmpty && _brands.isEmpty) {
+      _brands = cached;
+      notifyListeners();
+    }
+
     final result = await useCase();
     result.fold((_) {}, (brands) => _brands = brands);
     notifyListeners();

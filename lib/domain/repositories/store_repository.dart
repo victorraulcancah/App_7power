@@ -11,4 +11,7 @@ abstract class StoreRepository {
   Future<CompanyInfoEntity?> getCachedCompanyInfo();
 
   Future<Either<Failure, List<BannerEntity>>> getBanners();
+
+  /// Los banners guardados de la última vez (null si aún no hay).
+  Future<List<BannerEntity>?> getCachedBanners();
 }
