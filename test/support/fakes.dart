@@ -223,13 +223,24 @@ class FakeProductRepo implements ProductRepository {
 class FakeStoreRepo implements StoreRepository {
   final CompanyInfoEntity? company;
 
-  FakeStoreRepo({this.company});
+  /// Lo que "tiene guardado el equipo" al arrancar.
+  final CompanyInfoEntity? cached;
+
+  /// Si se indica, la respuesta del backend no llega hasta que se complete.
+  final Future<void>? delay;
+
+  FakeStoreRepo({this.company, this.cached, this.delay});
 
   @override
-  Future<Either<Failure, CompanyInfoEntity>> getCompanyInfo() async =>
-      company == null
-          ? Either.left(const NetworkFailure('Sin conexión'))
-          : Either.right(company!);
+  Future<CompanyInfoEntity?> getCachedCompanyInfo() async => cached;
+
+  @override
+  Future<Either<Failure, CompanyInfoEntity>> getCompanyInfo() async {
+    await delay;
+    return company == null
+        ? Either.left(const NetworkFailure('Sin conexión'))
+        : Either.right(company!);
+  }
 
   @override
   Future<Either<Failure, List<BannerEntity>>> getBanners() async =>
@@ -880,9 +891,12 @@ class TestEnv {
     Failure? catalogFailure,
     int pageSize = 20,
     CompanyInfoEntity? company = testCompany,
+    CompanyInfoEntity? cachedCompany,
+    Future<void>? companyDelay,
   })  : products = FakeProductRepo(catalog,
             failure: catalogFailure, pageSize: pageSize),
-        store = FakeStoreRepo(company: company);
+        store = FakeStoreRepo(
+            company: company, cached: cachedCompany, delay: companyDelay);
 
   Widget app() => MyApp(providers: [
         ChangeNotifierProvider<AuthProvider>(
@@ -914,6 +928,7 @@ class TestEnv {
         ChangeNotifierProvider<CompanyProvider>(
           create: (_) => CompanyProvider(
             getCompanyInfoUseCase: GetCompanyInfoUseCase(store),
+            getCachedCompanyInfoUseCase: GetCachedCompanyInfoUseCase(store),
           )..load(),
         ),
         DependencyInjection.authAware<HomeProvider>(

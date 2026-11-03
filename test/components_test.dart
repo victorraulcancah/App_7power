@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:appecommerce/core/utils/format_utils.dart';
+import 'package:appecommerce/core/utils/image_url.dart';
 import 'package:appecommerce/presentation/components/components.dart';
 import 'package:appecommerce/theme/app_theme.dart';
 
@@ -16,6 +17,29 @@ void main() {
     expect(FormatUtils.money(1234.5), contains('1,234.50'));
     expect(FormatUtils.toDouble('12.5'), 12.5);
     expect(FormatUtils.toDouble(null), 0);
+  });
+
+  group('ImageUrl.resized', () {
+    const base = 'https://api.7power.pe';
+    const foto = '$base/storage/productos/a.jpg';
+
+    test('pide el ancho que alcanza para la densidad de la pantalla', () {
+      // 160 px lógicos a 2.6x = 416 px → el de 480.
+      expect(ImageUrl.resized(foto, 160, 2.6), '$base/api/img/480/productos/a.jpg');
+      // Ancho completo (360 a 3x = 1080).
+      expect(ImageUrl.resized(foto, 360, 3), '$base/api/img/1080/productos/a.jpg');
+      expect(ImageUrl.resized(foto, 60, 1), '$base/api/img/160/productos/a.jpg');
+    });
+
+    test('nunca pide más del mayor ancho disponible', () {
+      expect(ImageUrl.resized(foto, 900, 3), '$base/api/img/1080/productos/a.jpg');
+    });
+
+    test('deja igual lo que no es de storage o no tiene ancho', () {
+      expect(ImageUrl.resized('https://otro.com/a.jpg', 160, 2), isNull);
+      expect(ImageUrl.resized(foto, null, 2), isNull);
+      expect(ImageUrl.resized(foto, double.infinity, 2), isNull);
+    });
   });
 
   group('DataCard', () {

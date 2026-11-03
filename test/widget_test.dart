@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:appecommerce/core/errors/failures.dart';
 import 'package:appecommerce/core/utils/color_utils.dart';
+import 'package:appecommerce/data/datasources/store_local_datasource.dart';
 import 'package:appecommerce/data/models/banner_model.dart';
 import 'package:appecommerce/data/models/category_model.dart';
 import 'package:appecommerce/data/models/company_info_model.dart';
 import 'package:appecommerce/data/models/product_detail_model.dart';
 import 'package:appecommerce/data/models/product_model.dart';
 import 'package:appecommerce/domain/entities/company_info_entity.dart';
+import 'package:appecommerce/presentation/providers/company_provider.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -178,6 +183,106 @@ void main() {
 
     final theme = Theme.of(tester.element(find.byType(AppBar)));
     expect(theme.appBarTheme.backgroundColor, const Color(0xFF9B1C1C));
+  });
+
+  testWidgets('Con datos guardados el navbar sale con su color sin esperar a la red',
+      (tester) async {
+    // El backend "no responde" nunca: solo hay lo guardado en el equipo.
+    final env = TestEnv(
+      catalog: [product(1, 'Driver')],
+      cachedCompany: testCompany,
+      companyDelay: Completer<void>().future,
+    );
+    await tester.pumpWidget(env.app());
+    await tester.pump();
+    await tester.pump();
+
+    final theme = Theme.of(tester.element(find.byType(AppBar)));
+    expect(theme.appBarTheme.backgroundColor, const Color(0xFF112233));
+
+    // Se agota el tiempo de espera del backend para no dejar el timer pendiente.
+    await tester.pump(CompanyProvider.firstLoadLimit);
+  });
+
+  testWidgets('Sin datos guardados espera a la empresa y no pinta el color por defecto',
+      (tester) async {
+    final respuesta = Completer<void>();
+    final env = TestEnv(
+      catalog: [product(1, 'Driver')],
+      companyDelay: respuesta.future,
+    );
+    await tester.pumpWidget(env.app());
+    await tester.pump();
+
+    // Mientras llega: pantalla de carga, sin barra roja que luego cambie.
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    respuesta.complete();
+    await tester.pumpAndSettle();
+
+    final theme = Theme.of(tester.element(find.byType(AppBar)));
+    expect(theme.appBarTheme.backgroundColor, const Color(0xFF112233));
+  });
+
+  testWidgets('Si la empresa tarda más del límite, entra con el tema por defecto y luego se actualiza',
+      (tester) async {
+    final respuesta = Completer<void>();
+    final env = TestEnv(
+      catalog: [product(1, 'Driver')],
+      companyDelay: respuesta.future,
+    );
+    await tester.pumpWidget(env.app());
+    await tester.pump(CompanyProvider.firstLoadLimit + const Duration(seconds: 1));
+    await tester.pump();
+
+    var theme = Theme.of(tester.element(find.byType(AppBar)));
+    expect(theme.appBarTheme.backgroundColor, const Color(0xFF9B1C1C));
+
+    respuesta.complete();
+    await tester.pumpAndSettle();
+
+    theme = Theme.of(tester.element(find.byType(AppBar)));
+    expect(theme.appBarTheme.backgroundColor, const Color(0xFF112233));
+  });
+
+  test('CompanyInfoModel se guarda y se lee igual (toJson/fromJson)', () {
+    final original = CompanyInfoModel.fromJson({
+      'nombre_empresa': '7power',
+      'logo_url': 'https://api.7power.pe/storage/empresa/logos/a.png',
+      'color_navbar': '#000000',
+      'email': 'ventas@7power.pe',
+      'facebook': 'https://www.facebook.com/SEVENPOWER',
+      'metodos_pago': [
+        {'id': 1, 'nombre': 'Plin', 'imagen_url': 'https://x/plin.png'},
+      ],
+    });
+
+    final copia = CompanyInfoModel.fromJson(original.toJson());
+
+    expect(copia.name, '7power');
+    expect(copia.navbarColor, '#000000');
+    expect(copia.logoUrl, original.logoUrl);
+    expect(copia.email, 'ventas@7power.pe');
+    expect(copia.social, original.social);
+    expect(copia.paymentMethods.single.name, 'Plin');
+    expect(copia.paymentMethods.single.imageUrl, 'https://x/plin.png');
+  });
+
+  test('La empresa se guarda en el equipo y se recupera; un dato dañado se ignora',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    final local = StoreLocalDataSourceImpl();
+    expect(await local.readCompany(), isNull);
+
+    await local.writeCompany(CompanyInfoModel.fromJson({
+      'nombre_empresa': '7power',
+      'color_navbar': '#123456',
+    }));
+    expect((await local.readCompany())?.navbarColor, '#123456');
+
+    SharedPreferences.setMockInitialValues({'company_info_v1': '{no es json'});
+    expect(await StoreLocalDataSourceImpl().readCompany(), isNull);
   });
 
   testWidgets('El logo de la empresa sigue en el navbar', (tester) async {

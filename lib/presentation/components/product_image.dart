@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/utils/image_url.dart';
+
 /// Imagen de red con indicador de carga y placeholder si falla o no hay URL.
 ///
 /// Se guarda en disco: las imágenes del catálogo pesan cientos de KB y sin
@@ -17,6 +19,13 @@ class ProductImage extends StatelessWidget {
   final BoxFit fit;
   final BorderRadius? borderRadius;
 
+  /// Qué mostrar si no hay imagen o no carga (por defecto, un ícono gris). Los
+  /// logos usan su nombre en texto.
+  final Widget? fallback;
+
+  /// Sin spinner mientras carga: para logos chicos que no deben saltar.
+  final bool showSpinner;
+
   const ProductImage({
     super.key,
     this.url,
@@ -24,30 +33,35 @@ class ProductImage extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.borderRadius,
+    this.fallback,
+    this.showSpinner = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = Container(
-      width: width,
-      height: height,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        color: Theme.of(context).colorScheme.outline,
-      ),
-    );
+    final placeholder = fallback ??
+        Container(
+          width: width,
+          height: height,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: Theme.of(context).colorScheme.outline,
+          ),
+        );
 
     final spinner = SizedBox(
       width: width,
       height: height,
-      child: const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
+      child: showSpinner
+          ? const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          : null,
     );
 
     final Widget image = (url == null || url!.isEmpty)
@@ -70,19 +84,29 @@ class ProductImage extends StatelessWidget {
                       ? width
                       : (constraints.hasBoundedWidth ? constraints.maxWidth : null);
                   final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+                  final memCacheWidth = drawnWidth == null || !drawnWidth.isFinite
+                      ? null
+                      : (drawnWidth * pixelRatio).round();
 
-                  return CachedNetworkImage(
-                    imageUrl: url!,
-                    width: width,
-                    height: height,
-                    fit: fit,
-                    memCacheWidth: drawnWidth == null || !drawnWidth.isFinite
-                        ? null
-                        : (drawnWidth * pixelRatio).round(),
-                    fadeInDuration: const Duration(milliseconds: 150),
-                    errorWidget: (_, _, _) => placeholder,
-                    progressIndicatorBuilder: (_, _, _) => spinner,
-                  );
+                  CachedNetworkImage network(String imageUrl, WidgetBuilder? onError) =>
+                      CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        width: width,
+                        height: height,
+                        fit: fit,
+                        memCacheWidth: memCacheWidth,
+                        fadeInDuration: const Duration(milliseconds: 150),
+                        errorWidget: (context, _, _) =>
+                            onError == null ? placeholder : onError(context),
+                        progressIndicatorBuilder: (_, _, _) => spinner,
+                      );
+
+                  // Se pide la versión reducida; si el backend aún no la ofrece
+                  // (o falla), se usa la original en lugar de dejar un hueco.
+                  final resized = ImageUrl.resized(url!, drawnWidth, pixelRatio);
+                  return resized == null
+                      ? network(url!, null)
+                      : network(resized, (_) => network(url!, null));
                 },
               );
 

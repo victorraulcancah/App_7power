@@ -7,5 +7,8 @@ import '../entities/company_info_entity.dart';
 abstract class StoreRepository {
   Future<Either<Failure, CompanyInfoEntity>> getCompanyInfo();
 
+  /// Los últimos datos de la empresa guardados en el equipo (null si aún no hay).
+  Future<CompanyInfoEntity?> getCachedCompanyInfo();
+
   Future<Either<Failure, List<BannerEntity>>> getBanners();
 }

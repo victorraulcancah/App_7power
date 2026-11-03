@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'product_image.dart';
+
 /// Logo de la empresa. Usa el que está configurado en el backend
 /// (`logo_url`); si no hay o no carga, el logo de la tienda web, igual que
 /// hace la web con `assets/images/logo/logo.svg`.
@@ -24,11 +26,14 @@ class BrandLogo extends StatelessWidget {
     final logoUrl = url;
     if (logoUrl == null || logoUrl.isEmpty) return _fallback;
 
-    return Image.network(
-      logoUrl,
+    // Con caché en disco: el logo se descargaba en cada arranque y la barra
+    // quedaba con el logo de respaldo hasta que llegaba.
+    return ProductImage(
+      url: logoUrl,
       height: height,
       fit: BoxFit.contain,
-      errorBuilder: (_, _, _) => _fallback,
+      showSpinner: false,
+      fallback: _fallback,
     );
   }
 }

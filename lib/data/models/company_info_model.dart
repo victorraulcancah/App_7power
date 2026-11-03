@@ -16,6 +16,25 @@ class CompanyInfoModel extends CompanyInfoEntity {
     super.paymentMethods,
   });
 
+  /// Mismo formato que la respuesta del backend, para guardarlo en el equipo y
+  /// leerlo con [CompanyInfoModel.fromJson] en el próximo arranque.
+  Map<String, dynamic> toJson() => {
+        'nombre_empresa': name,
+        'logo_url': logoUrl,
+        'color_navbar': navbarColor,
+        'email': email,
+        'telefono': phone,
+        'celular': mobile,
+        'direccion': address,
+        'horario_atencion': openingHours,
+        'website': website,
+        for (final entry in social.entries) entry.key.name: entry.value,
+        'metodos_pago': [
+          for (final m in paymentMethods)
+            {'id': m.id, 'nombre': m.name, 'imagen_url': m.imageUrl},
+        ],
+      };
+
   factory CompanyInfoModel.fromJson(Map<String, dynamic> json) {
     String? text(String key) {
       final value = json[key]?.toString().trim();

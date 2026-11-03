@@ -174,10 +174,12 @@ class MorePage extends StatelessWidget {
                         ),
                         child: m.imageUrl == null
                             ? Text(m.name)
-                            : Image.network(
-                                m.imageUrl!,
+                            : ProductImage(
+                                url: m.imageUrl,
                                 height: 28,
-                                errorBuilder: (_, _, _) => Text(m.name),
+                                fit: BoxFit.contain,
+                                showSpinner: false,
+                                fallback: Text(m.name),
                               ),
                       ),
                   ],

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/color_utils.dart';
 import '../../domain/entities/company_info_entity.dart';
+import 'product_image.dart';
 
 /// Pie de página de la tienda. Usa el mismo color que el navbar, que define la
 /// empresa en el backend (igual que la web).
@@ -54,10 +55,12 @@ class AppFooter extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (info.logoUrl != null)
-            Image.network(
-              info.logoUrl!,
+            ProductImage(
+              url: info.logoUrl,
               height: 44,
-              errorBuilder: (_, _, _) => Text(info.name, style: textStyle),
+              fit: BoxFit.contain,
+              showSpinner: false,
+              fallback: Text(info.name, style: textStyle),
             )
           else
             Text(info.name,
@@ -110,10 +113,12 @@ class AppFooter extends StatelessWidget {
                     ),
                     child: method.imageUrl == null
                         ? Text(method.name)
-                        : Image.network(
-                            method.imageUrl!,
+                        : ProductImage(
+                            url: method.imageUrl,
                             height: 28,
-                            errorBuilder: (_, _, _) => Text(method.name),
+                            fit: BoxFit.contain,
+                            showSpinner: false,
+                            fallback: Text(method.name),
                           ),
                   ),
               ],

@@ -44,6 +44,7 @@ import 'data/datasources/auth_remote_datasource.dart';
 import 'data/datasources/cart_local_datasource.dart';
 import 'data/datasources/cart_remote_datasource.dart';
 import 'data/datasources/product_remote_datasource.dart';
+import 'data/datasources/store_local_datasource.dart';
 import 'data/datasources/store_remote_datasource.dart';
 import 'data/repositories/auth_repository_impl.dart';
 import 'data/repositories/cart_repository_impl.dart';
@@ -110,6 +111,7 @@ class DependencyInjection {
 
   static final StoreRepository _storeRepository = StoreRepositoryImpl(
     StoreRemoteDataSourceImpl(_apiClient),
+    localDataSource: StoreLocalDataSourceImpl(),
   );
 
   static final FavoritesRepository _favoritesRepository =
@@ -178,6 +180,8 @@ class DependencyInjection {
         ChangeNotifierProvider<CompanyProvider>(
           create: (_) => CompanyProvider(
             getCompanyInfoUseCase: GetCompanyInfoUseCase(_storeRepository),
+            getCachedCompanyInfoUseCase:
+                GetCachedCompanyInfoUseCase(_storeRepository),
           )..load(),
         ),
         // Estos tres muestran precios, que dependen del cliente logueado: se

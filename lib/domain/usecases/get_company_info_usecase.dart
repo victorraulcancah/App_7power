@@ -11,3 +11,12 @@ class GetCompanyInfoUseCase {
   Future<Either<Failure, CompanyInfoEntity>> call() =>
       repository.getCompanyInfo();
 }
+
+/// Lo último que se guardó de la empresa, sin ir a la red.
+class GetCachedCompanyInfoUseCase {
+  final StoreRepository repository;
+
+  GetCachedCompanyInfoUseCase(this.repository);
+
+  Future<CompanyInfoEntity?> call() => repository.getCachedCompanyInfo();
+}
