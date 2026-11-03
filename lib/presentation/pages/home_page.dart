@@ -119,24 +119,16 @@ class _HomeSearchState extends State<_HomeSearch> {
         AppConstants.defaultPadding,
         12,
       ),
-      child: TextField(
-        key: const Key('home-search'),
-        controller: _controller,
-        textInputAction: TextInputAction.search,
-        onSubmitted: (_) => _submit(),
-        decoration: InputDecoration(
-          hintText: 'Buscar productos, marcas o códigos',
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: IconButton(
-            tooltip: 'Buscar',
-            icon: const Icon(Icons.arrow_forward_rounded),
-            onPressed: _submit,
-          ),
-          filled: true,
-          fillColor: const Color(0xFFF3F3F5),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
-            borderSide: BorderSide.none,
+      child: SearchBox(
+        child: TextField(
+          key: const Key('home-search'),
+          controller: _controller,
+          textInputAction: TextInputAction.search,
+          onSubmitted: (_) => _submit(),
+          decoration: SearchBox.decoration(
+            context,
+            hint: 'Buscar productos, marcas o códigos',
+            suffix: SearchSubmitButton(onPressed: _submit),
           ),
         ),
       ),
