@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/utils/color_utils.dart';
 import '../../domain/entities/company_info_entity.dart';
 import '../../domain/entities/product_filters.dart';
+import '../../theme/app_theme.dart';
 import '../components/components.dart';
 import '../providers/company_provider.dart';
 import '../utils/open_url.dart';
@@ -46,7 +46,7 @@ class MorePage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        _BrandCard(info: info, color: company.brandColor),
+        _BrandCard(info: info),
         MenuGroup(title: 'Compra en 7power', children: [
           MenuItem(
             icon: Icons.local_fire_department_outlined,
@@ -195,20 +195,21 @@ class MorePage extends StatelessWidget {
 /// Tarjeta de portada con el logo y los datos básicos de la empresa.
 class _BrandCard extends StatelessWidget {
   final CompanyInfoEntity? info;
-  final Color color;
 
-  const _BrandCard({required this.info, required this.color});
+  const _BrandCard({required this.info});
 
   @override
   Widget build(BuildContext context) {
-    final onColor = ColorUtils.onColor(color);
+    // Rojo de la marca con degradado: el negro es solo de la barra superior y
+    // del footer.
+    const onColor = Colors.white;
     final theme = Theme.of(context);
 
     return Container(
       margin: const EdgeInsets.all(AppConstants.defaultPadding),
       padding: const EdgeInsets.all(AppConstants.defaultPadding * 1.25),
       decoration: BoxDecoration(
-        color: color,
+        gradient: AppTheme.gradient,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
