@@ -34,53 +34,6 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-/// Categoría con su imagen en un círculo y el nombre debajo.
-class _CategoryBubble extends StatelessWidget {
-  final CategoryEntity category;
-  final VoidCallback onTap;
-
-  const _CategoryBubble({required this.category, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 80,
-        child: Column(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.surfaceContainerHighest,
-                border: Border.all(color: const Color(0xFFE6E6E9)),
-              ),
-              child: category.imageUrl == null
-                  ? Icon(Icons.category_outlined,
-                      color: theme.colorScheme.outline)
-                  : ProductImage(url: category.imageUrl),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              FormatUtils.titleCase(category.name),
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Buscador de la portada, como el de la web: al enviar el texto se abre la
 /// tienda con los resultados (no busca mientras se escribe).
 class _HomeSearch extends StatefulWidget {
@@ -151,7 +104,6 @@ class _ShopByBrand extends StatelessWidget {
     if (all.isEmpty) return const SizedBox.shrink();
 
     final brands = all.take(maxBrands).toList();
-    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,63 +115,7 @@ class _ShopByBrand extends StatelessWidget {
             builder: (_) => BrandsPage(onSelected: onOpenBrand),
           )),
         ),
-        SizedBox(
-          height: 112,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.defaultPadding,
-            ),
-            itemCount: brands.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final brand = brands[i];
-              return InkWell(
-                key: Key('home-brand-${brand.id}'),
-                onTap: () => onOpenBrand(brand),
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: 96,
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 96,
-                        height: 76,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE6E6E9)),
-                        ),
-                        child: brand.imageUrl == null
-                            ? Center(
-                                child: Text(
-                                  brand.name,
-                                  maxLines: 2,
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelMedium,
-                                ),
-                              )
-                            : ProductImage(
-                                url: brand.imageUrl,
-                                fit: BoxFit.contain,
-                              ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        brand.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        BrandCarousel(brands: brands, onTap: onOpenBrand),
       ],
     );
   }
@@ -356,29 +252,34 @@ class _HomePageState extends State<HomePage> {
               if (b.linkUrl?.startsWith('/shop') ?? false) widget.onOpenShop();
             },
           ),
-          if (categories.isNotEmpty) ...[
-            const SectionHeader(title: 'Categorías'),
-            SizedBox(
-              height: 104,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.defaultPadding,
-                ),
-                itemCount: categories.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
-                itemBuilder: (context, i) => _CategoryBubble(
-                  category: categories[i],
-                  onTap: () => widget.onOpenShop(categoryId: categories[i].id),
-                ),
+          // Cada sección entra una tras otra, con un leve desvanecido.
+          if (categories.isNotEmpty)
+            FadeSlideIn(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionHeader(
+                    title: 'Categorías',
+                    onAction: () => widget.onOpenShop(),
+                  ),
+                  CategoryCarousel(
+                    categories: categories,
+                    onTap: (c) => widget.onOpenShop(categoryId: c.id),
+                  ),
+                ],
               ),
             ),
-          ],
-          _Recommended(
-            categories: categories,
-            onOpenShop: widget.onOpenShop,
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 120),
+            child: _Recommended(
+              categories: categories,
+              onOpenShop: widget.onOpenShop,
+            ),
           ),
-          _ShopByBrand(onOpenBrand: widget.onOpenBrand),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 240),
+            child: _ShopByBrand(onOpenBrand: widget.onOpenBrand),
+          ),
           const SizedBox(height: 24),
         ],
       ),

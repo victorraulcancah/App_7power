@@ -23,6 +23,16 @@ class SectionHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Barrita roja a la izquierda del título.
+          Container(
+            width: 4,
+            height: 20,
+            margin: const EdgeInsets.only(right: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           Expanded(
             child: Text(
               title,
