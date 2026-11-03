@@ -19,6 +19,10 @@ class CompanyInfoEntity {
 
   /// Color del navbar y del footer, "#RRGGBB". Lo configura la empresa.
   final String? navbarColor;
+
+  /// Pantalla de carga: color de fondo "#RRGGBB" y texto, como en la web.
+  final String? splashColor;
+  final String? splashText;
   final String? email;
   final String? phone;
   final String? mobile;
@@ -32,6 +36,8 @@ class CompanyInfoEntity {
     required this.name,
     this.logoUrl,
     this.navbarColor,
+    this.splashColor,
+    this.splashText,
     this.email,
     this.phone,
     this.mobile,

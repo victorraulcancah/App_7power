@@ -2,24 +2,42 @@ import 'package:flutter/material.dart';
 import '../core/utils/color_utils.dart';
 
 class AppTheme {
-  /// Color de marca por defecto. Se usa hasta que llega el de la empresa
-  /// (`color_navbar` en /empresa-info/publica) o si el backend no lo define.
+  /// Rojo de la marca: es el color de la app (botones, íconos, selección,
+  /// precios). El color que la empresa configura en el backend (`color_navbar`,
+  /// hoy negro) es solo de la barra superior y del footer; si no lo define, esas
+  /// también usan este rojo.
   static const Color primary = Color(0xFF9B1C1C);
+
+  /// Tonalidades del rojo: más oscuro para degradados y fondos suaves para
+  /// botones secundarios, íconos y fichas.
+  static const Color primaryDark = Color(0xFF6B1111);
+  static const Color primaryLight = Color(0xFFD13A3A);
+  static const Color primarySoft = Color(0xFFFBE4E4);
+
+  /// Degradado de la marca para cabeceras y tarjetas destacadas.
+  static const LinearGradient gradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primaryDark, primary, primaryLight],
+    stops: [0, 0.55, 1],
+  );
   static const Color secondary = Color(0xFF000000);
   static const Color bg = Colors.white;
 
   /// Fondo de las pantallas con tarjetas (gris muy claro, para que se noten).
   static const Color canvas = Color(0xFFF6F6F7);
 
-  /// Tema de la tienda. [brand] es el color del navbar/footer que configura la
-  /// empresa en el backend; también es el color primario de la app.
+  /// Tema de la tienda. [navbar] es el color de la barra superior y del footer
+  /// que configura la empresa en el backend; el resto de la app usa el rojo de
+  /// la marca en distintas tonalidades.
   ///
   /// Los grises (superficies, bordes, indicador de la barra inferior) salen de
-  /// una paleta neutra: si salieran del color de marca, un navbar negro daría
-  /// tonos rosados raros en toda la app.
-  static ThemeData build([Color? brand]) {
-    final seed = brand ?? primary;
+  /// una paleta neutra: así un navbar negro no tiñe el resto de la app.
+  static ThemeData build([Color? navbar]) {
+    const seed = primary;
     final onSeed = ColorUtils.onColor(seed);
+    final bar = navbar ?? primary;
+    final onBar = ColorUtils.onColor(bar);
 
     final neutral = ColorScheme.fromSeed(
       seedColor: const Color(0xFF707070),
@@ -30,6 +48,8 @@ class AppTheme {
       onPrimary: onSeed,
       surface: Colors.white,
       surfaceTint: Colors.transparent,
+      primaryContainer: primarySoft,
+      onPrimaryContainer: primaryDark,
       secondaryContainer: seed.withValues(alpha: 0.10),
       onSecondaryContainer: seed,
     );
@@ -40,14 +60,15 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: bg,
+      // Barra superior: el color de la empresa (negro hoy).
       appBarTheme: AppBarTheme(
-        backgroundColor: seed,
-        foregroundColor: onSeed,
+        backgroundColor: bar,
+        foregroundColor: onBar,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: onSeed,
+          color: onBar,
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),

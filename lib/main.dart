@@ -5,7 +5,7 @@ import 'package:provider/single_child_widget.dart';
 
 import 'core/constants/app_constants.dart';
 import 'dependency_injection.dart';
-import 'presentation/pages/main_shell.dart';
+import 'presentation/pages/startup_gate.dart';
 import 'presentation/providers/company_provider.dart';
 
 void main() {
@@ -38,21 +38,10 @@ class MyApp extends StatelessWidget {
           locale: const Locale('es', 'PE'),
           supportedLocales: const [Locale('es', 'PE'), Locale('es')],
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          // Sin datos de la empresa no se sabe qué color usar: se espera un
-          // instante en lugar de pintar el color por defecto y cambiarlo.
-          home: company.isLoaded ? const MainShell() : const _Splash(),
+          // Pantalla de carga hasta tener el color de la empresa y la portada.
+          home: const StartupGate(),
         ),
       ),
     );
   }
-}
-
-class _Splash extends StatelessWidget {
-  const _Splash();
-
-  @override
-  Widget build(BuildContext context) => const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      );
 }

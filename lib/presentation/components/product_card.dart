@@ -50,7 +50,13 @@ class ProductCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: radius),
+      // Borde en rojo suave, como la tarjeta de la web.
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(
+          color: theme.colorScheme.primary.withValues(alpha: 0.35),
+        ),
+      ),
       child: InkWell(
         onTap: onTap,
         child: Column(
@@ -104,8 +110,15 @@ class ProductCard extends StatelessWidget {
                             : const LockedPrice(),
                       ),
                       if (priceVisible && onAddToCart != null)
+                        // Rojo suave con ícono rojo: el "Agregar al carrito" de la web.
                         IconButton.filled(
                           visualDensity: VisualDensity.compact,
+                          style: IconButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            foregroundColor: theme.colorScheme.primary,
+                            disabledBackgroundColor:
+                                theme.colorScheme.surfaceContainerHighest,
+                          ),
                           onPressed: available ? onAddToCart : null,
                           icon: const Icon(Icons.add_shopping_cart, size: 18),
                         ),

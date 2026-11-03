@@ -52,24 +52,23 @@ void main() {
 
     testWidgets('el texto se lee: oscuro en las demás y claro sobre la elegida',
         (tester) async {
-      // Marca negra (la que usa 7power): la elegida es negra con texto blanco.
+      // Aunque el navbar de la empresa sea negro, las fichas son rojas.
       await pumpChips(tester, const Color(0xFF000000));
 
       expect(labelColor(tester, 'Cables'), const Color(0xFF26262B));
       expect(labelColor(tester, 'Todo'), Colors.white);
     });
 
-    testWidgets('con una marca clara el texto de la elegida es oscuro',
-        (tester) async {
+    testWidgets('el color del navbar no cambia el de las fichas', (tester) async {
       await pumpChips(tester, const Color(0xFFFFEB3B));
 
-      expect(labelColor(tester, 'Todo'), Colors.black);
-      expect(labelColor(tester, 'Cables'), const Color(0xFF26262B));
+      expect(labelColor(tester, 'Todo'), Colors.white);
+      final theme = Theme.of(tester.element(find.byType(RawChip).first));
+      expect(theme.chipTheme.selectedColor, AppTheme.primary);
     });
 
-    testWidgets('la elegida se rellena con el color de la marca y sin check',
-        (tester) async {
-      await pumpChips(tester, const Color(0xFF9B1C1C));
+    testWidgets('la elegida se rellena de rojo y sin check', (tester) async {
+      await pumpChips(tester, const Color(0xFF000000));
 
       final chip = tester.widget<RawChip>(find.byType(RawChip).first);
       expect(chip.showCheckmark, isFalse);

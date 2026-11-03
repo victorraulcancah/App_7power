@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/format_utils.dart';
 import '../../../domain/entities/statement_entity.dart';
+import '../../../theme/app_theme.dart';
 import '../../components/components.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/load_status.dart';
@@ -277,7 +278,7 @@ class _BalanceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
+        gradient: AppTheme.gradient,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(

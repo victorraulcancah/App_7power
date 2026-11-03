@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../theme/app_theme.dart';
 import '../components/components.dart';
 import '../providers/auth_provider.dart';
 import '../providers/favorites_provider.dart';
@@ -187,9 +188,9 @@ class _Header extends StatelessWidget {
         AppConstants.defaultPadding * 1.25, 8,
         AppConstants.defaultPadding * 1.25, 24,
       ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      decoration: const BoxDecoration(
+        gradient: AppTheme.gradient,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(
         children: [

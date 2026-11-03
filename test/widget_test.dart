@@ -13,6 +13,8 @@ import 'package:appecommerce/data/models/company_info_model.dart';
 import 'package:appecommerce/data/models/product_detail_model.dart';
 import 'package:appecommerce/data/models/product_model.dart';
 import 'package:appecommerce/domain/entities/company_info_entity.dart';
+import 'package:appecommerce/presentation/components/components.dart';
+import 'package:appecommerce/presentation/pages/startup_gate.dart';
 import 'package:appecommerce/presentation/providers/company_provider.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 import 'package:provider/provider.dart';
@@ -214,15 +216,74 @@ void main() {
     await tester.pumpWidget(env.app());
     await tester.pump();
 
-    // Mientras llega: pantalla de carga, sin barra roja que luego cambie.
+    // Mientras llega: el splash de la tienda, sin barra roja que luego cambie.
     expect(find.byType(AppBar), findsNothing);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(SplashScreen), findsOneWidget);
+    expect(find.text('CARGANDO...'), findsOneWidget);
 
     respuesta.complete();
     await tester.pumpAndSettle();
 
+    // Ya con la tienda lista el splash se quita.
+    expect(find.byType(SplashScreen), findsNothing);
     final theme = Theme.of(tester.element(find.byType(AppBar)));
     expect(theme.appBarTheme.backgroundColor, const Color(0xFF112233));
+  });
+
+  testWidgets('El splash usa el color y el texto que define la empresa',
+      (tester) async {
+    final respuesta = Completer<void>();
+    final env = TestEnv(
+      catalog: [product(1, 'Driver')],
+      cachedCompany: const CompanyInfoEntity(
+        name: '7power',
+        navbarColor: '#112233',
+        splashColor: '#003300',
+        splashText: 'Preparando tu tienda',
+      ),
+      // La portada tarda: se ve el splash con lo guardado de la empresa.
+      companyDelay: respuesta.future,
+    );
+    await tester.pumpWidget(env.app());
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('PREPARANDO TU TIENDA'), findsOneWidget);
+    final fondo = tester.widget<ColoredBox>(find.descendant(
+      of: find.byType(SplashScreen),
+      matching: find.byType(ColoredBox),
+    ).first);
+    expect(fondo.color, const Color(0xFF003300));
+
+    // Con la portada cargada se quita.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(StartupGate.fade);
+    expect(find.byType(SplashScreen), findsNothing);
+
+    await tester.pump(CompanyProvider.firstLoadLimit);
+    respuesta.complete();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Si la portada no llega, el splash se quita al pasar el límite',
+      (tester) async {
+    final env = TestEnv(
+      catalog: [product(1, 'Driver')],
+      cachedCompany: testCompany,
+      companyDelay: Completer<void>().future,
+    );
+    await tester.pumpWidget(env.app());
+    await tester.pump();
+
+    // Pasado el límite se entra aunque la empresa no haya respondido; cada
+    // paso (tienda construida, portada cargada, desvanecido) necesita un cuadro.
+    await tester.pump(StartupGate.limit + const Duration(seconds: 1));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(StartupGate.fade + const Duration(milliseconds: 50));
+    }
+
+    expect(find.byType(SplashScreen), findsNothing);
+    expect(find.byType(AppBar), findsWidgets);
   });
 
   testWidgets('Si la empresa tarda más del límite, entra con el tema por defecto y luego se actualiza',

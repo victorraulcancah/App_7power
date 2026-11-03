@@ -78,20 +78,35 @@ void main() {
       }
     });
 
-    test('la marca es el color primario y se lee sobre él', () {
-      final dark = AppTheme.build(Colors.black).colorScheme;
-      expect(dark.primary, Colors.black);
-      expect(dark.onPrimary, Colors.white);
+    test('el color de la empresa es solo de la barra superior; la app es roja', () {
+      final theme = AppTheme.build(Colors.black);
 
-      final light = AppTheme.build(Colors.yellow).colorScheme;
-      expect(light.onPrimary, Colors.black);
+      // Barra superior: negro, con texto claro.
+      expect(theme.appBarTheme.backgroundColor, Colors.black);
+      expect(theme.appBarTheme.foregroundColor, Colors.white);
+      // El resto de la app: rojo de la marca, que no cambia con el navbar.
+      expect(theme.colorScheme.primary, AppTheme.primary);
+      expect(theme.colorScheme.onPrimary, Colors.white);
+      expect(theme.colorScheme.primaryContainer, AppTheme.primarySoft);
+      expect(AppTheme.build(Colors.yellow).colorScheme.primary, AppTheme.primary);
+      // Una barra clara lleva texto oscuro.
+      expect(AppTheme.build(Colors.yellow).appBarTheme.foregroundColor, Colors.black);
     });
 
-    test('la barra inferior es blanca y marca la pestaña con la marca', () {
+    test('sin color de empresa la barra usa el rojo de la marca', () {
+      expect(AppTheme.build().appBarTheme.backgroundColor, AppTheme.primary);
+    });
+
+    test('la barra inferior es blanca y marca la pestaña en rojo', () {
       final nav = AppTheme.build(const Color(0xFF112233)).navigationBarTheme;
 
       expect(nav.backgroundColor, Colors.white);
-      expect(nav.indicatorColor, const Color(0xFF112233).withValues(alpha: 0.12));
+      expect(nav.indicatorColor, AppTheme.primary.withValues(alpha: 0.12));
+    });
+
+    test('el degradado va del rojo oscuro al claro pasando por el de la marca', () {
+      expect(AppTheme.gradient.colors,
+          [AppTheme.primaryDark, AppTheme.primary, AppTheme.primaryLight]);
     });
   });
 
