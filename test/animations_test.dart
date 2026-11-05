@@ -181,6 +181,135 @@ void main() {
     });
   });
 
+  group('Bounce', () {
+    setUp(() => Bounce.enabled = true);
+    tearDown(() => Bounce.enabled = false);
+
+    double scale(WidgetTester tester) => tester
+        .widget<ScaleTransition>(find.descendant(
+          of: find.byType(Bounce),
+          matching: find.byType(ScaleTransition),
+        ))
+        .scale
+        .value;
+
+    Widget app(Object? trigger) =>
+        _app(Center(child: Bounce(trigger: trigger, child: const Text('♥'))));
+
+    testWidgets('rebota cuando cambia lo que lo dispara', (tester) async {
+      await tester.pumpWidget(app(1));
+      expect(scale(tester), 1);
+
+      await tester.pumpWidget(app(2));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(scale(tester), greaterThan(1.1), reason: 'se agranda');
+
+      await tester.pumpAndSettle();
+      expect(scale(tester), closeTo(1, 0.001), reason: 'vuelve a su tamaño');
+    });
+
+    testWidgets('si no cambia nada, no se mueve', (tester) async {
+      await tester.pumpWidget(app(1));
+      await tester.pumpWidget(app(1));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(scale(tester), 1);
+    });
+
+    testWidgets('apagado no rebota', (tester) async {
+      Bounce.enabled = false;
+      await tester.pumpWidget(app(1));
+      await tester.pumpWidget(app(2));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(scale(tester), 1);
+    });
+  });
+
+  group('PressScale', () {
+    setUp(() => PressScale.enabled = true);
+    tearDown(() => PressScale.enabled = false);
+
+    double scale(WidgetTester tester) => tester
+        .widget<AnimatedScale>(find.descendant(
+          of: find.byType(PressScale),
+          matching: find.byType(AnimatedScale),
+        ))
+        .scale;
+
+    testWidgets('se achica mientras se presiona y el toque sigue funcionando',
+        (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(_app(Center(
+        child: PressScale(
+          scale: 0.9,
+          child: GestureDetector(
+            onTap: () => taps++,
+            child: const SizedBox(width: 100, height: 100, child: Text('Tarjeta')),
+          ),
+        ),
+      )));
+      expect(scale(tester), 1);
+
+      final gesture = await tester.startGesture(tester.getCenter(find.text('Tarjeta')));
+      await tester.pump();
+      expect(scale(tester), 0.9);
+
+      await gesture.up();
+      await tester.pump();
+      expect(scale(tester), 1);
+      expect(taps, 1, reason: 'no se come el toque');
+    });
+  });
+
+  group('Esqueletos', () {
+    testWidgets('la portada vacía se arma sin errores y con la forma de la real',
+        (tester) async {
+      tester.view.physicalSize = const Size(822, 1600);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_app(const HomeSkeleton()));
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ProductCardSkeleton), findsNWidgets(2));
+      expect(find.byType(SkeletonBox), findsWidgets);
+    });
+
+    testWidgets('la cuadrícula tiene tantas tarjetas como se pidan', (tester) async {
+      tester.view.physicalSize = const Size(822, 2400);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_app(const ProductGridSkeleton(count: 4)));
+
+      expect(find.byType(ProductCardSkeleton), findsNWidgets(4));
+    });
+
+    testWidgets('el brillo recorre el esqueleto y se detiene al quitarlo',
+        (tester) async {
+      Shimmer.animate = true;
+      addTearDown(() => Shimmer.animate = false);
+
+      await tester.pumpWidget(_app(const Shimmer(child: SkeletonBox(width: 100, height: 20))));
+      await tester.pump(const Duration(milliseconds: 300));
+      // Sigue animando: hay un cuadro pendiente.
+      expect(tester.binding.hasScheduledFrame, isTrue);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, isFalse);
+    });
+
+    testWidgets('apagado no programa cuadros (las pruebas pueden terminar)',
+        (tester) async {
+      await tester.pumpWidget(_app(const Shimmer(child: SkeletonBox(width: 100, height: 20))));
+      await tester.pumpAndSettle();
+
+      expect(tester.binding.hasScheduledFrame, isFalse);
+    });
+  });
+
   group('FadeSlideIn', () {
     setUp(() => FadeSlideIn.enabled = true);
     tearDown(() => FadeSlideIn.enabled = false);

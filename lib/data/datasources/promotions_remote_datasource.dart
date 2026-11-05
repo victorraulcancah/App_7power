@@ -9,6 +9,11 @@ abstract class PromotionsRemoteDataSource {
   Future<List<CouponOffer>> getActiveCoupons();
 
   Future<OfferBanner> getOffers();
+
+  Future<List<PromoBanner>> getPromoBanners();
+
+  /// Las ventas flash vigentes (sin las que ya terminaron).
+  Future<List<FlashSale>> getFlashSales();
 }
 
 class PromotionsRemoteDataSourceImpl implements PromotionsRemoteDataSource {
@@ -44,6 +49,58 @@ class PromotionsRemoteDataSourceImpl implements PromotionsRemoteDataSource {
                   c['solo_primera_compra'] == 1,
             ))
         .where((c) => c.code.isNotEmpty)
+        .toList();
+  }
+
+  @override
+  Future<List<PromoBanner>> getPromoBanners() async {
+    final response = await client.get(ApiConstants.promoBannersEndpoint);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
+    // Llega como { status, data: [...] }.
+    final list = body is Map ? body['data'] : body;
+    return ((list as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map((b) => PromoBanner(
+              id: (b['id'] as num).toInt(),
+              title: _text(b['titulo']) ?? '',
+              price: _text(b['precio']),
+              buttonText: _text(b['texto_boton']),
+              imageUrl: _text(b['imagen_url']),
+              linkUrl: _text(b['enlace_url']),
+              buttonColor: _text(b['color_boton']),
+              nameBadgeColor: _text(b['color_badge_nombre']),
+              priceBadgeColor: _text(b['color_badge_precio']),
+            ))
+        // Sin imagen no hay nada que mostrar.
+        .where((b) => b.imageUrl != null)
+        .toList();
+  }
+
+  @override
+  Future<List<FlashSale>> getFlashSales() async {
+    final response = await client.get(ApiConstants.flashSalesEndpoint);
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
+    final list = body is Map ? body['data'] : body;
+    final now = DateTime.now();
+
+    return ((list as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map((s) {
+          final endsAt = DateTime.tryParse(s['fecha_fin']?.toString() ?? '');
+          if (endsAt == null) return null;
+          return FlashSale(
+            id: (s['id'] as num).toInt(),
+            name: _text(s['nombre']) ?? '',
+            imageUrl: _text(s['imagen_url']),
+            endsAt: endsAt,
+            buttonText: _text(s['texto_boton']),
+            linkUrl: _text(s['enlace_url']),
+            buttonColor: _text(s['color_boton']),
+            badgeColor: _text(s['color_badge']),
+          );
+        })
+        .whereType<FlashSale>()
+        .where((s) => s.isActive(now))
         .toList();
   }
 

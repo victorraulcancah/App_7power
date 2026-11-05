@@ -19,6 +19,9 @@ class ProductDetailEntity {
   final String? specifications;
   final String? technicalFeatures;
   final String? warranty;
+
+  /// Dirección del manual en PDF, si el producto lo tiene.
+  final String? manualUrl;
   final List<ProductEntity> related;
 
   /// Más de una opción => la ficha muestra el selector S/ - US$.
@@ -31,6 +34,7 @@ class ProductDetailEntity {
     this.specifications,
     this.technicalFeatures,
     this.warranty,
+    this.manualUrl,
     this.related = const [],
     this.currencyOptions = const [],
   });

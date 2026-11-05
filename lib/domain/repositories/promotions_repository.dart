@@ -8,4 +8,10 @@ abstract class PromotionsRepository {
 
   /// El banner de ofertas activo. Sin banner activo devuelve uno vacío.
   Future<Either<Failure, OfferBanner>> getOffers();
+
+  /// Banners promocionales de la portada.
+  Future<Either<Failure, List<PromoBanner>>> getPromoBanners();
+
+  /// Ventas flash vigentes, con su cuenta regresiva.
+  Future<Either<Failure, List<FlashSale>>> getFlashSales();
 }

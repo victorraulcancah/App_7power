@@ -17,3 +17,18 @@ class GetOffersUseCase {
 
   Future<Either<Failure, OfferBanner>> call() => repository.getOffers();
 }
+
+class GetPromoBannersUseCase {
+  final PromotionsRepository repository;
+  GetPromoBannersUseCase(this.repository);
+
+  Future<Either<Failure, List<PromoBanner>>> call() =>
+      repository.getPromoBanners();
+}
+
+class GetFlashSalesUseCase {
+  final PromotionsRepository repository;
+  GetFlashSalesUseCase(this.repository);
+
+  Future<Either<Failure, List<FlashSale>>> call() => repository.getFlashSales();
+}

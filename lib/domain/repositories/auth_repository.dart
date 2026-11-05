@@ -16,6 +16,13 @@ abstract class AuthRepository {
   /// Cambia el celular del cliente (9 dígitos, empieza con 9).
   Future<Either<Failure, UserEntity>> updatePhone(String phone);
 
+  /// Sube la foto de perfil del archivo [filePath] y devuelve el cliente con la
+  /// foto nueva.
+  Future<Either<Failure, UserEntity>> updatePhoto(String filePath);
+
+  /// Quita la foto de perfil.
+  Future<Either<Failure, UserEntity>> removePhoto();
+
   /// Cambia la contraseña. La sesión actual sigue abierta.
   Future<Either<Failure, void>> changePassword({
     required String current,

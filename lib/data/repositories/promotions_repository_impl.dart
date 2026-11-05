@@ -17,4 +17,12 @@ class PromotionsRepositoryImpl implements PromotionsRepository {
   @override
   Future<Either<Failure, OfferBanner>> getOffers() =>
       guardRequest(remote.getOffers);
+
+  @override
+  Future<Either<Failure, List<PromoBanner>>> getPromoBanners() =>
+      guardRequest(remote.getPromoBanners);
+
+  @override
+  Future<Either<Failure, List<FlashSale>>> getFlashSales() =>
+      guardRequest(remote.getFlashSales);
 }

@@ -37,20 +37,24 @@ class CartButton extends StatelessWidget {
               width: 42,
               height: 42,
               child: Center(
-                child: Badge(
-                  isLabelVisible: units > 0,
-                  label: Text(
-                    '$units',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w700,
+                // Rebota cada vez que cambia la cantidad (al agregar algo).
+                child: Bounce(
+                  trigger: units,
+                  child: Badge(
+                    isLabelVisible: units > 0,
+                    label: Text(
+                      '$units',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  backgroundColor: const Color(0xFFFFC107),
-                  child: Icon(
-                    Icons.shopping_cart_rounded,
-                    color: theme.colorScheme.primary,
-                    size: 24,
+                    backgroundColor: const Color(0xFFFFC107),
+                    child: Icon(
+                      Icons.shopping_cart_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
                   ),
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
+import 'motion.dart';
 import 'price_text.dart';
 import 'product_image.dart';
 import 'stock_label.dart';
@@ -110,17 +111,8 @@ class ProductCard extends StatelessWidget {
                             : const LockedPrice(),
                       ),
                       if (priceVisible && onAddToCart != null)
-                        // Rojo suave con ícono rojo: el "Agregar al carrito" de la web.
-                        IconButton.filled(
-                          visualDensity: VisualDensity.compact,
-                          style: IconButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            foregroundColor: theme.colorScheme.primary,
-                            disabledBackgroundColor:
-                                theme.colorScheme.surfaceContainerHighest,
-                          ),
+                        _AddToCartButton(
                           onPressed: available ? onAddToCart : null,
-                          icon: const Icon(Icons.add_shopping_cart, size: 18),
                         ),
                     ],
                   ),
@@ -129,6 +121,47 @@ class ProductCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Rojo suave con ícono rojo: el "Agregar al carrito" de la web. Rebota cada vez
+/// que se toca, para confirmar que respondió.
+class _AddToCartButton extends StatefulWidget {
+  final VoidCallback? onPressed;
+
+  const _AddToCartButton({required this.onPressed});
+
+  @override
+  State<_AddToCartButton> createState() => _AddToCartButtonState();
+}
+
+class _AddToCartButtonState extends State<_AddToCartButton> {
+  int _taps = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final onPressed = widget.onPressed;
+
+    return Bounce(
+      trigger: _taps,
+      peak: 1.35,
+      child: IconButton.filled(
+        visualDensity: VisualDensity.compact,
+        style: IconButton.styleFrom(
+          backgroundColor: colors.primaryContainer,
+          foregroundColor: colors.primary,
+          disabledBackgroundColor: colors.surfaceContainerHighest,
+        ),
+        onPressed: onPressed == null
+            ? null
+            : () {
+                setState(() => _taps++);
+                onPressed();
+              },
+        icon: const Icon(Icons.add_shopping_cart, size: 18),
       ),
     );
   }

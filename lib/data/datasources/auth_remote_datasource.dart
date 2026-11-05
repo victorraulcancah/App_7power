@@ -23,6 +23,12 @@ abstract class AuthRemoteDataSource {
 
   Future<void> updatePhone(String phone);
 
+  /// Sube la foto de perfil del archivo [filePath]. Devuelve la ruta que le dio
+  /// el servidor.
+  Future<String?> uploadPhoto(String filePath);
+
+  Future<void> deletePhoto();
+
   Future<void> changePassword({
     required String current,
     required String next,
@@ -75,6 +81,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> updatePhone(String phone) async {
     await client.patch(ApiConstants.phoneEndpoint, body: {'telefono': phone});
+  }
+
+  @override
+  Future<String?> uploadPhoto(String filePath) async {
+    final response = await client.postFile(
+      ApiConstants.uploadPhotoEndpoint,
+      field: 'foto',
+      filePath: filePath,
+    );
+    final body =
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    return body['foto_url']?.toString();
+  }
+
+  @override
+  Future<void> deletePhoto() async {
+    await client.delete(ApiConstants.deletePhotoEndpoint);
   }
 
   @override

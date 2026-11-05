@@ -8,6 +8,8 @@ import '../../domain/entities/product_filters.dart';
 import '../components/components.dart';
 import '../providers/home_provider.dart';
 import '../providers/products_provider.dart';
+import '../providers/promotions_provider.dart';
+import '../utils/app_link.dart';
 import '../widgets/product_tile.dart';
 import 'brands_page.dart';
 
@@ -178,10 +180,7 @@ class _Recommended extends StatelessWidget {
           ),
         const SizedBox(height: 12),
         if (home.isLoadingRecommended)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 48),
-            child: Center(child: CircularProgressIndicator()),
-          )
+          const ProductGridSkeleton(count: 4, shrinkWrap: true)
         else if (products.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 32),
@@ -201,7 +200,13 @@ class _Recommended extends StatelessWidget {
               childAspectRatio: 0.56,
             ),
             itemCount: products.length,
-            itemBuilder: (context, i) => ProductTile(product: products[i]),
+            // Cada tarjeta entra un poco después de la anterior. La clave
+            // incluye la categoría: al cambiarla, las nuevas vuelven a entrar.
+            itemBuilder: (context, i) => FadeSlideIn(
+              key: ValueKey('rec-${selected ?? 'all'}-${products[i].id}'),
+              delay: Duration(milliseconds: 60 * i),
+              child: ProductTile(product: products[i]),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -227,16 +232,23 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeProvider>().load();
+      // Ventas flash y banners promocionales: un extra que no frena la portada.
+      context.read<PromotionsProvider>().loadHomePromotions();
     });
   }
+
+  /// Abre el destino de un botón de banner o venta flash.
+  void _open(String? url) =>
+      AppLink.open(context, url, onOpenShop: () => widget.onOpenShop());
 
   @override
   Widget build(BuildContext context) {
     final home = context.watch<HomeProvider>();
     final categories = context.watch<ProductsProvider>().categories;
+    final promotions = context.watch<PromotionsProvider>();
 
     if (home.status != HomeStatus.loaded) {
-      return const LoadingIndicator();
+      return const HomeSkeleton();
     }
 
     return RefreshIndicator(
@@ -246,13 +258,20 @@ class _HomePageState extends State<HomePage> {
           _HomeSearch(onSearch: widget.onSearch),
           BannerCarousel(
             banners: home.banners,
-            // Los banners apuntan a rutas de la web; por ahora solo se
-            // entiende "/shop".
+            // Los banners apuntan a páginas de la web: la tienda, un producto,
+            // ofertas o cupones se abren en el app; lo demás, en el navegador.
             onTap: (b) {
-              if (b.linkUrl?.startsWith('/shop') ?? false) widget.onOpenShop();
+              if (b.linkUrl != null) _open(b.linkUrl);
             },
           ),
           // Cada sección entra una tras otra, con un leve desvanecido.
+          if (promotions.flashSales.isNotEmpty)
+            FadeSlideIn(
+              child: FlashSalesSection(
+                sales: promotions.flashSales,
+                onOpen: (sale) => _open(sale.linkUrl),
+              ),
+            ),
           if (categories.isNotEmpty)
             FadeSlideIn(
               child: Column(
@@ -267,6 +286,14 @@ class _HomePageState extends State<HomePage> {
                     onTap: (c) => widget.onOpenShop(categoryId: c.id),
                   ),
                 ],
+              ),
+            ),
+          if (promotions.promoBanners.isNotEmpty)
+            FadeSlideIn(
+              delay: const Duration(milliseconds: 80),
+              child: PromoBannersSection(
+                banners: promotions.promoBanners,
+                onOpen: (banner) => _open(banner.linkUrl),
               ),
             ),
           FadeSlideIn(

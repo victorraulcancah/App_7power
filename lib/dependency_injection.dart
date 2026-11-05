@@ -269,6 +269,8 @@ class DependencyInjection {
           create: (_) => PromotionsProvider(
             getActiveCouponsUseCase: GetActiveCouponsUseCase(_promotionsRepository),
             getOffersUseCase: GetOffersUseCase(_promotionsRepository),
+            getPromoBannersUseCase: GetPromoBannersUseCase(_promotionsRepository),
+            getFlashSalesUseCase: GetFlashSalesUseCase(_promotionsRepository),
           ),
         ),
         ChangeNotifierProvider<InfoProvider>(

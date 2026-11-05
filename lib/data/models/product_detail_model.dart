@@ -14,6 +14,7 @@ class ProductDetailModel extends ProductDetailEntity {
     super.specifications,
     super.technicalFeatures,
     super.warranty,
+    super.manualUrl,
     super.related,
     super.currencyOptions,
   });
@@ -43,6 +44,7 @@ class ProductDetailModel extends ProductDetailEntity {
       specifications: text('especificaciones'),
       technicalFeatures: text('caracteristicas_tecnicas'),
       warranty: text('garantia'),
+      manualUrl: _manual(productJson['manual_pdf_url']),
       related: ((json['productos_relacionados'] as List?) ?? const [])
           .cast<Map<String, dynamic>>()
           .map(ProductModel.fromDetailJson)
@@ -56,6 +58,11 @@ class ProductDetailModel extends ProductDetailEntity {
               ))
           .toList(),
     );
+  }
+
+  static String? _manual(dynamic raw) {
+    final url = raw?.toString().trim();
+    return (url == null || url.isEmpty) ? null : url;
   }
 
   /// `imagenes` llega como texto JSON ('["a.png","b.png"]') o como lista.

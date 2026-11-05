@@ -10,6 +10,7 @@ import 'cart_page.dart';
 import 'home_page.dart';
 import 'more_page.dart';
 import 'products_page.dart';
+import 'support/support_page.dart';
 
 /// Estructura principal: barra superior con el logo, contenido por pestañas y
 /// navegación inferior (Inicio, Tienda, Cuenta y Más).
@@ -76,22 +77,26 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: const [CartButton()],
+        // Ayuda por WhatsApp a la mano en todas las pestañas, y el carrito.
+        actions: const [SupportAction(), CartButton()],
         // El logo queda centrado; el carrito, a la derecha.
         title: BrandLogo(url: company?.logoUrl, height: 34),
       ),
-      body: IndexedStack(
+      body: _TabFade(
         index: _tab,
-        children: [
-          HomePage(
-            onOpenShop: _openShop,
-            onOpenBrand: _openBrand,
-            onSearch: _openSearch,
-          ),
-          const ProductsPage(),
-          const AccountPage(),
-          MorePage(onOpenBrand: _openBrand),
-        ],
+        child: IndexedStack(
+          index: _tab,
+          children: [
+            HomePage(
+              onOpenShop: _openShop,
+              onOpenBrand: _openBrand,
+              onSearch: _openSearch,
+            ),
+            const ProductsPage(),
+            const AccountPage(),
+            MorePage(onOpenBrand: _openBrand),
+          ],
+        ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
@@ -118,6 +123,58 @@ class _MainShellState extends State<MainShell> {
             label: 'Más',
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Al cambiar de pestaña el contenido nuevo aparece con un desvanecido y un leve
+/// deslizamiento, en lugar de cambiar de golpe. Las pestañas siguen vivas (no
+/// se reconstruyen): solo se anima su aparición.
+class _TabFade extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _TabFade({required this.index, required this.child});
+
+  @override
+  State<_TabFade> createState() => _TabFadeState();
+}
+
+class _TabFadeState extends State<_TabFade> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+    value: 1,
+  );
+
+  late final Animation<double> _curve =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+
+  @override
+  void didUpdateWidget(_TabFade old) {
+    super.didUpdateWidget(old);
+    if (old.index != widget.index &&
+        FadeSlideIn.enabled &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.25, end: 1).animate(_curve),
+      child: SlideTransition(
+        position: Tween<Offset>(begin: const Offset(0, 0.015), end: Offset.zero)
+            .animate(_curve),
+        child: widget.child,
       ),
     );
   }

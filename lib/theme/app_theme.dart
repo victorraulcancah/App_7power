@@ -59,6 +59,12 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      // Las pantallas entran con un desvanecido y un deslizamiento suave.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
       scaffoldBackgroundColor: bg,
       // Barra superior: el color de la empresa (negro hoy).
       appBarTheme: AppBarTheme(

@@ -38,7 +38,9 @@ class UserEntity {
     return (first + last).toUpperCase();
   }
 
-  UserEntity copyWith({String? phone}) => UserEntity(
+  /// Una copia con otro celular y/o otra foto. [removePhoto] la quita.
+  UserEntity copyWith({String? phone, String? photoUrl, bool removePhoto = false}) =>
+      UserEntity(
         id: id,
         fullName: fullName,
         email: email,
@@ -47,7 +49,7 @@ class UserEntity {
         phone: phone ?? this.phone,
         documentType: documentType,
         documentNumber: documentNumber,
-        photoUrl: photoUrl,
+        photoUrl: removePhoto ? null : (photoUrl ?? this.photoUrl),
         emailVerified: emailVerified,
         erpCode: erpCode,
       );

@@ -101,6 +101,8 @@ class _CouponCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 4,
               children: [
+                if (coupon.expiresSoon(DateTime.now()))
+                  const StatusTag(label: 'Por vencer', type: StatusTagType.warning),
                 if (coupon.minPurchase != null && coupon.minPurchase! > 0)
                   StatusTag(
                     label: 'Compra mínima ${FormatUtils.money(coupon.minPurchase!)}',

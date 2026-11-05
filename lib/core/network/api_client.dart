@@ -91,6 +91,26 @@ class ApiClient {
         headers: headers,
       );
 
+  /// Sube el archivo de [filePath] como `multipart/form-data` en el campo
+  /// [field] (por ejemplo la foto de perfil).
+  Future<http.Response> postFile(
+    String endpoint, {
+    required String field,
+    required String filePath,
+  }) =>
+      _send(
+        (uri, h) async {
+          final request = http.MultipartRequest('POST', uri)
+            ..headers.addAll(h)
+            // El tipo lo fija la propia petición (con su "boundary"): el JSON
+            // por defecto la rompería.
+            ..headers.remove('Content-Type')
+            ..files.add(await http.MultipartFile.fromPath(field, filePath));
+          return http.Response.fromStream(await _client.send(request));
+        },
+        endpoint,
+      );
+
   Future<http.Response> _send(
     Future<http.Response> Function(Uri uri, Map<String, String> headers) call,
     String endpoint, {

@@ -83,6 +83,28 @@ class AuthRepositoryImpl implements AuthRepository {
       });
 
   @override
+  Future<Either<Failure, UserEntity>> updatePhoto(String filePath) =>
+      guardRequest(() async {
+        final path = await remote.uploadPhoto(filePath);
+        final current = (await local.readSession())?.user ?? await remote.getProfile();
+        // Se conserva el resto de los datos guardados y se cambia la foto.
+        final updated = UserModel.fromEntity(
+          current.copyWith(photoUrl: UserModel.normalizePhotoUrl(path)),
+        );
+        await _saveUser(updated);
+        return updated;
+      });
+
+  @override
+  Future<Either<Failure, UserEntity>> removePhoto() => guardRequest(() async {
+        await remote.deletePhoto();
+        final current = (await local.readSession())?.user ?? await remote.getProfile();
+        final updated = UserModel.fromEntity(current.copyWith(removePhoto: true));
+        await _saveUser(updated);
+        return updated;
+      });
+
+  @override
   Future<Either<Failure, void>> changePassword({
     required String current,
     required String next,

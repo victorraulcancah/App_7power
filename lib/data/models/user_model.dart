@@ -36,6 +36,8 @@ class UserModel extends UserEntity {
   /// La foto llega como ruta ("/storage/clientes/a.jpg") o como URL, y el login
   /// la deja duplicada ("/storage/clientes//storage/clientes/a.jpg"): se
   /// normaliza a una URL absoluta.
+  static String? normalizePhotoUrl(dynamic raw) => _photoUrl(raw);
+
   static String? _photoUrl(dynamic raw) {
     final value = raw?.toString().trim();
     if (value == null || value.isEmpty) return null;

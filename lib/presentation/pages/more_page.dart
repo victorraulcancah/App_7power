@@ -17,6 +17,7 @@ import 'more/contact_page.dart';
 import 'more/shipping_steps_page.dart';
 import 'promotions/coupons_page.dart';
 import 'promotions/offers_page.dart';
+import 'support/support_page.dart';
 
 /// Pestaña "Más": información de la empresa, atención al cliente y legal.
 class MorePage extends StatelessWidget {
@@ -82,6 +83,12 @@ class MorePage extends StatelessWidget {
           ),
         ]),
         MenuGroup(title: 'Atención al cliente', children: [
+          MenuItem(
+            icon: Icons.help_outline_rounded,
+            title: 'Ayuda y preguntas frecuentes',
+            subtitle: 'Habla con un asesor por WhatsApp',
+            onTap: () => _open(context, const SupportPage()),
+          ),
           MenuItem(
             icon: Icons.support_agent_outlined,
             title: 'Contáctanos',

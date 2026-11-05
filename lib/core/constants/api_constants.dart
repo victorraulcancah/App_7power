@@ -50,6 +50,8 @@ class ApiConstants {
   // Promociones (públicas)
   static const String activeCouponsEndpoint = '/cupones/activos';
   static const String activeOffersEndpoint = '/banners-ofertas/activo';
+  static const String promoBannersEndpoint = '/banners-promocionales/publicos';
+  static const String flashSalesEndpoint = '/banners-flash-sales/activos';
 
   // Información de la empresa (públicos)
   static const String aboutEndpoint = '/sobre-nosotros/publico';
@@ -79,6 +81,16 @@ class ApiConstants {
   static const String profileEndpoint = '/user';
   static const String phoneEndpoint = '/user/telefono';
   static const String changePasswordEndpoint = '/user/change-password';
+  static const String uploadPhotoEndpoint = '/cliente/upload-foto';
+  static const String deletePhotoEndpoint = '/cliente/delete-foto';
+
+  /// WhatsApp de atención al cliente (con código de país, sin "+"). Es el que usa
+  /// la web; si la empresa configura el suyo en el panel, se usa ese. Se puede
+  /// cambiar al compilar con `--dart-define=SUPPORT_WHATSAPP=51999999999`.
+  static const String supportWhatsapp = String.fromEnvironment(
+    'SUPPORT_WHATSAPP',
+    defaultValue: '51951127833',
+  );
   static const String favoritesEndpoint = '/favoritos';
   static const String onlinePurchasesEndpoint = '/pago-en-linea';
   static const String storePurchasesEndpoint = '/compras/mis-compras-erp';

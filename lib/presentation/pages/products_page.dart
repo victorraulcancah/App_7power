@@ -18,6 +18,9 @@ class ProductsPage extends StatefulWidget {
 }
 
 class _ProductsPageState extends State<ProductsPage> {
+  /// Cuántas tarjetas entran con animación al cargar la lista.
+  static const int _animatedTiles = 12;
+
   final ScrollController _scroll = ScrollController();
 
   @override
@@ -94,7 +97,7 @@ class _ProductsPageState extends State<ProductsPage> {
     switch (provider.status) {
       case ProductsStatus.initial:
       case ProductsStatus.loading:
-        return const LoadingIndicator(message: 'Cargando productos...');
+        return const ProductGridSkeleton(count: 8);
       case ProductsStatus.error:
         return ErrorState(
           message: provider.errorMessage,
@@ -127,7 +130,15 @@ class _ProductsPageState extends State<ProductsPage> {
                     if (i >= products.length) {
                       return const LoadingIndicator();
                     }
-                    return ProductTile(product: products[i]);
+                    final tile = ProductTile(product: products[i]);
+                    // Solo las primeras entran con animación: las que llegan al
+                    // paginar o al volver atrás aparecen sin más.
+                    if (i >= _animatedTiles) return tile;
+                    return FadeSlideIn(
+                      key: ValueKey(products[i].id),
+                      delay: Duration(milliseconds: 45 * (i % 8)),
+                      child: tile,
+                    );
                   },
                 ),
         );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -8,10 +9,15 @@ import '../../domain/entities/product_detail_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../components/components.dart';
 import '../providers/product_detail_provider.dart';
+import '../utils/open_url.dart';
+import '../utils/product_share.dart';
+import '../utils/whatsapp_support.dart';
 import '../widgets/favorite_button.dart';
 import '../widgets/product_tile.dart';
 import 'cart_page.dart';
+import 'image_viewer_page.dart';
 import 'login_page.dart';
+import 'support/support_page.dart';
 
 /// Ficha de un producto: galería, precio, stock, descripción y agregar al
 /// carrito. Sigue las reglas de la web: precio oculto a invitados sin lista de
@@ -53,8 +59,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       appBar: AppBar(
         title: const Text('Producto'),
         actions: [
-          if (provider.detail != null)
+          if (provider.detail != null) ...[
+            IconButton(
+              tooltip: 'Compartir producto',
+              icon: const Icon(Icons.share_outlined),
+              onPressed: () => ProductShare.share(
+                context,
+                _selected(provider.detail!),
+              ),
+            ),
             FavoriteButton(product: provider.detail!.product),
+          ],
           const CartButton(),
         ],
       ),
@@ -142,6 +157,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     for (final entry in detail.sections.entries)
                       _Section(title: entry.key, body: entry.value),
+                    if (detail.manualUrl != null)
+                      _ManualButton(url: detail.manualUrl!),
+                    // Consultar por este producto, con su nombre y enlace ya
+                    // escritos en el mensaje.
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: OutlinedButton.icon(
+                        onPressed: () => WhatsAppSupport.open(
+                          context,
+                          message: WhatsAppSupport.productMessage(product),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF128C7E),
+                          side: const BorderSide(color: whatsappGreen),
+                        ),
+                        icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 18),
+                        label: const Text('Preguntar por WhatsApp'),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -312,8 +346,28 @@ class _GalleryState extends State<_Gallery> {
             child: PageView.builder(
               itemCount: images.length,
               onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (_, i) =>
-                  ProductImage(url: images[i], fit: BoxFit.contain),
+              // Al tocar la foto se abre a pantalla completa, para ampliarla.
+              itemBuilder: (_, i) => GestureDetector(
+                onTap: widget.images.isEmpty
+                    ? null
+                    : () => ImageViewerPage.open(
+                          context,
+                          widget.images,
+                          initialIndex: i,
+                        ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ProductImage(url: images[i], fit: BoxFit.contain),
+                    if (widget.images.isNotEmpty)
+                      const Positioned(
+                        right: 10,
+                        bottom: 10,
+                        child: _ZoomHint(),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -339,6 +393,42 @@ class _GalleryState extends State<_Gallery> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Lupa en la esquina de la foto: avisa que se puede tocar para ampliarla.
+class _ZoomHint extends StatelessWidget {
+  const _ZoomHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(Icons.zoom_in_rounded, size: 18, color: Colors.white),
+    );
+  }
+}
+
+/// El enlace al manual en PDF del producto.
+class _ManualButton extends StatelessWidget {
+  final String url;
+
+  const _ManualButton({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: OutlinedButton.icon(
+        onPressed: () => openUrl(context, url),
+        icon: const Icon(Icons.picture_as_pdf_outlined),
+        label: const Text('Ver manual del producto (PDF)'),
+      ),
     );
   }
 }

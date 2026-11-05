@@ -229,11 +229,17 @@ class FakeProductRepo implements ProductRepository {
     }
     return Either.right(ProductDetailEntity(
       product: product,
+      images: galleries[id] ?? const [],
+      manualUrl: manualUrls[id],
       longDescription: 'Descripción de ${product.name}',
       warranty: '12 meses',
       currencyOptions: currencyOptions[id] ?? const [],
     ));
   }
+
+  /// Fotos de la galería y manual en PDF por producto, para la ficha.
+  final Map<int, List<String>> galleries = {};
+  final Map<int, String> manualUrls = {};
 }
 
 class FakeStoreRepo implements StoreRepository {
@@ -387,6 +393,24 @@ class FakeAuthRemote implements AuthRemoteDataSource {
       throw const ServerException('Celular no válido', '422');
     }
     savedPhone = phone;
+  }
+
+  /// Fotos subidas (rutas locales) y, si se indica, el motivo por el que falla.
+  final List<String> uploadedPhotos = [];
+  int deletedPhotos = 0;
+  Exception? photoFailure;
+
+  @override
+  Future<String?> uploadPhoto(String filePath) async {
+    if (photoFailure != null) throw photoFailure!;
+    uploadedPhotos.add(filePath);
+    return '/storage/clientes/${uploadedPhotos.length}_7.jpg';
+  }
+
+  @override
+  Future<void> deletePhoto() async {
+    if (photoFailure != null) throw photoFailure!;
+    deletedPhotos++;
   }
 
   /// Contraseña vigente del cliente en el "servidor" y los cambios recibidos.
@@ -813,7 +837,21 @@ class FakeStatementRemote implements StatementRemoteDataSource {
 class FakePromotionsRemote implements PromotionsRemoteDataSource {
   List<CouponOffer> coupons = const [];
   OfferBanner offers = const OfferBanner();
+  List<PromoBanner> promoBanners = const [];
+  List<FlashSale> flashSales = const [];
   Exception? failure;
+
+  @override
+  Future<List<PromoBanner>> getPromoBanners() async {
+    if (failure != null) throw failure!;
+    return promoBanners;
+  }
+
+  @override
+  Future<List<FlashSale>> getFlashSales() async {
+    if (failure != null) throw failure!;
+    return flashSales;
+  }
 
   @override
   Future<List<CouponOffer>> getActiveCoupons() async {
@@ -1034,6 +1072,8 @@ class TestEnv {
           return PromotionsProvider(
             getActiveCouponsUseCase: GetActiveCouponsUseCase(repo),
             getOffersUseCase: GetOffersUseCase(repo),
+            getPromoBannersUseCase: GetPromoBannersUseCase(repo),
+            getFlashSalesUseCase: GetFlashSalesUseCase(repo),
           );
         }),
         ChangeNotifierProvider<RegistrationProvider>(create: (_) {

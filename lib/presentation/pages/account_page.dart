@@ -15,8 +15,11 @@ import 'account/personal_data_page.dart';
 import 'account/statement_page.dart';
 import 'account/purchases_page.dart';
 import 'account/quotes_page.dart';
+import '../widgets/profile_photo.dart';
 import 'cart_page.dart';
 import 'login_page.dart';
+import 'promotions/coupons_page.dart';
+import 'support/support_page.dart';
 import 'more/about_page.dart';
 import 'more/claim_book_page.dart';
 import 'more/contact_page.dart';
@@ -123,6 +126,13 @@ class _AccountMenu extends StatelessWidget {
               title: 'Estado de cuenta',
               onTap: () => _open(context, const StatementPage()),
             ),
+          // En la web "Mis cupones" está en este mismo menú.
+          MenuItem(
+            icon: Icons.local_offer_outlined,
+            title: 'Mis cupones',
+            subtitle: 'Códigos de descuento vigentes',
+            onTap: () => _open(context, const CouponsPage()),
+          ),
           MenuItem(
             icon: Icons.menu_book_outlined,
             title: 'Mis reclamos',
@@ -135,6 +145,11 @@ class _AccountMenu extends StatelessWidget {
           ),
         ]),
         MenuGroup(title: 'Ayuda', children: [
+          MenuItem(
+            icon: Icons.help_outline_rounded,
+            title: 'Ayuda y preguntas frecuentes',
+            onTap: () => _open(context, const SupportPage()),
+          ),
           MenuItem(
             icon: Icons.menu_book_outlined,
             title: 'Libro de reclamaciones',
@@ -194,16 +209,11 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 34,
-            backgroundColor: onPrimary,
-            foregroundColor: theme.colorScheme.primary,
-            foregroundImage:
-                user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
-            // Si la foto no carga se ven las iniciales.
-            onForegroundImageError: user.photoUrl != null ? (_, _) {} : null,
-            child: Text(user.initials,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          // Al tocarla se cambia la foto de perfil.
+          ProfileAvatar(
+            user: user,
+            background: onPrimary,
+            foreground: theme.colorScheme.primary,
           ),
           const SizedBox(width: 16),
           Expanded(

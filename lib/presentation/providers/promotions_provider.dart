@@ -4,15 +4,41 @@ import '../../domain/entities/promotion_entity.dart';
 import '../../domain/usecases/promotions_usecases.dart';
 import 'load_status.dart';
 
-/// Cupones activos y banner de ofertas.
+/// Cupones activos, banner de ofertas y las promociones de la portada (banners
+/// promocionales y ventas flash).
 class PromotionsProvider extends ChangeNotifier {
   final GetActiveCouponsUseCase getActiveCouponsUseCase;
   final GetOffersUseCase getOffersUseCase;
+  final GetPromoBannersUseCase? getPromoBannersUseCase;
+  final GetFlashSalesUseCase? getFlashSalesUseCase;
 
   PromotionsProvider({
     required this.getActiveCouponsUseCase,
     required this.getOffersUseCase,
+    this.getPromoBannersUseCase,
+    this.getFlashSalesUseCase,
   });
+
+  List<PromoBanner> _promoBanners = const [];
+  List<FlashSale> _flashSales = const [];
+
+  /// Banners promocionales de la portada (vacío si no hay o no cargaron).
+  List<PromoBanner> get promoBanners => _promoBanners;
+
+  /// Ventas flash vigentes (vacío si no hay o no cargaron).
+  List<FlashSale> get flashSales => _flashSales;
+
+  /// Pide las promociones de la portada. Son un extra: si fallan, la portada
+  /// sigue igual sin esas secciones.
+  Future<void> loadHomePromotions() async {
+    // Los dos pedidos salen a la vez.
+    final banners = getPromoBannersUseCase?.call();
+    final sales = getFlashSalesUseCase?.call();
+
+    (await banners)?.fold((_) {}, (list) => _promoBanners = list);
+    (await sales)?.fold((_) {}, (list) => _flashSales = list);
+    notifyListeners();
+  }
 
   LoadStatus _couponsStatus = LoadStatus.initial;
   List<CouponOffer> _coupons = const [];

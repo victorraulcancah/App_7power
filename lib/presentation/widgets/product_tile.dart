@@ -14,17 +14,21 @@ class ProductTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProductCard(
-      name: product.name,
-      brand: product.brand,
-      imageUrl: product.imageUrl,
-      price: product.price,
-      currency: product.currency,
-      stock: product.stock,
-      priceVisible: product.priceVisible,
-      onTap: () => ProductDetailPage.open(context, product),
-      onAddToCart: () => CartActions.add(context, product),
-      topAction: FavoriteButton(product: product, compact: true),
+    // Se achica un poco al presionarla.
+    return PressScale(
+      scale: 0.975,
+      child: ProductCard(
+        name: product.name,
+        brand: product.brand,
+        imageUrl: product.imageUrl,
+        price: product.price,
+        currency: product.currency,
+        stock: product.stock,
+        priceVisible: product.priceVisible,
+        onTap: () => ProductDetailPage.open(context, product),
+        onAddToCart: () => CartActions.add(context, product),
+        topAction: FavoriteButton(product: product, compact: true),
+      ),
     );
   }
 }

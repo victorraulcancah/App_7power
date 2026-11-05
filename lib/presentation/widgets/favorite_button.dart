@@ -48,25 +48,34 @@ class FavoriteButton extends StatelessWidget {
     final tooltip = isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos';
     final icon = Icon(isFavorite ? Icons.favorite : Icons.favorite_border);
 
+    // El corazón rebota al marcarlo o desmarcarlo.
     if (!compact) {
-      return IconButton(
-        tooltip: tooltip,
-        icon: icon,
-        onPressed: () => _toggle(context),
+      return Bounce(
+        trigger: isFavorite,
+        peak: 1.4,
+        child: IconButton(
+          tooltip: tooltip,
+          icon: icon,
+          onPressed: () => _toggle(context),
+        ),
       );
     }
 
-    return IconButton.filled(
-      tooltip: tooltip,
-      icon: icon,
-      iconSize: 18,
-      visualDensity: VisualDensity.compact,
-      style: IconButton.styleFrom(
-        backgroundColor: Colors.white.withValues(alpha: 0.92),
-        foregroundColor:
-            isFavorite ? theme.colorScheme.error : const Color(0xFF26262B),
+    return Bounce(
+      trigger: isFavorite,
+      peak: 1.4,
+      child: IconButton.filled(
+        tooltip: tooltip,
+        icon: icon,
+        iconSize: 18,
+        visualDensity: VisualDensity.compact,
+        style: IconButton.styleFrom(
+          backgroundColor: Colors.white.withValues(alpha: 0.92),
+          foregroundColor:
+              isFavorite ? theme.colorScheme.error : const Color(0xFF26262B),
+        ),
+        onPressed: () => _toggle(context),
       ),
-      onPressed: () => _toggle(context),
     );
   }
 }

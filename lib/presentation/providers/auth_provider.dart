@@ -107,6 +107,33 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
+  /// Sube [filePath] como foto de perfil. Devuelve null si se guardó, o el
+  /// motivo por el que no se pudo.
+  Future<String?> updatePhoto(String filePath) async {
+    final result = await UpdatePhotoUseCase(repository)(filePath);
+    return result.fold(
+      (failure) => failure.message,
+      (user) {
+        _user = user;
+        notifyListeners();
+        return null;
+      },
+    );
+  }
+
+  /// Quita la foto de perfil. Devuelve null si se quitó, o el motivo.
+  Future<String?> removePhoto() async {
+    final result = await RemovePhotoUseCase(repository)();
+    return result.fold(
+      (failure) => failure.message,
+      (user) {
+        _user = user;
+        notifyListeners();
+        return null;
+      },
+    );
+  }
+
   /// Devuelve null si se cambió, o el motivo por el que no se pudo.
   Future<String?> changePassword({
     required String current,

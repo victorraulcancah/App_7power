@@ -51,6 +51,29 @@ class UpdatePhoneUseCase {
   }
 }
 
+class UpdatePhotoUseCase {
+  final AuthRepository repository;
+
+  UpdatePhotoUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call(String filePath) {
+    if (filePath.trim().isEmpty) {
+      return Future.value(Either.left(
+        const ValidationFailure('No se eligió ninguna foto.'),
+      ));
+    }
+    return repository.updatePhoto(filePath);
+  }
+}
+
+class RemovePhotoUseCase {
+  final AuthRepository repository;
+
+  RemovePhotoUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call() => repository.removePhoto();
+}
+
 /// Qué le falta a una contraseña nueva, con las reglas del backend: 8
 /// caracteres, mayúscula, minúscula y número. Null si cumple.
 String? validateNewPassword(String value) {
