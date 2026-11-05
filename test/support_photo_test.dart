@@ -241,8 +241,11 @@ void main() {
 
     test('si el servidor rechaza la foto, muestra su motivo', () async {
       final client = ApiClient(
-        client: MockClient((_) async => http.Response(
-              jsonEncode({'errors': {'foto': ['La foto no debe pesar más de 2048 KB.']}}),
+        // El servidor responde en UTF-8 (con tildes).
+        client: MockClient((_) async => http.Response.bytes(
+              utf8.encode(jsonEncode({
+                'errors': {'foto': ['La foto no debe pesar más de 2048 KB.']},
+              })),
               422,
             )),
       );
