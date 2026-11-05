@@ -36,8 +36,10 @@ class _SplashScreenState extends State<SplashScreen>
   /// 4 s, ondas y texto 2 s, flotado 3 s.
   static const _cycle = Duration(seconds: 12);
 
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: _cycle)..repeat();
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _cycle,
+  )..repeat();
 
   @override
   void dispose() {
@@ -97,8 +99,9 @@ class _SplashScreenState extends State<SplashScreen>
                             borderRadius: BorderRadius.circular(logoHeight),
                             boxShadow: [
                               BoxShadow(
-                                color: SplashScreen._glow
-                                    .withValues(alpha: 0.08 + 0.22 * glow),
+                                color: SplashScreen._glow.withValues(
+                                  alpha: 0.08 + 0.22 * glow,
+                                ),
                                 blurRadius: 30 + 25 * glow,
                                 spreadRadius: 4 + 8 * glow,
                               ),
@@ -119,22 +122,27 @@ class _SplashScreenState extends State<SplashScreen>
                   SizedBox(height: compact ? 22 : 24),
                   Opacity(
                     opacity: 0.7 + 0.3 * text,
-                    child: Text(
-                      widget.text.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: compact ? 13 : 16,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 2,
-                        decoration: TextDecoration.none,
-                        shadows: [
-                          Shadow(
-                            color: SplashScreen._glow
-                                .withValues(alpha: 0.3 + 0.5 * text),
-                            blurRadius: 10 + 10 * text,
-                          ),
-                        ],
+                    // Con su propia capa: el texto con sombra no admite la
+                    // opacidad "heredada" y Impeller avisa en el registro.
+                    child: RepaintBoundary(
+                      child: Text(
+                        widget.text.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: compact ? 13 : 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2,
+                          decoration: TextDecoration.none,
+                          shadows: [
+                            Shadow(
+                              color: SplashScreen._glow.withValues(
+                                alpha: 0.3 + 0.5 * text,
+                              ),
+                              blurRadius: 10 + 10 * text,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -160,17 +168,19 @@ class _Wave extends StatelessWidget {
     final diameter = 200 + 250 * progress;
     return Opacity(
       opacity: 1 - progress,
-      child: Container(
-        width: diameter,
-        height: diameter,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              SplashScreen._glow.withValues(alpha: strength),
-              SplashScreen._glow.withValues(alpha: 0),
-            ],
-            stops: const [0, 0.7],
+      child: RepaintBoundary(
+        child: Container(
+          width: diameter,
+          height: diameter,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                SplashScreen._glow.withValues(alpha: strength),
+                SplashScreen._glow.withValues(alpha: 0),
+              ],
+              stops: const [0, 0.7],
+            ),
           ),
         ),
       ),

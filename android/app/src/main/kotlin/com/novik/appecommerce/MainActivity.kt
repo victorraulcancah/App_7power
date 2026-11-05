@@ -1,5 +1,6 @@
 package com.novik.appecommerce
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// La hoja de la huella (local_auth) necesita una FragmentActivity.
+class MainActivity : FlutterFragmentActivity()

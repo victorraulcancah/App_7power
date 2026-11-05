@@ -82,7 +82,7 @@ class _StartupGateState extends State<StartupGate> {
               onEnd: () {
                 if (_dismissed && mounted) setState(() => _removed = true);
               },
-              child: splash,
+              child: RepaintBoundary(child: splash),
             ),
           ),
       ],

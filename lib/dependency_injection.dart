@@ -81,6 +81,10 @@ import 'presentation/providers/favorites_provider.dart';
 import 'presentation/providers/purchases_provider.dart';
 import 'presentation/providers/quotes_provider.dart';
 import 'presentation/providers/auth_aware_reload.dart';
+import 'core/push/push_messaging.dart';
+import 'data/datasources/push_remote_datasource.dart';
+import 'presentation/providers/app_lock_provider.dart';
+import 'presentation/providers/push_provider.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/cart_provider.dart';
 import 'presentation/providers/company_provider.dart';
@@ -164,6 +168,19 @@ class DependencyInjection {
             changePasswordUseCase: ChangePasswordUseCase(_authRepository),
             repository: _authRepository,
           )..restore(),
+        ),
+        // Bloqueo del app con la huella (si el cliente lo activó).
+        ChangeNotifierProvider<AppLockProvider>(
+          create: (_) => AppLockProvider()..load(),
+        ),
+        // Notificaciones push (si el app está configurada con Firebase): se
+        // registra el teléfono al iniciar sesión y se quita al cerrarla.
+        ChangeNotifierProxyProvider<AuthProvider, PushProvider>(
+          create: (_) => PushProvider(
+            messaging: FirebasePushMessaging(),
+            remote: PushRemoteDataSourceImpl(_apiClient),
+          ),
+          update: (_, auth, push) => push!..attach(auth),
         ),
         // El carrito depende de la sesión: al iniciarla pasa el carrito de
         // invitado al servidor.

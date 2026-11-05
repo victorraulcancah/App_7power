@@ -28,6 +28,20 @@ class ApiConstants {
   static const String logoutEndpoint = '/logout';
   static const String cartEndpoint = '/cart';
 
+  /// "Continuar con Google": manda el `id_token` que da Google en el teléfono.
+  static const String googleLoginEndpoint = '/auth/google/token';
+
+  /// "ID de cliente" de tipo **Web** del proyecto de Google (el mismo que usa el
+  /// login de la web en `GOOGLE_CLIENT_ID`). Sin él el botón de Google no se
+  /// muestra. Se define al compilar:
+  ///   flutter build apk --dart-define=GOOGLE_SERVER_CLIENT_ID=1234-abc.apps.googleusercontent.com
+  static const String googleServerClientId =
+      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+  /// Las pruebas lo fijan para ver el botón sin compilar con el ID de cliente.
+  static bool? googleLoginOverride;
+  static bool get googleLoginEnabled =>
+      googleLoginOverride ?? googleServerClientId.isNotEmpty;
+
   // Registro y recuperación de contraseña (públicos)
   static const String registerEndpoint = '/register';
   static const String documentTypesEndpoint = '/document-types';
@@ -81,6 +95,8 @@ class ApiConstants {
   static const String profileEndpoint = '/user';
   static const String phoneEndpoint = '/user/telefono';
   static const String changePasswordEndpoint = '/user/change-password';
+  /// Teléfono del cliente para las notificaciones push.
+  static const String devicesEndpoint = '/cliente/dispositivos';
   static const String uploadPhotoEndpoint = '/cliente/upload-foto';
   static const String deletePhotoEndpoint = '/cliente/delete-foto';
 

@@ -1,10 +1,30 @@
 import java.io.FileInputStream
 import java.util.Properties
 
+// Notificaciones push (Firebase): solo si se agregó android/app/google-services.json
+// (ver docs/NOTIFICACIONES.md). Sin ese archivo el app compila igual, sin push.
+val firebaseConfigured = file("google-services.json").exists()
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        if (file("google-services.json").exists()) {
+            classpath("com.google.gms:google-services:4.4.4")
+        }
+    }
+}
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+if (firebaseConfigured) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 // Datos de la clave de firma. Viven en android/key.properties, que NO se sube a

@@ -84,11 +84,13 @@ class ApiClient {
   Future<http.Response> delete(
     String endpoint, {
     Map<String, String>? headers,
+    Map<String, String>? queryParameters,
   }) =>
       _send(
         (uri, h) => _client.delete(uri, headers: h),
         endpoint,
         headers: headers,
+        queryParameters: queryParameters,
       );
 
   /// Sube el archivo de [filePath] como `multipart/form-data` en el campo

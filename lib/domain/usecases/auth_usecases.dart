@@ -18,6 +18,21 @@ class LoginUseCase {
   }
 }
 
+class GoogleLoginUseCase {
+  final AuthRepository repository;
+
+  GoogleLoginUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call(String idToken) {
+    if (idToken.trim().isEmpty) {
+      return Future.value(Either.left(
+        const ValidationFailure('No se pudo iniciar sesión con Google.'),
+      ));
+    }
+    return repository.loginWithGoogle(idToken);
+  }
+}
+
 class RestoreSessionUseCase {
   final AuthRepository repository;
 

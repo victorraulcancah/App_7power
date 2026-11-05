@@ -154,10 +154,13 @@ class SearchSubmitButton extends StatelessWidget {
       child: IconButton.filled(
         tooltip: 'Buscar',
         style: IconButton.styleFrom(
-          minimumSize: const Size(40, 40),
-          fixedSize: const Size(40, 40),
+          minimumSize: const Size(36, 36),
+          fixedSize: const Size(36, 36),
+          // Blanco explícito: dentro del campo la flecha tomaba el color gris
+          // de los íconos del campo y casi no se veía sobre el rojo.
+          foregroundColor: Colors.white,
         ),
-        icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+        icon: const Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
         onPressed: onPressed,
       ),
     );

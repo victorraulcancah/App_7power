@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../theme/app_theme.dart';
 import '../components/components.dart';
+import '../providers/app_lock_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/statement_provider.dart';
@@ -144,6 +145,11 @@ class _AccountMenu extends StatelessWidget {
             onTap: () => _open(context, const CartPage()),
           ),
         ]),
+        // Solo si el teléfono puede identificar (huella, rostro o PIN).
+        if (context.select<AppLockProvider, bool>((l) => l.available))
+          MenuGroup(title: 'Seguridad', children: [
+            const _BiometricLockItem(),
+          ]),
         MenuGroup(title: 'Ayuda', children: [
           MenuItem(
             icon: Icons.help_outline_rounded,
@@ -181,6 +187,42 @@ class _AccountMenu extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// El interruptor del bloqueo con huella. Activarlo o apagarlo pide la huella.
+class _BiometricLockItem extends StatelessWidget {
+  const _BiometricLockItem();
+
+  Future<void> _toggle(BuildContext context, bool value) async {
+    final lock = context.read<AppLockProvider>();
+    final now = await lock.setEnabled(value);
+
+    if (!context.mounted) return;
+    if (now == value) {
+      AppSnackbar.success(
+        context,
+        value ? 'Bloqueo con huella activado' : 'Bloqueo con huella desactivado',
+      );
+    } else {
+      AppSnackbar.info(context, 'No se pudo confirmar tu identidad.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = context.select<AppLockProvider, bool>((l) => l.enabled);
+
+    return MenuItem(
+      icon: Icons.fingerprint_rounded,
+      title: 'Bloqueo con huella',
+      subtitle: 'Pide tu huella al abrir el app',
+      onTap: () => _toggle(context, !enabled),
+      trailing: Switch(
+        value: enabled,
+        onChanged: (value) => _toggle(context, value),
+      ),
     );
   }
 }

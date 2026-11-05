@@ -35,24 +35,32 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, UserEntity>> login(String email, String password) =>
-      guardRequest(() async {
-        final result = await remote.login(email, password);
+      guardRequest(() => _open(remote.login(email, password)));
 
-        if (result.userType != 'cliente' || result.client == null) {
-          // El servidor ya abrió una sesión para esa cuenta: se cierra para no
-          // dejar un token activo que esta app no va a usar.
-          try {
-            await remote.logout(result.token);
-          } catch (_) {}
-          throw const ValidationException(
-            'Esta app es solo para clientes de la tienda.',
-          );
-        }
+  @override
+  Future<Either<Failure, UserEntity>> loginWithGoogle(String idToken) =>
+      guardRequest(() => _open(remote.loginWithGoogle(idToken)));
 
-        await local.saveSession(result.token, result.client!);
-        apiClient.authToken = result.token;
-        return result.client!;
-      });
+  /// Deja abierta la sesión de [pending] (guardada en el equipo y con su token en
+  /// el cliente HTTP), si es de un cliente.
+  Future<UserEntity> _open(Future<LoginResult> pending) async {
+    final result = await pending;
+
+    if (result.userType != 'cliente' || result.client == null) {
+      // El servidor ya abrió una sesión para esa cuenta: se cierra para no
+      // dejar un token activo que esta app no va a usar.
+      try {
+        await remote.logout(result.token);
+      } catch (_) {}
+      throw const ValidationException(
+        'Esta app es solo para clientes de la tienda.',
+      );
+    }
+
+    await local.saveSession(result.token, result.client!);
+    apiClient.authToken = result.token;
+    return result.client!;
+  }
 
   @override
   Future<Either<Failure, UserEntity?>> restoreSession() =>

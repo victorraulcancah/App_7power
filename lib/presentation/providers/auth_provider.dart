@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/auth_usecases.dart';
+import '../utils/google_id_token.dart';
 
 enum AuthStatus { initial, unauthenticated, loading, authenticated }
 
@@ -46,6 +47,13 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
 
+  int _loginCount = 0;
+
+  /// Cuántas veces se inició sesión en esta ejecución del app (con contraseña o
+  /// con Google; restaurar la sesión al abrir no cuenta). Sirve para reaccionar
+  /// a "acaba de entrar" sin depender de ver el estado intermedio.
+  int get loginCount => _loginCount;
+
   Future<void> restore() async {
     final result = await restoreSessionUseCase();
     result.fold(
@@ -76,6 +84,50 @@ class AuthProvider extends ChangeNotifier {
       (user) {
         _user = user;
         _status = AuthStatus.authenticated;
+        _loginCount++;
+        return true;
+      },
+    );
+    notifyListeners();
+    return ok;
+  }
+
+  /// Entra con Google: la hoja del sistema da el `id_token` y el servidor lo
+  /// valida. Devuelve true si se inició sesión. Si el cliente cancela devuelve
+  /// false sin mensaje de error; si algo falla, el motivo queda en
+  /// [errorMessage].
+  Future<bool> loginWithGoogle() async {
+    _status = AuthStatus.loading;
+    _errorMessage = '';
+    notifyListeners();
+
+    final String? idToken;
+    try {
+      idToken = await GoogleIdToken.fetch();
+    } catch (_) {
+      _errorMessage = 'No se pudo iniciar sesión con Google. Intenta de nuevo.';
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return false;
+    }
+
+    if (idToken == null) {
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return false;
+    }
+
+    final result = await GoogleLoginUseCase(repository)(idToken);
+    final ok = result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _status = AuthStatus.unauthenticated;
+        return false;
+      },
+      (user) {
+        _user = user;
+        _status = AuthStatus.authenticated;
+        _loginCount++;
         return true;
       },
     );
@@ -148,8 +200,23 @@ class AuthProvider extends ChangeNotifier {
     return result.fold((failure) => failure.message, (_) => null);
   }
 
+  final List<Future<void> Function()> _logoutHooks = [];
+
+  /// Algo que debe hacerse *antes* de cerrar la sesión, mientras el token todavía
+  /// vale (por ejemplo, quitar el teléfono de las notificaciones push).
+  void addLogoutHook(Future<void> Function() hook) => _logoutHooks.add(hook);
+
   Future<void> logout() async {
+    for (final hook in _logoutHooks) {
+      try {
+        await hook();
+      } catch (_) {
+        // Un fallo aquí no debe impedir cerrar la sesión.
+      }
+    }
     await logoutUseCase();
+    // Para que la próxima vez Google deje elegir otra cuenta.
+    await GoogleIdToken.signOut();
     _user = null;
     _errorMessage = '';
     _status = AuthStatus.unauthenticated;

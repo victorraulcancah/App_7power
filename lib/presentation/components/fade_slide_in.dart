@@ -39,7 +39,9 @@ class FadeSlideIn extends StatelessWidget {
         1,
         curve: Curves.easeOutCubic,
       ),
-      child: child,
+      // Con su propia capa: si el hijo se pintara junto con la opacidad, el motor
+      // gráfico (Impeller) avisa con errores en el registro cuando trae sombras.
+      child: RepaintBoundary(child: child),
       builder: (context, t, child) => Opacity(
         opacity: t,
         child: Transform.translate(

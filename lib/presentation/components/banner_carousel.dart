@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -67,38 +68,58 @@ class _BannerCarouselState extends State<BannerCarousel> {
               onPageChanged: (i) => setState(() => _index = i),
               itemBuilder: (context, i) {
                 final banner = widget.banners[i];
-                final radius = BorderRadius.circular(AppConstants.defaultBorderRadius);
+                final radius = BorderRadius.circular(
+                  AppConstants.defaultBorderRadius,
+                );
 
                 // Al deslizar, el banner que sale se achica y se desvanece un
                 // poco mientras entra el siguiente.
                 return AnimatedBuilder(
                   animation: _controller,
                   builder: (context, child) {
-                    final page = _controller.hasClients &&
+                    final page =
+                        _controller.hasClients &&
                             _controller.position.haveDimensions
                         ? (_controller.page ?? _index.toDouble())
                         : _index.toDouble();
                     final away = (page - i).abs().clamp(0.0, 1.0);
                     return Opacity(
                       opacity: 1 - 0.4 * away,
-                      child: Transform.scale(scale: 1 - 0.07 * away, child: child),
+                      child: Transform.scale(
+                        scale: 1 - 0.07 * away,
+                        child: child,
+                      ),
                     );
                   },
-                  child: GestureDetector(
-                    onTap: widget.onTap == null ? null : () => widget.onTap!(banner),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                      decoration: BoxDecoration(
-                        borderRadius: radius,
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.18),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
+                  // Con su propia capa (ver FadeSlideIn): evita avisos de Impeller
+                  // al combinar opacidad con sombras.
+                  child: RepaintBoundary(
+                    child: GestureDetector(
+                      onTap: widget.onTap == null
+                          ? null
+                          : () => widget.onTap!(banner),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: radius,
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.18,
+                              ),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: ProductImage(
+                          url: banner.imageUrl,
+                          borderRadius: radius,
+                        ),
                       ),
-                      child: ProductImage(url: banner.imageUrl, borderRadius: radius),
                     ),
                   ),
                 );

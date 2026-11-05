@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/validators.dart';
 import '../components/components.dart';
@@ -42,6 +44,21 @@ class _LoginFormState extends State<LoginForm> {
     if (ok) {
       widget.onSuccess?.call();
     } else {
+      AppSnackbar.error(context, auth.errorMessage);
+    }
+  }
+
+  Future<void> _google() async {
+    FocusScope.of(context).unfocus();
+
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.loginWithGoogle();
+
+    if (!mounted) return;
+    if (ok) {
+      widget.onSuccess?.call();
+    } else if (auth.errorMessage.isNotEmpty) {
+      // Si el cliente solo canceló, no hay nada que avisar.
       AppSnackbar.error(context, auth.errorMessage);
     }
   }
@@ -91,6 +108,12 @@ class _LoginFormState extends State<LoginForm> {
             isLoading: auth.isLoading,
             onPressed: _submit,
           ),
+          if (ApiConstants.googleLoginEnabled) ...[
+            const SizedBox(height: 16),
+            const _OrDivider(),
+            const SizedBox(height: 16),
+            _GoogleButton(onPressed: auth.isLoading ? null : _google),
+          ],
           const SizedBox(height: 8),
           AppButton(
             label: '¿Olvidaste tu contraseña?',
@@ -105,6 +128,47 @@ class _LoginFormState extends State<LoginForm> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "o" entre dos líneas, para separar el correo de las otras formas de entrar.
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final outline = Theme.of(context).colorScheme.outline;
+
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text('o', style: TextStyle(color: outline)),
+        ),
+        const Expanded(child: Divider()),
+      ],
+    );
+  }
+}
+
+/// "Continuar con Google", con la "G" de colores.
+class _GoogleButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const _GoogleButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFF3C4043),
+        side: const BorderSide(color: Color(0xFFDADCE0)),
+      ),
+      icon: const FaIcon(FontAwesomeIcons.google, size: 18, color: Color(0xFFEA4335)),
+      label: const Text('Continuar con Google'),
     );
   }
 }

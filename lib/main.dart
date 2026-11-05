@@ -7,6 +7,8 @@ import 'core/constants/app_constants.dart';
 import 'dependency_injection.dart';
 import 'presentation/pages/startup_gate.dart';
 import 'presentation/providers/company_provider.dart';
+import 'presentation/widgets/lock_gate.dart';
+import 'presentation/widgets/push_host.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
       // cuando llegan sus datos desde el backend.
       child: Consumer<CompanyProvider>(
         builder: (context, company, _) => MaterialApp(
+          navigatorKey: LockGate.navigatorKey,
           debugShowCheckedModeBanner: false,
           title: AppConstants.appName,
           theme: company.theme,
@@ -38,6 +41,10 @@ class MyApp extends StatelessWidget {
           locale: const Locale('es', 'PE'),
           supportedLocales: const [Locale('es', 'PE'), Locale('es')],
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          // El bloqueo con huella va por encima de todas las pantallas.
+          builder: (context, child) => LockGate(
+            child: PushHost(child: child ?? const SizedBox.shrink()),
+          ),
           // Pantalla de carga hasta tener el color de la empresa y la portada.
           home: const StartupGate(),
         ),

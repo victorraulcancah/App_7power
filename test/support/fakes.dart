@@ -87,6 +87,10 @@ import 'package:appecommerce/presentation/providers/registration_provider.dart';
 import 'package:appecommerce/data/models/product_detail_model.dart';
 import 'package:appecommerce/dependency_injection.dart';
 import 'package:appecommerce/main.dart';
+import 'package:appecommerce/core/push/push_messaging.dart';
+import 'package:appecommerce/data/datasources/push_remote_datasource.dart';
+import 'package:appecommerce/presentation/providers/app_lock_provider.dart';
+import 'package:appecommerce/presentation/providers/push_provider.dart';
 import 'package:appecommerce/presentation/providers/auth_provider.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 import 'package:appecommerce/presentation/providers/company_provider.dart';
@@ -374,6 +378,22 @@ class FakeAuthRemote implements AuthRemoteDataSource {
 
   /// El cliente que devuelve el login.
   UserModel loginUser = testUser;
+
+  /// Los `id_token` de Google recibidos; solo vale el que empieza con "valido".
+  final List<String> googleTokens = [];
+
+  @override
+  Future<LoginResult> loginWithGoogle(String idToken) async {
+    googleTokens.add(idToken);
+    if (!idToken.startsWith('valido')) {
+      throw const AuthException('No pudimos validar tu cuenta de Google. Intenta de nuevo.');
+    }
+    return LoginResult(
+      userType: userType,
+      token: 'token-google',
+      client: userType == 'cliente' ? loginUser : null,
+    );
+  }
 
   @override
   Future<void> logout(String token) async => loggedOutTokens.add(token);
@@ -833,6 +853,64 @@ class FakeStatementRemote implements StatementRemoteDataSource {
   }
 }
 
+/// Notificaciones push en memoria. Cada test decide si "hay Firebase" y mete los
+/// avisos que quiere que lleguen.
+class FakePushMessaging implements PushMessaging {
+  /// Si es false, `init()` dice que no se pueden usar (sin Firebase o sin permiso).
+  bool configured = false;
+  String? currentToken = 'tok-telefono-1';
+  PushMessage? initial;
+  int initCalls = 0;
+  int deletedTokens = 0;
+
+  final foregroundController = StreamController<PushMessage>.broadcast();
+  final openedController = StreamController<PushMessage>.broadcast();
+  final refreshController = StreamController<String>.broadcast();
+
+  @override
+  Future<bool> init() async {
+    initCalls++;
+    return configured;
+  }
+
+  @override
+  Future<String?> token() async => currentToken;
+
+  @override
+  Stream<String> get onTokenRefresh => refreshController.stream;
+
+  @override
+  Stream<PushMessage> get onForeground => foregroundController.stream;
+
+  @override
+  Stream<PushMessage> get onOpened => openedController.stream;
+
+  @override
+  Future<PushMessage?> initialMessage() async => initial;
+
+  @override
+  Future<void> deleteToken() async => deletedTokens++;
+}
+
+/// El registro de teléfonos en el "servidor".
+class FakePushRemote implements PushRemoteDataSource {
+  final List<String> registered = [];
+  final List<String> unregistered = [];
+  Exception? failure;
+
+  @override
+  Future<void> register(String token) async {
+    if (failure != null) throw failure!;
+    registered.add(token);
+  }
+
+  @override
+  Future<void> unregister(String token) async {
+    if (failure != null) throw failure!;
+    unregistered.add(token);
+  }
+}
+
 /// Cupones y ofertas en memoria.
 class FakePromotionsRemote implements PromotionsRemoteDataSource {
   List<CouponOffer> coupons = const [];
@@ -972,6 +1050,13 @@ class TestEnv {
             delay: companyDelay,
             cachedBanners: cachedBanners);
 
+  /// El bloqueo con huella; los tests lo leen para ver su estado.
+  final AppLockProvider lock = AppLockProvider();
+
+  /// Notificaciones push en memoria: por defecto "sin Firebase" (no hace nada).
+  final FakePushMessaging pushMessaging = FakePushMessaging();
+  final FakePushRemote pushRemote = FakePushRemote();
+
   Widget app() => MyApp(providers: [
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
@@ -983,6 +1068,13 @@ class TestEnv {
             changePasswordUseCase: ChangePasswordUseCase(authRepo),
             repository: authRepo,
           )..restore(),
+        ),
+        ChangeNotifierProvider<AppLockProvider>(
+          create: (_) => lock..load(),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, PushProvider>(
+          create: (_) => PushProvider(messaging: pushMessaging, remote: pushRemote),
+          update: (_, auth, push) => push!..attach(auth),
         ),
         ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
           create: (_) => CartProvider(

@@ -7,6 +7,10 @@ abstract class AuthRepository {
   /// o reparto pertenecen a otras apps y se rechazan.
   Future<Either<Failure, UserEntity>> login(String email, String password);
 
+  /// Inicia sesión con el `id_token` de Google. Crea la cuenta si es la primera
+  /// vez. Igual que [login], solo acepta clientes.
+  Future<Either<Failure, UserEntity>> loginWithGoogle(String idToken);
+
   /// Recupera la sesión guardada en el dispositivo, o null si no hay.
   Future<Either<Failure, UserEntity?>> restoreSession();
 

@@ -16,6 +16,10 @@ class LoginResult {
 abstract class AuthRemoteDataSource {
   Future<LoginResult> login(String email, String password);
 
+  /// Entra con el `id_token` de Google. El servidor lo valida, crea la cuenta si
+  /// es la primera vez y responde igual que [login].
+  Future<LoginResult> loginWithGoogle(String idToken);
+
   /// Revoca [token] en el servidor.
   Future<void> logout(String token);
 
@@ -47,8 +51,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       ApiConstants.loginEndpoint,
       body: {'email': email, 'password': password},
     );
-    final body =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    return _loginResult(response.bodyBytes);
+  }
+
+  @override
+  Future<LoginResult> loginWithGoogle(String idToken) async {
+    final response = await client.post(
+      ApiConstants.googleLoginEndpoint,
+      body: {'id_token': idToken},
+    );
+    return _loginResult(response.bodyBytes);
+  }
+
+  /// La respuesta de /login (y de Google) tiene la misma forma.
+  LoginResult _loginResult(List<int> bytes) {
+    final body = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
     final type = body['tipo_usuario']?.toString() ?? '';
 
     return LoginResult(
