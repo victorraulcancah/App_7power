@@ -30,8 +30,8 @@ class ProductRepositoryImpl implements ProductRepository {
           ));
 
   @override
-  Future<Either<Failure, List<BrandEntity>>> getBrands() =>
-      guardRequest(remoteDataSource.getBrands);
+  Future<Either<Failure, List<BrandEntity>>> getBrands({int? categoryId}) =>
+      guardRequest(() => remoteDataSource.getBrands(categoryId: categoryId));
 
   @override
   Future<Either<Failure, List<CategoryEntity>>> getCategories() =>

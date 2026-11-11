@@ -249,6 +249,19 @@ class _ProductFiltersSheetState extends State<ProductFiltersSheet> {
     );
   }
 
+  /// Las marcas que se ofrecen: las de la categoría elegida (o todas) y, para
+  /// poder soltarlas, las ya marcadas aunque no tengan productos ahí.
+  List<BrandEntity> get _brandOptions {
+    final available = _provider.availableBrands;
+    final shown = {for (final b in available) b.id};
+    return [
+      ...available,
+      for (final b in _provider.brands)
+        if (_draft.brandIds.contains(b.id) && !shown.contains(b.id))
+          BrandEntity(id: b.id, name: b.name),
+    ];
+  }
+
   /// El rango solo cuenta como filtro si se movió de los topes.
   ProductFilters get _result {
     if (!_provider.canFilterByPrice) return _draft.copyWith(clearPrice: true);
@@ -320,9 +333,21 @@ class _ProductFiltersSheetState extends State<ProductFiltersSheet> {
                   if (_provider.brands.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     Text('Marcas', style: theme.textTheme.titleSmall),
+                    // Con una categoría elegida, solo salen las marcas que
+                    // tienen productos en ella.
+                    if (_provider.selectedCategoryName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'Con productos en '
+                          '${FormatUtils.titleCase(_provider.selectedCategoryName!)}',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.outline),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     _BrandSelect(
-                      brands: _provider.brands,
+                      brands: _brandOptions,
                       selected: _draft.brandIds,
                       onChanged: (ids) =>
                           setState(() => _draft = _draft.copyWith(brandIds: ids)),

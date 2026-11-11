@@ -5,6 +5,7 @@ import '../../domain/entities/product_filters.dart';
 import '../components/components.dart';
 import '../providers/company_provider.dart';
 import '../providers/products_provider.dart';
+import '../widgets/home_header.dart';
 import 'account_page.dart';
 import 'cart_page.dart';
 import 'home_page.dart';
@@ -76,12 +77,28 @@ class _MainShellState extends State<MainShell> {
     final company = context.watch<CompanyProvider>().info;
 
     return Scaffold(
-      appBar: AppBar(
-        // Ayuda por WhatsApp a la mano en todas las pestañas, y el carrito.
-        actions: const [SupportAction(), CartButton()],
-        // El logo queda centrado; el carrito, a la derecha.
-        title: BrandLogo(url: company?.logoUrl, height: 34),
-      ),
+      appBar: _tab == 0
+          // El inicio no lleva logo: el buscador ocupa la barra, con la lista
+          // de favoritos, el carrito y la ayuda a su lado.
+          ? AppBar(
+              centerTitle: false,
+              titleSpacing: 12,
+              title: SizedBox(
+                width: double.infinity,
+                child: HomeSearchField(onSearch: _openSearch),
+              ),
+              actions: const [
+                FavoritesShortcut(),
+                CartButton(),
+                SupportAction(),
+              ],
+            )
+          // Ayuda por WhatsApp a la mano en todas las pestañas, y el carrito.
+          // El logo queda centrado; el carrito, a la derecha.
+          : AppBar(
+              actions: const [SupportAction(), CartButton()],
+              title: BrandLogo(url: company?.logoUrl, height: 34),
+            ),
       body: _TabFade(
         index: _tab,
         child: IndexedStack(
@@ -90,7 +107,6 @@ class _MainShellState extends State<MainShell> {
             HomePage(
               onOpenShop: _openShop,
               onOpenBrand: _openBrand,
-              onSearch: _openSearch,
             ),
             const ProductsPage(),
             const AccountPage(),

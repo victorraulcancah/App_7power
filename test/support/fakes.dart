@@ -207,8 +207,26 @@ class FakeProductRepo implements ProductRepository {
       ]);
 
   @override
-  Future<Either<Failure, List<BrandEntity>>> getBrands() async =>
-      Either.right(brands);
+  Future<Either<Failure, List<BrandEntity>>> getBrands({int? categoryId}) async {
+    brandRequests.add(categoryId);
+    if (categoryId != null && brandsFailure != null) {
+      return Either.left(brandsFailure!);
+    }
+    // Con categoría, las que tienen productos en ella (por defecto, todas).
+    if (categoryId != null && brandsByCategory.containsKey(categoryId)) {
+      return Either.right(brandsByCategory[categoryId]!);
+    }
+    return Either.right(brands);
+  }
+
+  /// Marcas con productos en cada categoría (para `getBrands(categoryId:)`).
+  final Map<int, List<BrandEntity>> brandsByCategory = {};
+
+  /// Las categorías por las que se pidieron marcas (null = la lista completa).
+  final List<int?> brandRequests = [];
+
+  /// Si se indica, pedir las marcas de una categoría falla.
+  Failure? brandsFailure;
 
   /// Lo que "tiene guardado el equipo" al arrancar (null = nada guardado).
   List<CategoryEntity>? cachedCategories;
@@ -238,8 +256,12 @@ class FakeProductRepo implements ProductRepository {
       longDescription: 'Descripción de ${product.name}',
       warranty: '12 meses',
       currencyOptions: currencyOptions[id] ?? const [],
+      related: relatedProducts[id] ?? const [],
     ));
   }
+
+  /// Productos relacionados que devuelve el servidor para cada producto.
+  final Map<int, List<ProductEntity>> relatedProducts = {};
 
   /// Fotos de la galería y manual en PDF por producto, para la ficha.
   final Map<int, List<String>> galleries = {};
@@ -346,7 +368,8 @@ class FakeProductRemote implements ProductRemoteDataSource {
   Future<List<CategoryModel>> getCategories() => throw UnimplementedError();
 
   @override
-  Future<List<BrandEntity>> getBrands() => throw UnimplementedError();
+  Future<List<BrandEntity>> getBrands({int? categoryId}) =>
+      throw UnimplementedError();
 
   @override
   Future<List<CategoryModel>?> getCachedCategories() async => null;

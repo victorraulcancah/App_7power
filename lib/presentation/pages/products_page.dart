@@ -108,12 +108,9 @@ class _ProductsPageState extends State<ProductsPage> {
         return RefreshIndicator(
           onRefresh: provider.loadProducts,
           child: products.isEmpty
-              ? ListView(children: const [
-                  SizedBox(height: 80),
-                  EmptyState(
-                    title: 'Sin productos',
-                    message: 'No encontramos productos con ese filtro.',
-                  ),
+              ? ListView(children: [
+                  const SizedBox(height: 80),
+                  _NoResults(provider: provider),
                 ])
               : GridView.builder(
                   controller: _scroll,
@@ -143,6 +140,60 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
         );
     }
+  }
+}
+
+/// Sin resultados: dice qué combinación se pidió y deja quitarla con un toque,
+/// en vez de dejar un callejón sin salida.
+class _NoResults extends StatelessWidget {
+  final ProductsProvider provider;
+
+  const _NoResults({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final filters = provider.filters;
+    final category = provider.selectedCategoryName;
+    final brandNames = [
+      for (final b in provider.brands)
+        if (filters.brandIds.contains(b.id)) b.name,
+    ];
+
+    final parts = <String>[
+      if (brandNames.isNotEmpty) brandNames.join(' o '),
+      if (category != null) FormatUtils.titleCase(category),
+      if (filters.hasPriceRange) 'ese rango de precio',
+      if (provider.query.isNotEmpty) '"${provider.query}"',
+    ];
+
+    final canClearFilters = filters.isActive;
+    final canClearCategory = provider.selectedCategoryId != null;
+
+    return Column(
+      children: [
+        EmptyState(
+          title: 'Sin productos',
+          message: parts.length > 1
+              ? 'No hay productos con la combinación: ${parts.join(' + ')}.'
+              : parts.length == 1
+                  ? 'No encontramos productos con ${parts.single}.'
+                  : 'No encontramos productos con ese filtro.',
+          actionLabel: canClearFilters
+              ? 'Quitar filtros'
+              : (canClearCategory ? 'Ver todas las categorías' : null),
+          onAction: canClearFilters
+              ? provider.clearFilters
+              : (canClearCategory ? () => provider.selectCategory(null) : null),
+        ),
+        // Con filtros y categoría a la vez, también se puede soltar solo la
+        // categoría.
+        if (canClearFilters && canClearCategory)
+          TextButton(
+            onPressed: () => provider.selectCategory(null),
+            child: const Text('Ver todas las categorías'),
+          ),
+      ],
+    );
   }
 }
 
@@ -231,13 +282,55 @@ class _ActiveFilters extends StatelessWidget {
       );
 }
 
-class _CategoryFilter extends StatelessWidget {
+class _CategoryFilter extends StatefulWidget {
   final ProductsProvider provider;
 
   const _CategoryFilter({required this.provider});
 
   @override
+  State<_CategoryFilter> createState() => _CategoryFilterState();
+}
+
+class _CategoryFilterState extends State<_CategoryFilter> {
+  /// Una llave por chip, para llevar el elegido a la vista: con más de treinta
+  /// categorías, el elegido (por ejemplo, venido de la portada) quedaba fuera
+  /// de la pantalla y no se sabía por qué la lista salía filtrada.
+  final Map<int?, GlobalKey> _keys = {};
+
+  GlobalKey _keyFor(int? id) => _keys.putIfAbsent(id, GlobalKey.new);
+
+  @override
+  void initState() {
+    super.initState();
+    _revealSelected();
+  }
+
+  @override
+  void didUpdateWidget(_CategoryFilter old) {
+    super.didUpdateWidget(old);
+    if (old.provider.selectedCategoryId != widget.provider.selectedCategoryId ||
+        old.provider.categories.length != widget.provider.categories.length) {
+      _revealSelected();
+    }
+  }
+
+  void _revealSelected() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _keyFor(widget.provider.selectedCategoryId).currentContext;
+      if (context == null || !mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = widget.provider;
+
     return SizedBox(
       height: 40,
       child: ListView(
@@ -246,17 +339,20 @@ class _CategoryFilter extends StatelessWidget {
           horizontal: AppConstants.defaultPadding,
         ),
         children: [
-          _chip('Todos', provider.selectedCategoryId == null,
+          _chip(null, 'Todos', provider.selectedCategoryId == null,
               () => provider.selectCategory(null)),
           for (final c in provider.categories)
-            _chip(FormatUtils.titleCase(c.name), provider.selectedCategoryId == c.id,
+            _chip(c.id, FormatUtils.titleCase(c.name),
+                provider.selectedCategoryId == c.id,
                 () => provider.selectCategory(c.id)),
         ],
       ),
     );
   }
 
-  Widget _chip(String label, bool selected, VoidCallback onTap) => Padding(
+  Widget _chip(int? id, String label, bool selected, VoidCallback onTap) =>
+      Padding(
+        key: _keyFor(id),
         padding: const EdgeInsets.only(right: 8),
         child: ChoiceChip(
           label: Text(label),

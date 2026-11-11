@@ -20,7 +20,9 @@ abstract class ProductRemoteDataSource {
 
   Future<List<CategoryModel>> getCategories();
 
-  Future<List<BrandEntity>> getBrands();
+  /// Las marcas con productos. Con [categoryId], solo las que tienen productos
+  /// en esa categoría y con su cantidad en ella.
+  Future<List<BrandEntity>> getBrands({int? categoryId});
 
   Future<ProductDetailModel> getProductDetail(int id);
 
@@ -135,11 +137,17 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
   @override
-  Future<List<BrandEntity>> getBrands() async {
-    final response = await client.get(ApiConstants.marcasEndpoint);
+  Future<List<BrandEntity>> getBrands({int? categoryId}) async {
+    final response = await client.get(
+      ApiConstants.marcasEndpoint,
+      queryParameters: {
+        if (categoryId != null) 'categoria_id': '$categoryId',
+      },
+    );
     final text = utf8.decode(response.bodyBytes);
     final brands = _parseBrands(text);
-    await cache?.write(_brandsKey, text);
+    // Solo la lista completa se guarda: la de una categoría es parcial.
+    if (categoryId == null) await cache?.write(_brandsKey, text);
     return brands;
   }
 

@@ -18,7 +18,8 @@ abstract class ProductRepository {
 
   Future<Either<Failure, List<CategoryEntity>>> getCategories();
 
-  Future<Either<Failure, List<BrandEntity>>> getBrands();
+  /// Las marcas con productos; con [categoryId], solo las de esa categoría.
+  Future<Either<Failure, List<BrandEntity>>> getBrands({int? categoryId});
 
   Future<Either<Failure, ProductDetailEntity>> getProductDetail(int id);
 

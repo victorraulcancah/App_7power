@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -11,13 +10,11 @@ import '../components/components.dart';
 import '../providers/product_detail_provider.dart';
 import '../utils/open_url.dart';
 import '../utils/product_share.dart';
-import '../utils/whatsapp_support.dart';
 import '../widgets/favorite_button.dart';
 import '../widgets/product_tile.dart';
 import 'cart_page.dart';
 import 'image_viewer_page.dart';
 import 'login_page.dart';
-import 'support/support_page.dart';
 
 /// Ficha de un producto: galería, precio, stock, descripción y agregar al
 /// carrito. Sigue las reglas de la web: precio oculto a invitados sin lista de
@@ -100,6 +97,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final theme = Theme.of(context);
     final canBuy = product.priceVisible && product.isAvailable;
     final maxQuantity = product.stock > 0 ? product.stock : 1;
+    final related = detail.related.where((p) => p.isAvailable).toList();
 
     return Column(
       children: [
@@ -159,27 +157,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       _Section(title: entry.key, body: entry.value),
                     if (detail.manualUrl != null)
                       _ManualButton(url: detail.manualUrl!),
-                    // Consultar por este producto, con su nombre y enlace ya
-                    // escritos en el mensaje.
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: OutlinedButton.icon(
-                        onPressed: () => WhatsAppSupport.open(
-                          context,
-                          message: WhatsAppSupport.productMessage(product),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF128C7E),
-                          side: const BorderSide(color: whatsappGreen),
-                        ),
-                        icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 18),
-                        label: const Text('Preguntar por WhatsApp'),
-                      ),
-                    ),
                   ],
                 ),
               ),
-              if (detail.related.isNotEmpty) ...[
+              // Solo los que se pueden comprar: un relacionado agotado no ayuda.
+              if (related.isNotEmpty) ...[
                 const SectionHeader(title: 'Productos relacionados'),
                 SizedBox(
                   height: 330,
@@ -188,11 +170,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppConstants.defaultPadding,
                     ),
-                    itemCount: detail.related.length,
+                    itemCount: related.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 12),
                     itemBuilder: (context, i) => SizedBox(
                       width: 170,
-                      child: ProductTile(product: detail.related[i]),
+                      child: ProductTile(product: related[i]),
                     ),
                   ),
                 ),

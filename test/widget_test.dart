@@ -346,7 +346,8 @@ void main() {
     expect(await StoreLocalDataSourceImpl().readCompany(), isNull);
   });
 
-  testWidgets('El logo de la empresa sigue en el navbar', (tester) async {
+  testWidgets('El logo de la empresa va en el navbar, menos en el inicio',
+      (tester) async {
     const conLogo = CompanyInfoEntity(
       name: '7power',
       logoUrl: 'http://api.test/logo.png',
@@ -356,10 +357,16 @@ void main() {
     await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
-    expect(
-      find.descendant(of: find.byType(AppBar), matching: find.byType(Image)),
-      findsOneWidget,
-    );
+    final logo =
+        find.descendant(of: find.byType(AppBar), matching: find.byType(Image));
+
+    // En el inicio el buscador ocupa la barra: sin logo.
+    expect(logo, findsNothing);
+
+    // En las demás pestañas sigue el logo.
+    await tester.tap(find.text('Tienda'));
+    await tester.pumpAndSettle();
+    expect(logo, findsOneWidget);
   });
 
   testWidgets('La portada muestra categorías y productos, sin footer',

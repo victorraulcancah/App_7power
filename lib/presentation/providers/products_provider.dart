@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/category_entity.dart';
@@ -52,7 +54,25 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   List<ProductEntity> get products => _products;
   List<CategoryEntity> get categories => _categories;
   List<BrandEntity> get brands => _brands;
+
+  /// Marcas con productos en la categoría elegida (null = no hay categoría o
+  /// todavía no llegan).
+  List<BrandEntity>? _categoryBrands;
+
+  /// Las marcas que ofrece la hoja de filtros: las de la categoría elegida, o
+  /// todas si no hay categoría.
+  List<BrandEntity> get availableBrands =>
+      _categoryId == null ? _brands : (_categoryBrands ?? _brands);
+
   int? get selectedCategoryId => _categoryId;
+
+  /// Nombre de la categoría elegida (para decir qué se está filtrando).
+  String? get selectedCategoryName {
+    for (final c in _categories) {
+      if (c.id == _categoryId) return c.name;
+    }
+    return null;
+  }
 
   /// Texto buscado (lo que muestra el buscador de la tienda).
   String get query => _query;
@@ -180,6 +200,7 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   Future<void> searchEverywhere(String query) {
     _query = query.trim();
     _categoryId = null;
+    _categoryBrands = null;
     _filters = ProductFilters.none;
     return loadProducts();
   }
@@ -187,7 +208,26 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   Future<void> selectCategory(int? categoryId) {
     if (categoryId == _categoryId) return Future.value();
     _categoryId = categoryId;
-    return loadProducts();
+    _categoryBrands = null;
+    final loading = loadProducts();
+    if (categoryId != null) unawaited(_loadCategoryBrands(categoryId));
+    return loading;
+  }
+
+  /// Las marcas que tienen productos en [categoryId], para que la hoja de
+  /// filtros no ofrezca una combinación que no da resultados. Si no se puede
+  /// pedir, se siguen mostrando todas.
+  Future<void> _loadCategoryBrands(int categoryId) async {
+    final useCase = getBrandsUseCase;
+    if (useCase == null) return;
+
+    final result = await useCase(categoryId: categoryId);
+    // Si mientras tanto se cambió de categoría, esta respuesta ya no sirve.
+    if (categoryId != _categoryId) return;
+    result.fold((_) {}, (brands) {
+      _categoryBrands = brands;
+      notifyListeners();
+    });
   }
 
   /// Aplica los filtros de la hoja (marcas, precio y orden).

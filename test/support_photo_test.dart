@@ -160,7 +160,8 @@ void main() {
       expect(items.length, greaterThanOrEqualTo(6));
     });
 
-    testWidgets('la ficha del producto permite preguntar por él', (tester) async {
+    testWidgets('la ficha del producto ya no ofrece preguntar por WhatsApp',
+        (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -176,12 +177,9 @@ void main() {
       ).first);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Preguntar por WhatsApp'));
-      await tester.pumpAndSettle();
-
-      final message = Uri.decodeComponent(opened!);
-      expect(message, contains('quiero consultar por este producto: Driver'));
-      expect(message, contains('product-details/5'));
+      expect(find.text('Producto'), findsOneWidget);
+      expect(find.text('Preguntar por WhatsApp'), findsNothing);
+      expect(opened, isNull);
     });
   });
 

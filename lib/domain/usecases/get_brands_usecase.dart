@@ -8,5 +8,6 @@ class GetBrandsUseCase {
 
   GetBrandsUseCase(this.repository);
 
-  Future<Either<Failure, List<BrandEntity>>> call() => repository.getBrands();
+  Future<Either<Failure, List<BrandEntity>>> call({int? categoryId}) =>
+      repository.getBrands(categoryId: categoryId);
 }

@@ -97,10 +97,14 @@ class SearchBox extends StatelessWidget {
 
   /// Decoración del `TextField` que va dentro de un [SearchBox]. [suffix] es lo
   /// que va a la derecha (borrar, o el botón de buscar).
+  ///
+  /// Con [compact] el campo es más bajo (el del inicio, que comparte fila con
+  /// los íconos de favoritos y carrito).
   static InputDecoration decoration(
     BuildContext context, {
     required String hint,
     Widget? suffix,
+    bool compact = false,
   }) {
     final primary = Theme.of(context).colorScheme.primary;
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
@@ -110,13 +114,17 @@ class SearchBox extends StatelessWidget {
 
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF8A8A8F)),
+      hintStyle: TextStyle(
+        fontSize: compact ? 13 : 14,
+        color: const Color(0xFF8A8A8F),
+      ),
       hintMaxLines: 1,
-      prefixIcon: Icon(Icons.search_rounded, color: primary),
+      prefixIcon: Icon(Icons.search_rounded, color: primary, size: compact ? 20 : 24),
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
+      isDense: compact,
+      contentPadding: EdgeInsets.symmetric(vertical: compact ? 10 : 15, horizontal: 8),
       border: border(primary.withValues(alpha: 0.55), 1.2),
       enabledBorder: border(primary.withValues(alpha: 0.55), 1.2),
       focusedBorder: border(primary, 2),
@@ -145,22 +153,33 @@ class SearchBox extends StatelessWidget {
 class SearchSubmitButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const SearchSubmitButton({super.key, required this.onPressed});
+  /// Más chico, para el buscador compacto del inicio.
+  final bool compact;
+
+  const SearchSubmitButton({
+    super.key,
+    required this.onPressed,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final size = compact ? 30.0 : 36.0;
+
     return Padding(
-      padding: const EdgeInsets.only(right: 6),
+      padding: EdgeInsets.only(right: compact ? 5 : 6),
       child: IconButton.filled(
         tooltip: 'Buscar',
         style: IconButton.styleFrom(
-          minimumSize: const Size(36, 36),
-          fixedSize: const Size(36, 36),
+          minimumSize: Size(size, size),
+          fixedSize: Size(size, size),
+          padding: EdgeInsets.zero,
           // Blanco explícito: dentro del campo la flecha tomaba el color gris
           // de los íconos del campo y casi no se veía sobre el rojo.
           foregroundColor: Colors.white,
         ),
-        icon: const Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
+        icon: Icon(Icons.arrow_forward_rounded,
+            size: compact ? 18 : 20, color: Colors.white),
         onPressed: onPressed,
       ),
     );
