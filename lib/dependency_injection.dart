@@ -192,6 +192,8 @@ class DependencyInjection {
             removeFromCartUseCase: RemoveFromCartUseCase(_cartRepository),
             clearCartUseCase: ClearCartUseCase(_cartRepository),
             syncGuestCartUseCase: SyncGuestCartUseCase(_cartRepository),
+            saveForLaterUseCase: SaveForLaterUseCase(_cartRepository),
+            moveToCartUseCase: MoveToCartUseCase(_cartRepository),
           ),
           update: (_, auth, cart) => cart!
             ..onAuthChanged(

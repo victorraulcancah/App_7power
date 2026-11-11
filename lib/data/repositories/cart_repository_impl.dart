@@ -54,6 +54,7 @@ class CartRepositoryImpl implements CartRepository {
           currency: p.currency ?? item.currency,
           quantity: item.quantity,
           stock: p.stock,
+          savedForLater: item.savedForLater,
         );
       } catch (_) {
         return item;
@@ -132,11 +133,53 @@ class CartRepositoryImpl implements CartRepository {
       guardRequest(() async {
         if (isLoggedIn()) {
           await remote.clear();
-        } else {
-          await local.clear();
+          // Lo guardado para después se queda (como en la web).
+          return remote.getCart();
         }
-        return <CartItemEntity>[];
+
+        final saved = (await local.read()).where((i) => i.savedForLater).toList();
+        await local.write(saved);
+        return saved;
       });
+
+  @override
+  Future<Either<Failure, List<CartItemEntity>>> saveForLater(int productId) =>
+      guardRequest(() async {
+        if (isLoggedIn()) {
+          await remote.saveForLater(productId);
+          return remote.getCart();
+        }
+        return _flagGuest(productId, saved: true);
+      });
+
+  @override
+  Future<Either<Failure, List<CartItemEntity>>> moveToCart(int productId) =>
+      guardRequest(() async {
+        if (isLoggedIn()) {
+          await remote.moveToCart(productId);
+          return remote.getCart();
+        }
+        return _flagGuest(productId, saved: false);
+      });
+
+  /// Marca (o desmarca) un producto del carrito de invitado como guardado.
+  Future<List<CartItemModel>> _flagGuest(
+    int productId, {
+    required bool saved,
+  }) async {
+    final items = await local.read();
+    final index = items.indexWhere((i) => i.productId == productId);
+    if (index < 0) return items;
+
+    // Al volver al carrito tiene que alcanzar el stock.
+    if (!saved) _checkStock(items[index].stock, items[index].quantity);
+
+    items[index] = CartItemModel.fromEntity(
+      items[index].copyWith(savedForLater: saved),
+    );
+    await local.write(items);
+    return items;
+  }
 
   @override
   Future<Either<Failure, List<CartItemEntity>>> syncGuestCart() =>
@@ -144,7 +187,16 @@ class CartRepositoryImpl implements CartRepository {
         final guestItems = await local.read();
         if (guestItems.isEmpty) return remote.getCart();
 
-        final merged = await remote.sync(guestItems);
+        var merged = await remote.sync(guestItems);
+        // El servidor los recibe como activos: se vuelven a guardar los que el
+        // invitado había guardado para después.
+        final saved = guestItems.where((i) => i.savedForLater).toList();
+        if (saved.isNotEmpty) {
+          for (final item in saved) {
+            await remote.saveForLater(item.productId);
+          }
+          merged = await remote.getCart();
+        }
         // Solo se vacía el carrito local cuando el servidor ya lo tiene.
         await local.clear();
         return merged;

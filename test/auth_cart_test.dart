@@ -319,7 +319,10 @@ void main() {
       expect(find.text('Pagar'), findsOneWidget);
       expect(find.text('Cotizar'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      // Se quita desde los 3 puntos de la línea.
+      await tester.tap(find.byTooltip('Más opciones').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Eliminar'));
       await tester.pumpAndSettle();
       expect(find.text('Driver 400W'), findsNothing);
       expect(find.text('S/ 60.00'), findsWidgets);

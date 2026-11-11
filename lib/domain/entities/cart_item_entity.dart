@@ -14,6 +14,10 @@ class CartItemEntity {
   /// Stock disponible al momento de agregarlo; limita la cantidad.
   final int stock;
 
+  /// "Guardado para después": sigue en la cuenta pero no cuenta en el pedido
+  /// ni en el total.
+  final bool savedForLater;
+
   const CartItemEntity({
     required this.productId,
     required this.name,
@@ -23,12 +27,13 @@ class CartItemEntity {
     this.imageUrl,
     this.code,
     this.currency,
+    this.savedForLater = false,
   });
 
   bool get hasPrice => price > 0;
   double get subtotal => price * quantity;
 
-  CartItemEntity copyWith({int? quantity}) => CartItemEntity(
+  CartItemEntity copyWith({int? quantity, bool? savedForLater}) => CartItemEntity(
         productId: productId,
         name: name,
         price: price,
@@ -37,5 +42,6 @@ class CartItemEntity {
         imageUrl: imageUrl,
         code: code,
         currency: currency,
+        savedForLater: savedForLater ?? this.savedForLater,
       );
 }

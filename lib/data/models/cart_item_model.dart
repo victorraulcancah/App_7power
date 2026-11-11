@@ -12,6 +12,7 @@ class CartItemModel extends CartItemEntity {
     super.imageUrl,
     super.code,
     super.currency,
+    super.savedForLater,
   });
 
   /// Elemento de `GET /cart`.
@@ -24,6 +25,7 @@ class CartItemModel extends CartItemEntity {
         currency: json['moneda']?.toString(),
         quantity: (json['cantidad'] as num).toInt(),
         stock: (json['stock_disponible'] as num?)?.toInt() ?? 0,
+        savedForLater: json['guardado_para_despues'] == true,
       );
 
   /// Carrito de invitado: se guarda con los datos del producto porque no hay
@@ -49,6 +51,7 @@ class CartItemModel extends CartItemEntity {
         currency: json['currency']?.toString(),
         quantity: (json['quantity'] as num).toInt(),
         stock: (json['stock'] as num?)?.toInt() ?? 0,
+        savedForLater: json['savedForLater'] == true,
       );
 
   factory CartItemModel.fromEntity(CartItemEntity e) => CartItemModel(
@@ -60,6 +63,7 @@ class CartItemModel extends CartItemEntity {
         currency: e.currency,
         quantity: e.quantity,
         stock: e.stock,
+        savedForLater: e.savedForLater,
       );
 
   Map<String, dynamic> toLocal() => {
@@ -71,5 +75,6 @@ class CartItemModel extends CartItemEntity {
         'currency': currency,
         'quantity': quantity,
         'stock': stock,
+        'savedForLater': savedForLater,
       };
 }

@@ -43,6 +43,20 @@ class ClearCartUseCase {
   CartResult call() => repository.clear();
 }
 
+class SaveForLaterUseCase {
+  final CartRepository repository;
+  SaveForLaterUseCase(this.repository);
+
+  CartResult call(int productId) => repository.saveForLater(productId);
+}
+
+class MoveToCartUseCase {
+  final CartRepository repository;
+  MoveToCartUseCase(this.repository);
+
+  CartResult call(int productId) => repository.moveToCart(productId);
+}
+
 class SyncGuestCartUseCase {
   final CartRepository repository;
   SyncGuestCartUseCase(this.repository);

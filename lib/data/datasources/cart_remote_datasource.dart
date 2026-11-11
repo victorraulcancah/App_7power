@@ -13,7 +13,14 @@ abstract class CartRemoteDataSource {
 
   Future<void> remove(int productId);
 
+  /// Vacía el carrito activo; lo guardado para después se queda.
   Future<void> clear();
+
+  /// Pasa el producto a "guardados para después" (sale del pedido).
+  Future<void> saveForLater(int productId);
+
+  /// Devuelve un guardado al carrito (el servidor revisa el stock).
+  Future<void> moveToCart(int productId);
 
   /// Fusiona [items] con el carrito del servidor y devuelve el resultado.
   Future<List<CartItemModel>> sync(List<CartItemModel> items);
@@ -24,12 +31,10 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
 
   CartRemoteDataSourceImpl(this.client);
 
+  /// Trae todo, también los "guardados para después" (vienen marcados).
   List<CartItemModel> _parse(List<int> bytes) =>
       (jsonDecode(utf8.decode(bytes)) as List)
           .cast<Map<String, dynamic>>()
-          // Los "guardados para después" de la web no son parte del carrito
-          // activo.
-          .where((i) => i['guardado_para_despues'] != true)
           .map(CartItemModel.fromApi)
           .toList();
 
@@ -63,6 +68,16 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   @override
   Future<void> clear() async {
     await client.delete('${ApiConstants.cartEndpoint}/clear');
+  }
+
+  @override
+  Future<void> saveForLater(int productId) async {
+    await client.post('${ApiConstants.cartEndpoint}/save-for-later/$productId');
+  }
+
+  @override
+  Future<void> moveToCart(int productId) async {
+    await client.post('${ApiConstants.cartEndpoint}/move-to-cart/$productId');
   }
 
   @override

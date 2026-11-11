@@ -87,6 +87,8 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final active = cart.items;
+    final saved = cart.savedItems;
 
     return Scaffold(
       appBar: AppBar(
@@ -100,7 +102,7 @@ class _CartPageState extends State<CartPage> {
             ),
         ],
       ),
-      body: cart.isEmpty
+      body: cart.isEmpty && saved.isEmpty
           ? EmptyState(
               icon: Icons.shopping_cart_outlined,
               title: 'Tu carrito está vacío',
@@ -112,15 +114,25 @@ class _CartPageState extends State<CartPage> {
               children: [
                 const _EditingQuoteBanner(),
                 Expanded(
-                  child: ListView.separated(
+                  child: ListView(
                     padding: const EdgeInsets.all(AppConstants.defaultPadding),
-                    itemCount: cart.items.length,
-                    separatorBuilder: (_, _) => const Divider(height: 24),
-                    itemBuilder: (context, i) =>
-                        _CartLine(item: cart.items[i], busy: cart.isBusy),
+                    children: [
+                      if (active.isEmpty)
+                        const _EmptyActiveCart()
+                      else
+                        for (var i = 0; i < active.length; i++) ...[
+                          if (i > 0) const Divider(height: 24),
+                          _CartLine(item: active[i], busy: cart.isBusy),
+                        ],
+                      if (saved.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        _SavedSection(items: saved, busy: cart.isBusy),
+                      ],
+                    ],
                   ),
                 ),
-                _Summary(cart: cart),
+                // Sin nada en el pedido no hay total ni botones de pago.
+                if (active.isNotEmpty) _Summary(cart: cart),
               ],
             ),
     );
@@ -207,9 +219,11 @@ class _CartLine extends StatelessWidget {
     // con sesión se muestra siempre.
     final showPrice = loggedIn || item.hasPrice;
 
-    Future<void> run(Future<String?> Function() action) async {
+    /// Corre la acción y avisa si falló. Devuelve true si salió bien.
+    Future<bool> run(Future<String?> Function() action) async {
       final error = await action();
       if (error != null && context.mounted) AppSnackbar.error(context, error);
+      return error == null;
     }
 
     return Row(
@@ -226,10 +240,28 @@ class _CartLine extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium),
+                  ),
+                  // Los 3 puntos: guardar para después o eliminar.
+                  _LineMenu(
+                    enabled: !busy,
+                    onSave: () async {
+                      final ok = await run(() => cart.saveForLater(item.productId));
+                      if (ok && context.mounted) {
+                        AppSnackbar.success(context, 'Guardado para después');
+                      }
+                    },
+                    onRemove: () => run(() => cart.remove(item.productId)),
+                  ),
+                ],
+              ),
               if (item.code != null)
                 Text('Código: ${item.code}',
                     style: theme.textTheme.bodySmall
@@ -242,7 +274,12 @@ class _CartLine extends StatelessWidget {
               else
                 const LockedPrice(),
               const SizedBox(height: 8),
-              Row(
+              // En pantallas angostas el total baja a la línea de abajo.
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   Opacity(
                     opacity: busy ? 0.5 : 1,
@@ -250,6 +287,8 @@ class _CartLine extends StatelessWidget {
                       ignoring: busy,
                       child: QuantitySelector(
                         value: item.quantity,
+                        // Unidad de medida: los productos se venden por unidad.
+                        unit: 'un',
                         // Como la web: tope en el stock (o 1 si no hay dato).
                         max: item.stock > 0 ? item.stock : 1,
                         onChanged: (v) =>
@@ -257,25 +296,203 @@ class _CartLine extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Spacer(),
                   if (showPrice)
                     Text(
                       FormatUtils.money(item.subtotal, currency: item.currency),
                       style: theme.textTheme.titleSmall,
                     ),
-                  IconButton(
-                    tooltip: 'Quitar',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: busy
-                        ? null
-                        : () => run(() => cart.remove(item.productId)),
-                  ),
                 ],
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Los 3 puntos de cada producto del carrito.
+class _LineMenu extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onSave;
+  final VoidCallback onRemove;
+
+  const _LineMenu({
+    required this.enabled,
+    required this.onSave,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final error = Theme.of(context).colorScheme.error;
+
+    return SizedBox(
+      width: 36,
+      height: 32,
+      child: PopupMenuButton<_LineAction>(
+        tooltip: 'Más opciones',
+        enabled: enabled,
+        padding: EdgeInsets.zero,
+        icon: const Icon(Icons.more_vert),
+        onSelected: (action) =>
+            action == _LineAction.save ? onSave() : onRemove(),
+        itemBuilder: (_) => [
+          const PopupMenuItem(
+            value: _LineAction.save,
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.bookmark_border),
+              title: Text('Guardar para después'),
+            ),
+          ),
+          PopupMenuItem(
+            value: _LineAction.remove,
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.delete_outline, color: error),
+              title: Text('Eliminar', style: TextStyle(color: error)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _LineAction { save, remove }
+
+/// Cuando todo lo del carrito se guardó para después.
+class _EmptyActiveCart extends StatelessWidget {
+  const _EmptyActiveCart();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        children: [
+          Icon(Icons.shopping_cart_outlined,
+              size: 40, color: theme.colorScheme.outline),
+          const SizedBox(height: 8),
+          Text('Tu carrito está vacío', style: theme.textTheme.titleMedium),
+          Text(
+            'Lo que guardaste para después está aquí abajo.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.outline),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Guardados para después (N)": no cuentan en el pedido hasta volver al carrito.
+class _SavedSection extends StatelessWidget {
+  final List<CartItemEntity> items;
+  final bool busy;
+
+  const _SavedSection({required this.items, required this.busy});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cart = context.read<CartProvider>();
+    final loggedIn = context.watch<AuthProvider>().isAuthenticated;
+
+    Future<bool> run(Future<String?> Function() action) async {
+      final error = await action();
+      if (error != null && context.mounted) AppSnackbar.error(context, error);
+      return error == null;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Guardados para después (${items.length})',
+            style: theme.textTheme.titleMedium,
+          ),
+          for (final item in items) ...[
+            const Divider(height: 24),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ProductImage(
+                  url: item.imageUrl,
+                  width: 64,
+                  height: 64,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium),
+                      if (item.code != null)
+                        Text('Código: ${item.code}',
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(color: theme.colorScheme.outline)),
+                      const SizedBox(height: 4),
+                      if (loggedIn || item.hasPrice)
+                        PriceText(price: item.price, currency: item.currency)
+                      else
+                        const LockedPrice(),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(0, 40),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
+                            onPressed: busy
+                                ? null
+                                : () async {
+                                    final ok = await run(
+                                        () => cart.moveToCart(item.productId));
+                                    if (ok && context.mounted) {
+                                      AppSnackbar.success(
+                                          context, 'Producto movido al carrito');
+                                    }
+                                  },
+                            icon: const Icon(Icons.shopping_cart_outlined, size: 18),
+                            label: const Text('Mover al carrito'),
+                          ),
+                          IconButton(
+                            tooltip: 'Quitar de guardados',
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: busy
+                                ? null
+                                : () => run(() => cart.remove(item.productId)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

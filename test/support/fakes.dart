@@ -517,7 +517,10 @@ class FakeCartRemote implements CartRemoteDataSource {
             quantity: 0,
             stock: stockLimit,
           );
-    final updated = CartItemModel.fromEntity(base.copyWith(quantity: total));
+    // Agregar algo que estaba guardado para después lo devuelve al carrito.
+    final updated = CartItemModel.fromEntity(
+      base.copyWith(quantity: total, savedForLater: false),
+    );
     index >= 0 ? items[index] = updated : items.add(updated);
   }
 
@@ -533,8 +536,33 @@ class FakeCartRemote implements CartRemoteDataSource {
   Future<void> remove(int productId) async =>
       items.removeWhere((i) => i.productId == productId);
 
+  /// Como el servidor: vaciar solo quita lo activo, lo guardado se queda.
   @override
-  Future<void> clear() async => items = [];
+  Future<void> clear() async =>
+      items = items.where((i) => i.savedForLater).toList();
+
+  @override
+  Future<void> saveForLater(int productId) async => _flag(productId, true);
+
+  @override
+  Future<void> moveToCart(int productId) async {
+    final index = items.indexWhere((i) => i.productId == productId);
+    if (index >= 0 && items[index].quantity > stockLimit) {
+      throw const ServerException(
+        'Stock insuficiente para mover este producto al carrito.',
+        '409',
+      );
+    }
+    _flag(productId, false);
+  }
+
+  void _flag(int productId, bool saved) {
+    final index = items.indexWhere((i) => i.productId == productId);
+    if (index < 0) return;
+    items[index] = CartItemModel.fromEntity(
+      items[index].copyWith(savedForLater: saved),
+    );
+  }
 
   @override
   Future<List<CartItemModel>> sync(List<CartItemModel> value) async {
@@ -1098,6 +1126,8 @@ class TestEnv {
             removeFromCartUseCase: RemoveFromCartUseCase(cartRepo),
             clearCartUseCase: ClearCartUseCase(cartRepo),
             syncGuestCartUseCase: SyncGuestCartUseCase(cartRepo),
+            saveForLaterUseCase: SaveForLaterUseCase(cartRepo),
+            moveToCartUseCase: MoveToCartUseCase(cartRepo),
           ),
           update: (_, auth, cart) => cart!
             ..onAuthChanged(

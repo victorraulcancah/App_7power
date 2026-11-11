@@ -7,12 +7,17 @@ class QuantitySelector extends StatelessWidget {
   final int? max;
   final ValueChanged<int> onChanged;
 
+  /// Unidad de medida que se escribe junto al número ("5 un"). Sin ella, solo
+  /// el número.
+  final String? unit;
+
   const QuantitySelector({
     super.key,
     required this.value,
     required this.onChanged,
     this.min = 1,
     this.max,
+    this.unit,
   });
 
   @override
@@ -34,10 +39,11 @@ class QuantitySelector extends StatelessWidget {
             onPressed: canDecrease ? () => onChanged(value - 1) : null,
           ),
           SizedBox(
-            width: 32,
+            width: unit == null ? 32 : 56,
             child: Text(
-              '$value',
+              unit == null ? '$value' : '$value $unit',
               textAlign: TextAlign.center,
+              maxLines: 1,
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
