@@ -17,6 +17,10 @@ abstract class AuthRepository {
   /// Vuelve a pedir los datos del cliente al servidor y los guarda.
   Future<Either<Failure, UserEntity>> refreshProfile();
 
+  /// Lee del servidor el titular de la cuenta (el cliente del ERP si está
+  /// vinculada) y lo guarda junto con los datos del cliente, que no cambian.
+  Future<Either<Failure, UserEntity>> refreshHolder();
+
   /// Cambia el celular del cliente (9 dígitos, empieza con 9).
   Future<Either<Failure, UserEntity>> updatePhone(String phone);
 

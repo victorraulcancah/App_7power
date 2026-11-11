@@ -17,6 +17,8 @@ class UserModel extends UserEntity {
     super.photoUrl,
     super.emailVerified,
     super.erpCode,
+    super.holderName,
+    super.holderDocument,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -31,6 +33,9 @@ class UserModel extends UserEntity {
         photoUrl: _photoUrl(json['foto_url'] ?? json['foto']),
         emailVerified: json['email_verified_at'] != null,
         erpCode: json['codigo_erp']?.toString(),
+        // Solo existen en lo que el app guarda en el equipo (ver [toJson]).
+        holderName: json['titular_nombre']?.toString(),
+        holderDocument: json['titular_documento']?.toString(),
       );
 
   /// La foto llega como ruta ("/storage/clientes/a.jpg") o como URL, y el login
@@ -65,6 +70,8 @@ class UserModel extends UserEntity {
         'foto_url': photoUrl,
         'email_verified_at': emailVerified ? 'verificado' : null,
         'codigo_erp': erpCode,
+        'titular_nombre': holderName,
+        'titular_documento': holderDocument,
       };
 
   String encode() => jsonEncode(toJson());
@@ -84,5 +91,30 @@ class UserModel extends UserEntity {
         photoUrl: e.photoUrl,
         emailVerified: e.emailVerified,
         erpCode: e.erpCode,
+        holderName: e.holderName,
+        holderDocument: e.holderDocument,
       );
+}
+
+/// El titular de la cuenta (`GET /cliente/titular`): si está vinculada, los datos
+/// del cliente del ERP; si no, los del registro en la tienda.
+class HolderModel {
+  final bool linked;
+  final String? name;
+  final String? document;
+
+  const HolderModel({required this.linked, this.name, this.document});
+
+  factory HolderModel.fromJson(Map<String, dynamic> json) {
+    String? text(String key) {
+      final value = json[key]?.toString().trim();
+      return (value == null || value.isEmpty) ? null : value;
+    }
+
+    return HolderModel(
+      linked: json['vinculado'] == true,
+      name: text('nombre'),
+      document: text('documento'),
+    );
+  }
 }

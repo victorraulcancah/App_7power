@@ -63,6 +63,7 @@ class PurchaseModel extends PurchaseEntity {
                 unitPrice: FormatUtils.toDouble(i['precio_unitario']),
                 subtotal: FormatUtils.toDouble(i['subtotal']),
                 imageUrl: _text(i['imagen_url']),
+                brand: _text(i['marca']),
               ))
           .toList(),
     );
@@ -94,6 +95,8 @@ class StorePurchasesModel extends StorePurchasesResult {
                             quantity: FormatUtils.toDouble(p['cantidad']),
                             price: FormatUtils.toDouble(p['precio']),
                             subtotal: FormatUtils.toDouble(p['subtotal']),
+                            imageUrl: _text(p['imagen_url']),
+                            brand: _text(p['marca']),
                           ))
                       .toList(),
                 ))

@@ -73,10 +73,44 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, UserEntity>> refreshProfile() => guardRequest(() async {
-        final user = await remote.getProfile();
-        await _saveUser(user);
+        final fresh = await remote.getProfile();
+        final previous = (await local.readSession())?.user;
+        // `GET /user` no trae al titular: se conserva el que ya se tenía y se
+        // intenta actualizar.
+        final user = await _withHolder(
+          fresh.copyWith(
+            holderName: previous?.holderName,
+            holderDocument: previous?.holderDocument,
+          ),
+        );
+        await _saveUser(UserModel.fromEntity(user));
         return user;
       });
+
+  @override
+  Future<Either<Failure, UserEntity>> refreshHolder() => guardRequest(() async {
+        final current = (await local.readSession())?.user;
+        if (current == null) {
+          throw const ValidationException('No hay una sesión iniciada.');
+        }
+        final user = await _withHolder(current);
+        await _saveUser(UserModel.fromEntity(user));
+        return user;
+      });
+
+  /// [user] con los datos del titular que tiene el servidor: los del cliente del
+  /// ERP si la cuenta está vinculada y ninguno si no. Si no se puede consultar
+  /// (sin red) se deja como estaba.
+  Future<UserEntity> _withHolder(UserEntity user) async {
+    try {
+      final holder = await remote.getHolder();
+      return holder.linked
+          ? user.copyWith(holderName: holder.name, holderDocument: holder.document)
+          : user.copyWith(clearHolder: true);
+    } catch (_) {
+      return user;
+    }
+  }
 
   @override
   Future<Either<Failure, UserEntity>> updatePhone(String phone) =>

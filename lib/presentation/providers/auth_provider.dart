@@ -65,6 +65,20 @@ class AuthProvider extends ChangeNotifier {
       },
     );
     notifyListeners();
+    if (isAuthenticated) unawaited(loadHolder());
+  }
+
+  /// Lee el titular de la cuenta (el cliente del ERP si está vinculada) para
+  /// mostrar sus datos. Sin mensaje de error si falla: se siguen usando los que
+  /// ya se tenían.
+  Future<void> loadHolder() async {
+    if (!isAuthenticated) return;
+    final result = await repository.refreshHolder();
+    result.fold((_) {}, (user) {
+      if (!isAuthenticated) return;
+      _user = user;
+      notifyListeners();
+    });
   }
 
   /// Devuelve true si el inicio de sesión fue correcto; si no, el motivo queda
@@ -89,6 +103,7 @@ class AuthProvider extends ChangeNotifier {
       },
     );
     notifyListeners();
+    if (ok) unawaited(loadHolder());
     return ok;
   }
 
@@ -132,6 +147,7 @@ class AuthProvider extends ChangeNotifier {
       },
     );
     notifyListeners();
+    if (ok) unawaited(loadHolder());
     return ok;
   }
 

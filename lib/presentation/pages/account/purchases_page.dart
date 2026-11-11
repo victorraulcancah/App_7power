@@ -178,15 +178,17 @@ class _StoreList extends StatelessWidget {
             if (sale.notes != null) Text(sale.notes!),
             const Divider(height: 24),
             for (final item in sale.items)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(item.name),
-                subtitle: Text(
-                  '${item.quantity.toStringAsFixed(item.quantity % 1 == 0 ? 0 : 2)} x '
-                  '${FormatUtils.money(item.price, currency: sale.currency)}',
-                ),
-                trailing: Text(
-                    FormatUtils.money(item.subtotal, currency: sale.currency)),
+              PurchaseItemTile(
+                name: item.name,
+                imageUrl: item.imageUrl,
+                brand: item.brand,
+                code: item.code,
+                quantity:
+                    '${item.quantity.toStringAsFixed(item.quantity % 1 == 0 ? 0 : 2)} un.',
+                total: FormatUtils.money(item.subtotal, currency: sale.currency),
+                unitPrice: item.quantity > 1
+                    ? FormatUtils.money(item.price, currency: sale.currency)
+                    : null,
               ),
             const Divider(height: 24),
             Row(
@@ -247,17 +249,14 @@ class PurchaseDetailPage extends StatelessWidget {
           const Divider(height: 32),
           Text('Productos', style: theme.textTheme.titleSmall),
           for (final item in p.items)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: ProductImage(
-                url: item.imageUrl,
-                width: 48,
-                height: 48,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-              subtitle: Text('${item.quantity} x ${money(item.unitPrice)}'),
-              trailing: Text(money(item.subtotal)),
+            PurchaseItemTile(
+              name: item.name,
+              imageUrl: item.imageUrl,
+              brand: item.brand,
+              code: item.code,
+              quantity: '${item.quantity} un.',
+              total: money(item.subtotal),
+              unitPrice: item.quantity > 1 ? money(item.unitPrice) : null,
             ),
           const Divider(height: 32),
           _Line('Subtotal', money(p.subtotal)),

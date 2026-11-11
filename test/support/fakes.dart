@@ -404,6 +404,20 @@ class FakeAuthRemote implements AuthRemoteDataSource {
   /// Lo que devuelve `GET /user`.
   UserModel profile = testUser;
 
+  /// Lo que devuelve `GET /cliente/titular` (por defecto, sin vincular).
+  HolderModel holder = const HolderModel(linked: false);
+  int holderCalls = 0;
+
+  /// Si se indica, consultar al titular falla (sin red, por ejemplo).
+  Exception? holderFailure;
+
+  @override
+  Future<HolderModel> getHolder() async {
+    holderCalls++;
+    if (holderFailure != null) throw holderFailure!;
+    return holder;
+  }
+
   @override
   Future<UserModel> getProfile() async => profile;
 

@@ -18,6 +18,7 @@ export 'price_text.dart';
 export 'product_card.dart';
 export 'product_image.dart';
 export 'promo_sections.dart';
+export 'purchase_item_tile.dart';
 export 'quantity_selector.dart';
 export 'section_header.dart';
 export 'skeleton.dart';

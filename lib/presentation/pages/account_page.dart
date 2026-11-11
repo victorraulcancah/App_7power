@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/format_utils.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../theme/app_theme.dart';
 import '../components/components.dart';
@@ -262,8 +263,10 @@ class _Header extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Con la cuenta vinculada, el nombre del cliente del ERP; si no, el
+                // del cliente registrado en la tienda.
                 Text(
-                  'Hola, ${user.firstNames ?? user.fullName}',
+                  'Hola, ${FormatUtils.titleCase(user.displayName)}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleLarge?.copyWith(
@@ -277,6 +280,13 @@ class _Header extends StatelessWidget {
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: onPrimary.withValues(alpha: 0.85)),
                 ),
+                if (user.displayDocument != null)
+                  Text(
+                    '${user.displayDocumentLabel}: ${user.displayDocument}',
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: onPrimary.withValues(alpha: 0.85)),
+                  ),
                 if (user.erpCode != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),

@@ -59,15 +59,17 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
                   label: 'Código de cliente',
                   value: '#${user.id}',
                 ),
+                // Con la cuenta vinculada, los datos del cliente del ERP (a su
+                // nombre se emiten los comprobantes); si no, los del registro.
                 _Field(
                   icon: Icons.person_outline,
                   label: 'Nombre o razón social',
-                  value: user.fullName,
+                  value: user.displayName,
                 ),
                 _Field(
                   icon: Icons.badge_outlined,
-                  label: user.documentType ?? 'Documento',
-                  value: user.documentNumber ?? '—',
+                  label: user.displayDocumentLabel,
+                  value: user.displayDocument ?? '—',
                 ),
                 _Field(
                   icon: Icons.mail_outline,

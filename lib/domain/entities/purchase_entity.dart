@@ -49,6 +49,7 @@ class PurchaseItemEntity {
   final double unitPrice;
   final double subtotal;
   final String? imageUrl;
+  final String? brand;
 
   const PurchaseItemEntity({
     required this.productId,
@@ -58,6 +59,7 @@ class PurchaseItemEntity {
     required this.subtotal,
     this.code,
     this.imageUrl,
+    this.brand,
   });
 }
 
@@ -111,12 +113,19 @@ class StoreSaleItemEntity {
   final double price;
   final double subtotal;
 
+  /// La foto y la marca salen del catálogo de la tienda (el ERP no las tiene);
+  /// son null si el producto ya no está en el catálogo.
+  final String? imageUrl;
+  final String? brand;
+
   const StoreSaleItemEntity({
     required this.name,
     required this.quantity,
     required this.price,
     required this.subtotal,
     this.code,
+    this.imageUrl,
+    this.brand,
   });
 }
 

@@ -25,6 +25,9 @@ abstract class AuthRemoteDataSource {
 
   Future<UserModel> getProfile();
 
+  /// El titular de la cuenta: el cliente del ERP si está vinculada.
+  Future<HolderModel> getHolder();
+
   Future<void> updatePhone(String phone);
 
   /// Sube la foto de perfil del archivo [filePath]. Devuelve la ruta que le dio
@@ -93,6 +96,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final body =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     return UserModel.fromJson(body['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<HolderModel> getHolder() async {
+    final response = await client.get(ApiConstants.holderEndpoint);
+    return HolderModel.fromJson(
+      jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>,
+    );
   }
 
   @override
