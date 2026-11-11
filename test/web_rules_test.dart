@@ -11,11 +11,13 @@ import 'package:appecommerce/domain/entities/product_detail_entity.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
 import 'package:appecommerce/presentation/components/product_card.dart';
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 /// Contexto del shell, aunque haya otra pantalla encima.
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar, skipOffstage: false));
+    tester.element(find.byType(MainNavBar, skipOffstage: false));
 
 Future<void> _goToShop(WidgetTester tester) async {
   await tester.tap(find.byTooltip('Tienda'));

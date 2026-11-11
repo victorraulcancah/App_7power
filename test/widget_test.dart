@@ -20,6 +20,8 @@ import 'package:appecommerce/presentation/providers/company_provider.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 import 'package:provider/provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 /// Pasa a la pestaña "Tienda".
@@ -29,7 +31,7 @@ Future<void> _goToShop(WidgetTester tester) async {
 }
 
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar));
+    tester.element(find.byType(MainNavBar));
 
 void main() {
   test('ProductModel interpreta la respuesta de /productos-publicos', () {
