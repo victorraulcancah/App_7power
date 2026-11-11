@@ -284,7 +284,7 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver 400W')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.add_shopping_cart).first);
@@ -349,7 +349,7 @@ void main() {
       );
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Driver 400W').first);
@@ -378,7 +378,7 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Parlante', stock: 0)]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Parlante').first);
@@ -399,7 +399,7 @@ void main() {
           .read<CartProvider>()
           .add(product(1, 'Driver', stock: 9), quantity: 2);
 
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       expect(find.text('Inicia sesión'), findsOneWidget);
 
@@ -428,7 +428,7 @@ void main() {
       final env = TestEnv();
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -449,7 +449,7 @@ void main() {
       final env = TestEnv();
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Ingresar'));
@@ -470,7 +470,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       expect(find.text('Hola, Ana Pérez'), findsOneWidget);
 

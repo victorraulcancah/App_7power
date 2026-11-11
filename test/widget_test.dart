@@ -24,7 +24,7 @@ import 'support/fakes.dart';
 
 /// Pasa a la pestaña "Tienda".
 Future<void> _goToShop(WidgetTester tester) async {
-  await tester.tap(find.text('Tienda'));
+  await tester.tap(find.byTooltip('Tienda'));
   await tester.pumpAndSettle();
 }
 
@@ -365,12 +365,12 @@ void main() {
     expect(logo, findsNothing);
 
     // La tienda tampoco lleva barra ni logo.
-    await tester.tap(find.text('Tienda'));
+    await tester.tap(find.byTooltip('Tienda'));
     await tester.pumpAndSettle();
     expect(logo, findsNothing);
 
     // En Cuenta y Más sigue el logo.
-    await tester.tap(find.text('Cuenta'));
+    await tester.tap(find.byTooltip('Cuenta'));
     await tester.pumpAndSettle();
     expect(logo, findsOneWidget);
   });

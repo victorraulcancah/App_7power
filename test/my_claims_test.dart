@@ -21,7 +21,7 @@ Future<void> _openMyClaims(WidgetTester tester, TestEnv env) async {
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
   // "Mis reclamos" está en la pestaña "Más", en Atención al cliente.
-  await tester.tap(find.text('Más'));
+  await tester.tap(find.byTooltip('Más'));
   await tester.pumpAndSettle();
   await tester.scrollUntilVisible(
     find.text('Mis reclamos'),

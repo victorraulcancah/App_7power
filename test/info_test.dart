@@ -27,7 +27,7 @@ Future<void> _openMore(WidgetTester tester, TestEnv env) async {
   _tall(tester);
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Más'));
+  await tester.tap(find.byTooltip('Más'));
   await tester.pumpAndSettle();
 }
 
@@ -547,7 +547,7 @@ void main() {
       _tall(tester);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
 
       for (final entry in [

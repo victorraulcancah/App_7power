@@ -25,7 +25,7 @@ Future<void> _openRegister(WidgetTester tester, TestEnv env) async {
   _tall(tester);
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cuenta'));
+  await tester.tap(find.byTooltip('Cuenta'));
   await tester.pumpAndSettle();
   final button = find.text('Crear una cuenta');
   await tester.ensureVisible(button);
@@ -295,7 +295,7 @@ void main() {
       _tall(tester);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       final link = find.text('¿Olvidaste tu contraseña?');
       await tester.ensureVisible(link);

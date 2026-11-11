@@ -27,7 +27,7 @@ Future<void> _openDetail(WidgetTester tester, TestEnv env) async {
   _tall(tester);
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Tienda'));
+  await tester.tap(find.byTooltip('Tienda'));
   await tester.pumpAndSettle();
   await tester.tap(find.descendant(
     of: find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ProductCard'),
@@ -98,11 +98,11 @@ void main() {
       expect(barColor(), Colors.white);
 
       // La tienda no lleva barra.
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
       expect(find.byType(AppBar), findsNothing);
 
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       // Sin color propio: toma el de la marca del tema.
       expect(barColor(), isNull);
@@ -138,7 +138,7 @@ void main() {
         (tester) async {
       await _openHome(tester);
 
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
 
       expect(find.byType(AppBar), findsNothing);
@@ -158,7 +158,7 @@ void main() {
     testWidgets('el carrito de la tienda abre el carrito', (tester) async {
       await _openHome(tester);
 
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Carrito'));
       await tester.pumpAndSettle();
@@ -169,9 +169,9 @@ void main() {
     testWidgets('al volver al inicio el buscador está de nuevo', (tester) async {
       await _openHome(tester);
 
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Inicio'));
+      await tester.tap(find.byTooltip('Inicio'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('home-search')), findsOneWidget);

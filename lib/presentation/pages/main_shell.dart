@@ -161,6 +161,10 @@ class _MainShellState extends State<MainShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
+        // Solo íconos: el nombre queda como descripción (mantener pulsado) y
+        // para los lectores de pantalla.
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        height: 60,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: const [
           NavigationDestination(

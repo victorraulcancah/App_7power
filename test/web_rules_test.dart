@@ -18,7 +18,7 @@ BuildContext _context(WidgetTester tester) =>
     tester.element(find.byType(NavigationBar, skipOffstage: false));
 
 Future<void> _goToShop(WidgetTester tester) async {
-  await tester.tap(find.text('Tienda'));
+  await tester.tap(find.byTooltip('Tienda'));
   await tester.pumpAndSettle();
 }
 
@@ -199,7 +199,7 @@ void main() {
       // El servidor responde con los precios del cliente tras el login.
       env.products.products = [product(1, 'Driver', price: 80)];
 
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       await tester.enterText(
           find.widgetWithText(TextFormField, 'Correo electrónico'),

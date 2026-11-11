@@ -326,7 +326,7 @@ void main() {
     Future<void> openDetail(WidgetTester tester, TestEnv env) async {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
       await tester.tap(find.descendant(
         of: find.byType(ProductCard),
@@ -465,7 +465,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Mis cupones'));

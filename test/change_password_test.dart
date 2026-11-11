@@ -20,7 +20,7 @@ Future<void> _openChangePassword(WidgetTester tester, TestEnv env) async {
   await env.authRepo.login('ana@correo.com', 'secreto');
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cuenta'));
+  await tester.tap(find.byTooltip('Cuenta'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Datos personales'));
   await tester.pumpAndSettle();

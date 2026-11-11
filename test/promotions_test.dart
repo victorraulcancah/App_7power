@@ -22,7 +22,7 @@ Future<void> _openMore(WidgetTester tester, TestEnv env) async {
 
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Más'));
+  await tester.tap(find.byTooltip('Más'));
   await tester.pumpAndSettle();
 }
 

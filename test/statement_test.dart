@@ -57,7 +57,7 @@ Future<TestEnv> _openStatement(
   await env.authRepo.login('ana@correo.com', 'secreto');
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cuenta'));
+  await tester.tap(find.byTooltip('Cuenta'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Estado de cuenta'));
   await tester.pumpAndSettle();
@@ -374,7 +374,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Estado de cuenta'));
       await tester.pumpAndSettle();

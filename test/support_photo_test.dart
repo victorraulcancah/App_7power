@@ -87,7 +87,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Ayuda'));
       await tester.pumpAndSettle();
@@ -108,7 +108,7 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Más'));
+      await tester.tap(find.byTooltip('Más'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Ayuda y preguntas frecuentes'));
       await tester.pumpAndSettle();
@@ -126,7 +126,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
       // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Ayuda'));
       await tester.pumpAndSettle();
@@ -148,7 +148,7 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
       // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Ayuda'));
       await tester.pumpAndSettle();
@@ -178,7 +178,7 @@ void main() {
       final env = TestEnv(catalog: [product(5, 'Driver', stock: 9)]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
       await tester.tap(find.descendant(
         of: find.byWidgetPredicate((w) => w.runtimeType.toString() == 'ProductCard'),
@@ -289,7 +289,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       return env;
     }

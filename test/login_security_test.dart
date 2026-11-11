@@ -143,7 +143,7 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       return env;
     }
@@ -423,7 +423,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
 
       expect(find.text('Bloqueo con huella'), findsOneWidget);
@@ -445,7 +445,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
 
       expect(find.text('Bloqueo con huella'), findsNothing);
@@ -460,7 +460,7 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).at(0), 'ana@correo.com');
@@ -486,7 +486,7 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField).at(0), 'ana@correo.com');
       await tester.enterText(find.byType(TextFormField).at(1), 'secreto');

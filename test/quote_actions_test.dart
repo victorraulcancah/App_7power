@@ -74,7 +74,7 @@ Future<TestEnv> _openQuote(WidgetTester tester, QuoteModel quote) async {
 
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cuenta'));
+  await tester.tap(find.byTooltip('Cuenta'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Cotizaciones'));
   await tester.pumpAndSettle();

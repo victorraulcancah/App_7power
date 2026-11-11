@@ -21,10 +21,7 @@ Future<TestEnv> _open(WidgetTester tester, [TestEnv? given]) async {
   final env = given ?? _env();
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.descendant(
-    of: find.byType(NavigationBar),
-    matching: find.text('Categorías'),
-  ));
+  await tester.tap(find.byTooltip('Categorías'));
   await tester.pumpAndSettle();
   return env;
 }
@@ -49,11 +46,11 @@ void main() {
         (tester) async {
       await _open(tester);
 
-      await tester.tap(find.text('Cuenta'));
+      await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
       expect(_bar(tester).selectedIndex, 3);
 
-      await tester.tap(find.text('Más'));
+      await tester.tap(find.byTooltip('Más'));
       await tester.pumpAndSettle();
       expect(_bar(tester).selectedIndex, 4);
       expect(find.text('Consultar un reclamo'), findsOneWidget);

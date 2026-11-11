@@ -47,7 +47,7 @@ Future<TestEnv> _openShop(WidgetTester tester, [TestEnv? given]) async {
   final env = given ?? _env();
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Tienda'));
+  await tester.tap(find.byTooltip('Tienda'));
   await tester.pumpAndSettle();
   return env;
 }

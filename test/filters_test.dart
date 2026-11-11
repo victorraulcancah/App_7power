@@ -42,7 +42,7 @@ Future<void> _openShop(WidgetTester tester, TestEnv env) async {
   _tall(tester);
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Tienda'));
+  await tester.tap(find.byTooltip('Tienda'));
   await tester.pumpAndSettle();
 }
 

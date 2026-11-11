@@ -23,7 +23,7 @@ Future<void> _openAccount(WidgetTester tester, TestEnv env) async {
   await env.authRepo.login('ana@correo.com', 'secreto');
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cuenta'));
+  await tester.tap(find.byTooltip('Cuenta'));
   await tester.pumpAndSettle();
 }
 
@@ -413,7 +413,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
       await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
@@ -434,7 +434,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
 
       expect(find.byTooltip('Guardar en favoritos'), findsNWidgets(2));
@@ -451,7 +451,7 @@ void main() {
       final env = TestEnv(catalog: [product(5, 'Driver', stock: 9)]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
       await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
@@ -470,7 +470,7 @@ void main() {
       await env.authRepo.login('ana@correo.com', 'secreto');
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tienda'));
+      await tester.tap(find.byTooltip('Tienda'));
       await tester.pumpAndSettle();
       await tester.tap(find.descendant(of: find.byType(ProductCard), matching: find.text('Driver')).first);
       await tester.pumpAndSettle();
