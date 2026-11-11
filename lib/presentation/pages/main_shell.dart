@@ -78,7 +78,11 @@ class _MainShellState extends State<MainShell> {
     final company = context.watch<CompanyProvider>().info;
 
     return Scaffold(
-      appBar: _tab == 0
+      // La tienda no lleva barra: su buscador, el filtro y el carrito van en la
+      // primera fila de la pantalla (ver `ProductsPage`).
+      appBar: _tab == _shopTab
+          ? null
+          : _tab == 0
           // El inicio no lleva logo: el buscador ocupa la barra, con la lista
           // de favoritos, el carrito y la ayuda a su lado.
           ? AppBar(
@@ -91,7 +95,7 @@ class _MainShellState extends State<MainShell> {
               systemOverlayStyle: SystemUiOverlayStyle.dark,
               shape: const Border(bottom: BorderSide(color: Color(0xFFE6E6EA))),
               centerTitle: false,
-              titleSpacing: 12,
+              titleSpacing: 10,
               title: SizedBox(
                 width: double.infinity,
                 child: HomeSearchField(onSearch: _openSearch),
@@ -100,8 +104,7 @@ class _MainShellState extends State<MainShell> {
               actions: const [
                 FavoritesShortcut(),
                 CartButton(plain: true),
-                SupportAction(compact: true),
-                SizedBox(width: 6),
+                SizedBox(width: 4),
               ],
             )
           // Ayuda por WhatsApp a la mano en todas las pestañas, y el carrito.
@@ -110,19 +113,23 @@ class _MainShellState extends State<MainShell> {
               actions: const [SupportAction(), CartButton()],
               title: BrandLogo(url: company?.logoUrl, height: 34),
             ),
-      body: _TabFade(
-        index: _tab,
-        child: IndexedStack(
+      // Sin barra en la tienda, la hora y la batería del teléfono van en oscuro
+      // sobre el blanco.
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: _tab == _shopTab
+            ? SystemUiOverlayStyle.dark
+            : SystemUiOverlayStyle.light,
+        child: _TabFade(
           index: _tab,
-          children: [
-            HomePage(
-              onOpenShop: _openShop,
-              onOpenBrand: _openBrand,
-            ),
-            const ProductsPage(),
-            const AccountPage(),
-            MorePage(onOpenBrand: _openBrand),
-          ],
+          child: IndexedStack(
+            index: _tab,
+            children: [
+              HomePage(onOpenShop: _openShop, onOpenBrand: _openBrand),
+              const ProductsPage(),
+              const AccountPage(),
+              MorePage(onOpenBrand: _openBrand),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: NavigationBar(
@@ -168,15 +175,18 @@ class _TabFade extends StatefulWidget {
   State<_TabFade> createState() => _TabFadeState();
 }
 
-class _TabFadeState extends State<_TabFade> with SingleTickerProviderStateMixin {
+class _TabFadeState extends State<_TabFade>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 260),
     value: 1,
   );
 
-  late final Animation<double> _curve =
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+  late final Animation<double> _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
 
   @override
   void didUpdateWidget(_TabFade old) {
@@ -199,8 +209,10 @@ class _TabFadeState extends State<_TabFade> with SingleTickerProviderStateMixin 
     return FadeTransition(
       opacity: Tween<double>(begin: 0.25, end: 1).animate(_curve),
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.015), end: Offset.zero)
-            .animate(_curve),
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.015),
+          end: Offset.zero,
+        ).animate(_curve),
         child: widget.child,
       ),
     );

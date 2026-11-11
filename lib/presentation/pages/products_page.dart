@@ -8,6 +8,7 @@ import '../providers/products_provider.dart';
 import '../../domain/entities/product_filters.dart';
 import '../widgets/product_filters_sheet.dart';
 import '../widgets/product_tile.dart';
+import 'cart_page.dart';
 
 /// Catálogo de productos de la tienda (pestaña "Tienda").
 class ProductsPage extends StatefulWidget {
@@ -48,48 +49,57 @@ class _ProductsPageState extends State<ProductsPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<ProductsProvider>();
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppConstants.defaultPadding,
-            AppConstants.defaultPadding,
-            AppConstants.defaultPadding,
-            8,
+    // Sin barra superior: la pantalla empieza por el buscador, el filtro y el
+    // carrito, por debajo de la hora y la batería del teléfono.
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppConstants.defaultPadding,
+              12,
+              6,
+              8,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppSearchField(
+                    onSearch: provider.search,
+                    initialValue: provider.query,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _FilterButton(provider: provider),
+                const SizedBox(width: 2),
+                const CartButton(plain: true),
+              ],
+            ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: AppSearchField(
-                  onSearch: provider.search,
-                  initialValue: provider.query,
+          if (provider.categories.isNotEmpty)
+            _CategoryFilter(provider: provider),
+          if (provider.filters.isActive) _ActiveFilters(provider: provider),
+          if (provider.status == ProductsStatus.loaded)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.defaultPadding,
+                vertical: 6,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  provider.total == 1
+                      ? '1 producto'
+                      : '${provider.total} productos',
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.outline),
                 ),
               ),
-              const SizedBox(width: 8),
-              _FilterButton(provider: provider),
-            ],
-          ),
-        ),
-        if (provider.categories.isNotEmpty) _CategoryFilter(provider: provider),
-        if (provider.filters.isActive) _ActiveFilters(provider: provider),
-        if (provider.status == ProductsStatus.loaded)
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.defaultPadding,
-              vertical: 6,
             ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                provider.total == 1 ? '1 producto' : '${provider.total} productos',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-              ),
-            ),
-          ),
-        Expanded(child: _body(provider)),
-      ],
+          Expanded(child: _body(provider)),
+        ],
+      ),
     );
   }
 
@@ -108,10 +118,12 @@ class _ProductsPageState extends State<ProductsPage> {
         return RefreshIndicator(
           onRefresh: provider.loadProducts,
           child: products.isEmpty
-              ? ListView(children: [
-                  const SizedBox(height: 80),
-                  _NoResults(provider: provider),
-                ])
+              ? ListView(
+                  children: [
+                    const SizedBox(height: 80),
+                    _NoResults(provider: provider),
+                  ],
+                )
               : GridView.builder(
                   controller: _scroll,
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -176,8 +188,8 @@ class _NoResults extends StatelessWidget {
           message: parts.length > 1
               ? 'No hay productos con la combinación: ${parts.join(' + ')}.'
               : parts.length == 1
-                  ? 'No encontramos productos con ${parts.single}.'
-                  : 'No encontramos productos con ese filtro.',
+              ? 'No encontramos productos con ${parts.single}.'
+              : 'No encontramos productos con ese filtro.',
           actionLabel: canClearFilters
               ? 'Quitar filtros'
               : (canClearCategory ? 'Ver todas las categorías' : null),
@@ -245,14 +257,16 @@ class _ActiveFilters extends StatelessWidget {
       height: 44,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppConstants.defaultPadding),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.defaultPadding,
+        ),
         children: [
           for (final id in filters.brandIds)
             _chip(
               brandNames[id] ?? 'Marca',
-              () => provider.applyFilters(filters.copyWith(
-                brandIds: {...filters.brandIds}..remove(id),
-              )),
+              () => provider.applyFilters(
+                filters.copyWith(brandIds: {...filters.brandIds}..remove(id)),
+              ),
             ),
           if (filters.hasPriceRange)
             _chip(
@@ -277,9 +291,9 @@ class _ActiveFilters extends StatelessWidget {
   }
 
   Widget _chip(String label, VoidCallback onDeleted) => Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: InputChip(label: Text(label), onDeleted: onDeleted),
-      );
+    padding: const EdgeInsets.only(right: 8),
+    child: InputChip(label: Text(label), onDeleted: onDeleted),
+  );
 }
 
 class _CategoryFilter extends StatefulWidget {
@@ -316,7 +330,8 @@ class _CategoryFilterState extends State<_CategoryFilter> {
 
   void _revealSelected() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = _keyFor(widget.provider.selectedCategoryId).currentContext;
+      final context = _keyFor(widget.provider.selectedCategoryId)
+          .currentContext;
       if (context == null || !mounted) return;
       Scrollable.ensureVisible(
         context,
@@ -339,12 +354,19 @@ class _CategoryFilterState extends State<_CategoryFilter> {
           horizontal: AppConstants.defaultPadding,
         ),
         children: [
-          _chip(null, 'Todos', provider.selectedCategoryId == null,
-              () => provider.selectCategory(null)),
+          _chip(
+            null,
+            'Todos',
+            provider.selectedCategoryId == null,
+            () => provider.selectCategory(null),
+          ),
           for (final c in provider.categories)
-            _chip(c.id, FormatUtils.titleCase(c.name),
-                provider.selectedCategoryId == c.id,
-                () => provider.selectCategory(c.id)),
+            _chip(
+              c.id,
+              FormatUtils.titleCase(c.name),
+              provider.selectedCategoryId == c.id,
+              () => provider.selectCategory(c.id),
+            ),
         ],
       ),
     );

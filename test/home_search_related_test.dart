@@ -38,7 +38,7 @@ Future<void> _openDetail(WidgetTester tester, TestEnv env) async {
 
 void main() {
   group('Buscador del inicio', () {
-    testWidgets('está en la barra de arriba, más bajo, con favoritos, carrito y ayuda',
+    testWidgets('está en la barra de arriba, más bajo, con favoritos y carrito',
         (tester) async {
       await _openHome(tester);
 
@@ -46,20 +46,24 @@ void main() {
       final search = tester.getRect(find.byKey(const Key('home-search')));
       final heart = tester.getRect(find.byTooltip('Favoritos'));
       final cart = tester.getRect(find.byTooltip('Carrito'));
-      final help = tester.getRect(find.byTooltip('Ayuda'));
 
       // Todo dentro de la barra, en una sola fila.
-      for (final r in [search, heart, cart, help]) {
+      for (final r in [search, heart, cart]) {
         expect(r.top, greaterThanOrEqualTo(appBar.top));
         expect(r.bottom, lessThanOrEqualTo(appBar.bottom));
         expect((r.center.dy - search.center.dy).abs(), lessThan(8));
       }
       // Más bajo que el de antes (con 15 de relleno vertical pasaba de 50).
       expect(search.height, lessThan(50));
-      // El orden: buscador, favoritos, carrito, ayuda.
+      // El orden: buscador, favoritos, carrito.
       expect(search.right, lessThan(heart.left));
       expect(heart.right, lessThanOrEqualTo(cart.left));
-      expect(cart.right, lessThanOrEqualTo(help.left));
+    });
+
+    testWidgets('el inicio no lleva el ícono de WhatsApp', (tester) async {
+      await _openHome(tester);
+
+      expect(find.byTooltip('Ayuda'), findsNothing);
     });
 
     testWidgets('en un teléfono de 360 px el buscador es ancho y su botón queda dentro',
@@ -73,12 +77,16 @@ void main() {
 
       final search = tester.getRect(find.byKey(const Key('home-search')));
       final button = tester.getRect(find.byTooltip('Buscar'));
-      final help = tester.getRect(find.byTooltip('Ayuda'));
+      final cart = tester.getRect(find.byTooltip('Carrito'));
 
-      // Más de la mitad de la pantalla, y sin pisar los íconos.
-      expect(search.width, greaterThan(180));
+      // Sin WhatsApp, el buscador ocupa más de dos tercios de la pantalla.
+      expect(search.width, greaterThan(240));
+      // Los íconos son chicos: ninguno pasa de 36 px de ancho.
+      for (final tip in ['Favoritos', 'Carrito']) {
+        expect(tester.getRect(find.byTooltip(tip)).width, lessThanOrEqualTo(36), reason: tip);
+      }
       expect(search.right, lessThan(tester.getRect(find.byTooltip('Favoritos')).left));
-      expect(help.right, lessThanOrEqualTo(360));
+      expect(cart.right, lessThanOrEqualTo(360));
       // El botón rojo está dentro del óvalo, no se sale.
       expect(button.left, greaterThanOrEqualTo(search.left));
       expect(button.right, lessThanOrEqualTo(search.right));
@@ -95,7 +103,12 @@ void main() {
 
       expect(barColor(), Colors.white);
 
+      // La tienda no lleva barra.
       await tester.tap(find.text('Tienda'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsNothing);
+
+      await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
       // Sin color propio: toma el de la marca del tema.
       expect(barColor(), isNull);
@@ -107,17 +120,56 @@ void main() {
       expect(find.byType(BrandLogo), findsNothing);
     });
 
-    testWidgets('en las otras pestañas siguen el logo, el carrito y la ayuda',
+    testWidgets('Cuenta y Más siguen con el logo, el carrito y la ayuda',
+        (tester) async {
+      await _openHome(tester);
+
+      for (final tab in ['Cuenta', 'Más']) {
+        await tester.tap(find.text(tab));
+        await tester.pumpAndSettle();
+
+        // (La pestaña Más tiene además su portada con el logo.)
+        expect(
+          find.descendant(of: find.byType(AppBar), matching: find.byType(BrandLogo)),
+          findsOneWidget,
+          reason: tab,
+        );
+        expect(find.byKey(const Key('home-search')), findsNothing, reason: tab);
+        expect(find.byTooltip('Carrito'), findsOneWidget, reason: tab);
+        expect(find.byTooltip('Ayuda'), findsOneWidget, reason: tab);
+      }
+    });
+
+    testWidgets('la tienda no lleva barra negra, logo ni WhatsApp, pero sí el carrito',
         (tester) async {
       await _openHome(tester);
 
       await tester.tap(find.text('Tienda'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(BrandLogo), findsOneWidget);
-      expect(find.byKey(const Key('home-search')), findsNothing);
-      expect(find.byTooltip('Carrito'), findsOneWidget);
-      expect(find.byTooltip('Ayuda'), findsOneWidget);
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.byType(BrandLogo), findsNothing);
+      expect(find.byTooltip('Ayuda'), findsNothing);
+
+      // Buscador, filtros y carrito en la primera fila, bajo la barra de estado.
+      final search = tester.getRect(find.byType(TextField).first);
+      final filters = tester.getRect(find.byTooltip('Filtros'));
+      final cart = tester.getRect(find.byTooltip('Carrito'));
+      expect((filters.center.dy - search.center.dy).abs(), lessThan(10));
+      expect((cart.center.dy - search.center.dy).abs(), lessThan(10));
+      expect(search.right, lessThan(filters.left));
+      expect(filters.right, lessThanOrEqualTo(cart.left));
+    });
+
+    testWidgets('el carrito de la tienda abre el carrito', (tester) async {
+      await _openHome(tester);
+
+      await tester.tap(find.text('Tienda'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Carrito'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mi carrito'), findsOneWidget);
     });
 
     testWidgets('al volver al inicio el buscador está de nuevo', (tester) async {

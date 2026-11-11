@@ -86,6 +86,9 @@ void main() {
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
 
+      // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
+      await tester.tap(find.text('Cuenta'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Ayuda'));
       await tester.pumpAndSettle();
       expect(find.text('¿Necesitas ayuda?'), findsOneWidget);
@@ -122,6 +125,9 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
+      // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
+      await tester.tap(find.text('Cuenta'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Ayuda'));
       await tester.pumpAndSettle();
 
@@ -140,6 +146,9 @@ void main() {
 
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
+      await tester.pumpAndSettle();
+      // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
+      await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Ayuda'));
       await tester.pumpAndSettle();
