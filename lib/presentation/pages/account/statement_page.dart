@@ -520,7 +520,9 @@ class _DocumentCard extends StatelessWidget {
       footerLabel: 'Monto',
       footerValue: _amount(soles, dollars),
       footerColor: voided ? theme.colorScheme.error : null,
-      onTap: () => _showDocument(context, lines),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => StatementDocumentPage(lines: lines)),
+      ),
       // Todos los productos del documento en la misma tarjeta.
       children: [
         const SizedBox(height: 4),
@@ -559,99 +561,168 @@ String _amount(double soles, double dollars) => dollars > 0 && soles == 0
     ? FormatUtils.money(dollars, currency: 'd')
     : FormatUtils.money(soles);
 
-/// El detalle de un documento: cada producto con su cantidad y su monto.
-void _showDocument(BuildContext context, List<AccountMovement> lines) {
-  final theme = Theme.of(context);
-  final first = lines.first;
-  final soles = lines.fold<double>(0, (n, l) => n + l.soles);
-  final dollars = lines.fold<double>(0, (n, l) => n + l.dollars);
+/// El detalle de un documento (una venta), con el mismo formato del detalle
+/// de una cotización: estado y fecha, productos, forma de pago y totales; y el
+/// botón para ver e imprimir el PDF.
+class StatementDocumentPage extends StatelessWidget {
+  final List<AccountMovement> lines;
 
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (context) => ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.8),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          20, 0, 20, 20 + MediaQuery.paddingOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(first.document, style: theme.textTheme.titleLarge),
-                ),
-                if (first.sale != null)
-                  IconButton.filledTonal(
-                    tooltip: 'Ver PDF',
-                    icon: const Icon(Icons.picture_as_pdf_outlined),
-                    onPressed: () => _openPdf(context, lines),
-                  ),
-              ],
-            ),
-            if (first.date != null)
-              Text(
-                FormatUtils.date(first.date!.toLocal()),
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.outline),
+  const StatementDocumentPage({super.key, required this.lines});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final first = lines.first;
+    final sale = first.sale;
+    final voided = lines.any((l) => l.isVoided);
+    final inDollars = sale?.inDollars ?? lines.any((l) => l.dollars > 0);
+    final currency = inDollars ? 'd' : null;
+    String money(double v) => FormatUtils.money(v, currency: currency);
+
+    // Los productos de la venta; si no se conocen, las líneas del movimiento.
+    final items = (sale != null && sale.lines.isNotEmpty)
+        ? [
+            for (final l in sale.lines)
+              (
+                name: l.name,
+                brand: l.brand,
+                code: l.code,
+                quantity: l.quantity,
+                unit: l.unitPrice,
+                total: l.total,
               ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: lines.length,
-                separatorBuilder: (_, _) => const Divider(height: 20),
-                itemBuilder: (context, i) {
-                  final l = lines[i];
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(l.description, style: theme.textTheme.bodyMedium),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            _amount(l.soles, l.dollars),
-                            style: theme.textTheme.titleSmall,
-                          ),
-                          if (l.quantity != null)
-                            Text(
-                              'Cant. ${l.quantity}',
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: theme.colorScheme.outline),
-                            ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
+          ]
+        : [
+            for (final l in lines)
+              (
+                name: l.description,
+                brand: null,
+                code: '',
+                quantity: l.quantity ?? 1,
+                unit: null,
+                total: inDollars ? l.dollars : l.soles,
               ),
+          ];
+    final total = items.fold<double>(0, (n, i) => n + i.total);
+    final discount = sale?.lines.fold<double>(0, (n, l) => n + l.discount) ?? 0;
+    final igv = (sale?.isVoucher ?? false) ? total - total / 1.18 : 0.0;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(first.document),
+        actions: [
+          if (sale != null)
+            IconButton(
+              tooltip: 'Ver PDF',
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              onPressed: () => _openPdf(context, lines),
             ),
-            const Divider(height: 24),
-            Row(
-              children: [
-                Text('Monto', style: theme.textTheme.titleMedium),
-                const Spacer(),
-                Text(
-                  _amount(soles, dollars),
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        children: [
+          Wrap(
+            spacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              voided
+                  ? const StatusTag(label: 'Anulada', type: StatusTagType.error)
+                  : const StatusTag(label: 'Venta', type: StatusTagType.info),
+              if (first.date != null) Text(FormatUtils.date(first.date!.toLocal())),
+            ],
+          ),
+          if (sale != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(sale.title, style: theme.textTheme.bodySmall),
+            ),
+          const Divider(height: 32),
+          Text('Productos', style: theme.textTheme.titleSmall),
+          for (final item in items)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              ],
+                child: Icon(Icons.inventory_2_outlined, color: theme.colorScheme.outline),
+              ),
+              title: Text(
+                item.brand == null ? item.name : '${item.name} | ${item.brand}',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text([
+                if (item.code.isNotEmpty) item.code,
+                if (item.unit != null)
+                  '${item.quantity} x ${money(item.unit!)}'
+                else
+                  'Cant. ${item.quantity}',
+              ].join(' · ')),
+              trailing: Text(money(item.total)),
+            ),
+          const Divider(height: 32),
+          if (sale != null && sale.paymentMethods.isNotEmpty) ...[
+            Text('Pago', style: theme.textTheme.titleSmall),
+            Text(sale.paymentMethods.join(', ')),
+            const Divider(height: 32),
+          ],
+          if (sale != null && (sale.sellerName != '-' || sale.warehouseName != null)) ...[
+            Text('Atención', style: theme.textTheme.titleSmall),
+            if (sale.sellerName != '-') Text('Vendedor: ${sale.sellerName}'),
+            if (sale.warehouseName != null) Text('Sucursal: ${sale.warehouseName}'),
+            const Divider(height: 32),
+          ],
+          if (sale?.observations != null) ...[
+            Text('Observaciones', style: theme.textTheme.titleSmall),
+            Text(sale!.observations!),
+            const Divider(height: 32),
+          ],
+          if (igv > 0) _TotalLine('Subtotal', money(total - igv)),
+          if (igv > 0) _TotalLine('IGV', money(igv)),
+          if (discount > 0) _TotalLine('Descuento', money(discount)),
+          _TotalLine('Total', money(total), bold: true),
+          if (sale != null) ...[
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'Ver PDF / Imprimir',
+              icon: Icons.picture_as_pdf_outlined,
+              onPressed: () => _openPdf(context, lines),
             ),
           ],
-        ),
+        ],
       ),
-    ),
-  );
+    );
+  }
+}
+
+class _TotalLine extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool bold;
+
+  const _TotalLine(this.label, this.value, {this.bold = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = bold
+        ? Theme.of(context).textTheme.titleMedium
+        : Theme.of(context).textTheme.bodyMedium;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Text(label, style: style),
+          const Spacer(),
+          Text(value, style: style),
+        ],
+      ),
+    );
+  }
 }
 
 class _Footer extends StatelessWidget {

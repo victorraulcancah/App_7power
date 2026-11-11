@@ -379,13 +379,17 @@ void main() {
       // Cada documento tiene su ícono para ver el PDF.
       expect(find.byTooltip('Ver PDF'), findsNWidgets(2));
 
-      // Al tocarla se ve el detalle con cada monto.
+      // Al tocarla se abre el detalle, con el formato de una cotización:
+      // productos con su monto y el total.
       await tester.tap(find.text('V001-6943'));
       await tester.pumpAndSettle();
+      expect(find.text('Productos'), findsOneWidget);
       expect(find.text('S/ 117.00'), findsOneWidget);
       expect(find.text('S/ 78.00'), findsOneWidget);
-      // El detalle también trae el botón del PDF.
-      expect(find.byTooltip('Ver PDF'), findsNWidgets(3));
+      expect(find.text('S/ 195.00'), findsOneWidget);
+      // Y el botón para ver e imprimir el PDF (en la barra y abajo).
+      expect(find.byTooltip('Ver PDF'), findsOneWidget);
+      expect(find.text('Ver PDF / Imprimir'), findsOneWidget);
     });
 
     testWidgets('sin código de ERP avisa que la cuenta no está vinculada', (tester) async {
