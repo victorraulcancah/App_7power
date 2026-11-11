@@ -307,7 +307,7 @@ void main() {
 
       await tester.tap(find.descendant(
         of: find.widgetWithText(InputChip, '"amplificador"'),
-        matching: find.byIcon(Icons.cancel),
+        matching: find.byType(Icon),
       ));
       await tester.pumpAndSettle();
 
