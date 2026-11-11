@@ -216,12 +216,16 @@ class _FaqTile extends StatelessWidget {
 
 /// Ícono de WhatsApp para la barra superior: lleva a la pantalla de ayuda.
 class SupportAction extends StatelessWidget {
-  const SupportAction({super.key});
+  /// Más angosto, para la barra del inicio.
+  final bool compact;
+
+  const SupportAction({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       tooltip: 'Ayuda',
+      visualDensity: compact ? VisualDensity.compact : null,
       icon: const FaIcon(FontAwesomeIcons.whatsapp, color: whatsappGreen, size: 26),
       onPressed: () => Navigator.of(context)
           .push(MaterialPageRoute(builder: (_) => const SupportPage())),

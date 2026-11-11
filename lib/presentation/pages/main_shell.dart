@@ -87,10 +87,12 @@ class _MainShellState extends State<MainShell> {
                 width: double.infinity,
                 child: HomeSearchField(onSearch: _openSearch),
               ),
+              // Íconos sueltos y angostos: así al buscador le queda el ancho.
               actions: const [
                 FavoritesShortcut(),
-                CartButton(),
-                SupportAction(),
+                CartButton(plain: true),
+                SupportAction(compact: true),
+                SizedBox(width: 6),
               ],
             )
           // Ayuda por WhatsApp a la mano en todas las pestañas, y el carrito.

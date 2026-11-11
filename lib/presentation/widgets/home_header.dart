@@ -50,7 +50,7 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
         onSubmitted: (_) => _submit(),
         decoration: SearchBox.decoration(
           context,
-          hint: 'Buscar productos, marcas o códigos',
+          hint: 'Buscar productos',
           compact: true,
           suffix: SearchSubmitButton(onPressed: _submit, compact: true),
         ),
@@ -70,6 +70,7 @@ class FavoritesShortcut extends StatelessWidget {
 
     return IconButton(
       tooltip: 'Favoritos',
+      visualDensity: VisualDensity.compact,
       onPressed: () {
         if (!context.read<AuthProvider>().isAuthenticated) {
           AppSnackbar.info(context, 'Inicia sesión para ver tus favoritos.');

@@ -13,12 +13,41 @@ import 'login_page.dart';
 
 /// Ícono del carrito con la cantidad de unidades. Abre [CartPage].
 class CartButton extends StatelessWidget {
-  const CartButton({super.key});
+  /// Un ícono suelto (sin el círculo claro), del color de la barra y más
+  /// angosto: para la barra del inicio, donde comparte espacio con el buscador.
+  final bool plain;
+
+  const CartButton({super.key, this.plain = false});
 
   @override
   Widget build(BuildContext context) {
     final units = context.select<CartProvider, int>((c) => c.totalUnits);
     final theme = Theme.of(context);
+
+    if (plain) {
+      return IconButton(
+        tooltip: 'Carrito',
+        visualDensity: VisualDensity.compact,
+        onPressed: () => Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const CartPage())),
+        // Rebota cada vez que cambia la cantidad (al agregar algo).
+        icon: Bounce(
+          trigger: units,
+          child: Badge(
+            isLabelVisible: units > 0,
+            label: Text(
+              '$units',
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            backgroundColor: const Color(0xFFFFC107),
+            child: const Icon(Icons.shopping_cart_outlined, size: 26),
+          ),
+        ),
+      );
+    }
 
     // Botón claro sobre el navbar (que es del color de marca): así se ve el
     // carrito aunque el navbar sea negro. La cantidad va en ámbar.

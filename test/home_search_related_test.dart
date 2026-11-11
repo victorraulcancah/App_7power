@@ -62,6 +62,31 @@ void main() {
       expect(cart.right, lessThanOrEqualTo(help.left));
     });
 
+    testWidgets('en un teléfono de 360 px el buscador es ancho y su botón queda dentro',
+        (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final env = TestEnv(catalog: [product(5, 'Driver', stock: 9)]);
+      await tester.pumpWidget(env.app());
+      await tester.pumpAndSettle();
+
+      final search = tester.getRect(find.byKey(const Key('home-search')));
+      final button = tester.getRect(find.byTooltip('Buscar'));
+      final help = tester.getRect(find.byTooltip('Ayuda'));
+
+      // Más de la mitad de la pantalla, y sin pisar los íconos.
+      expect(search.width, greaterThan(180));
+      expect(search.right, lessThan(tester.getRect(find.byTooltip('Favoritos')).left));
+      expect(help.right, lessThanOrEqualTo(360));
+      // El botón rojo está dentro del óvalo, no se sale.
+      expect(button.left, greaterThanOrEqualTo(search.left));
+      expect(button.right, lessThanOrEqualTo(search.right));
+      expect(button.top, greaterThanOrEqualTo(search.top));
+      expect(button.bottom, lessThanOrEqualTo(search.bottom));
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('el inicio no lleva logo', (tester) async {
       await _openHome(tester);
 

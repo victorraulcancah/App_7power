@@ -124,6 +124,12 @@ class SearchBox extends StatelessWidget {
       filled: true,
       fillColor: Colors.white,
       isDense: compact,
+      // Sin esto los íconos reservan 48 px a cada lado y el botón de buscar se
+      // sale del óvalo en el campo bajo.
+      prefixIconConstraints:
+          compact ? const BoxConstraints(minWidth: 36, minHeight: 36) : null,
+      suffixIconConstraints:
+          compact ? const BoxConstraints(minWidth: 36, minHeight: 36) : null,
       contentPadding: EdgeInsets.symmetric(vertical: compact ? 10 : 15, horizontal: 8),
       border: border(primary.withValues(alpha: 0.55), 1.2),
       enabledBorder: border(primary.withValues(alpha: 0.55), 1.2),
