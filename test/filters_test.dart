@@ -11,6 +11,8 @@ import 'package:appecommerce/data/datasources/product_remote_datasource.dart';
 import 'package:appecommerce/domain/entities/product_filters.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 void _tall(WidgetTester tester) {
@@ -20,7 +22,7 @@ void _tall(WidgetTester tester) {
 }
 
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar, skipOffstage: false));
+    tester.element(find.byType(MainNavBar, skipOffstage: false));
 
 TestEnv _env({bool priceBounds = false}) {
   final env = TestEnv(catalog: [

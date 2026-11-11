@@ -13,6 +13,8 @@ import 'package:appecommerce/domain/entities/product_filters.dart';
 import 'package:appecommerce/domain/entities/promotion_entity.dart';
 import 'package:appecommerce/presentation/pages/brands_page.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 Future<void> _openMore(WidgetTester tester, TestEnv env) async {
@@ -285,7 +287,7 @@ void main() {
 
       expect(env.products.lastFilters.brandIds, {29});
       // Volvió al shell, ahora en la pestaña Tienda.
-      expect(tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex, 1);
+      expect(tester.widget<MainNavBar>(find.byType(MainNavBar)).selectedIndex, 1);
       expect(find.text('Marcas'), findsNothing);
     });
   });

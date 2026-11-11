@@ -13,6 +13,8 @@ import 'package:appecommerce/domain/usecases/search_products_usecase.dart';
 import 'package:appecommerce/presentation/providers/product_search_provider.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 TestEnv _env() => TestEnv(catalog: [
@@ -334,12 +336,12 @@ void main() {
       await tester.pumpAndSettle();
 
       final provider = tester
-          .element(find.byType(NavigationBar, skipOffstage: false))
+          .element(find.byType(MainNavBar, skipOffstage: false))
           .read<ProductsProvider>();
       expect(provider.query, 'cable');
       expect(provider.selectedCategoryId, 2);
       expect(
-        tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+        tester.widget<MainNavBar>(find.byType(MainNavBar)).selectedIndex,
         1,
       );
     });
@@ -359,7 +361,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final provider = tester
-          .element(find.byType(NavigationBar, skipOffstage: false))
+          .element(find.byType(MainNavBar, skipOffstage: false))
           .read<ProductsProvider>();
       expect(provider.selectedCategoryId, 2);
       expect(provider.query, '');

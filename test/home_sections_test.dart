@@ -6,10 +6,12 @@ import 'package:appecommerce/domain/entities/product_filters.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 import 'package:appecommerce/theme/app_theme.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar, skipOffstage: false));
+    tester.element(find.byType(MainNavBar, skipOffstage: false));
 
 /// Portada en una pantalla alta, para que las secciones queden construidas.
 Future<TestEnv> _openHome(
@@ -32,7 +34,7 @@ Future<TestEnv> _openHome(
 }
 
 int _selectedTab(WidgetTester tester) =>
-    tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
+    tester.widget<MainNavBar>(find.byType(MainNavBar)).selectedIndex;
 
 void main() {
   group('Diseño de las pestañas', () {
@@ -128,8 +130,8 @@ void main() {
 
       // Sigue en el buscador, sin abrir la tienda.
       expect(find.byKey(const Key('search-field')), findsOneWidget);
-      final bar = tester.widget<NavigationBar>(
-        find.byType(NavigationBar, skipOffstage: false),
+      final bar = tester.widget<MainNavBar>(
+        find.byType(MainNavBar, skipOffstage: false),
       );
       expect(bar.selectedIndex, 0);
     });

@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:appecommerce/presentation/components/components.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 void _tall(WidgetTester tester) {
@@ -89,7 +91,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('la barra del inicio y la de Cuenta son blancas',
+    testWidgets('la barra del inicio es blanca y la de Cuenta, oscura con fondo',
         (tester) async {
       await _openHome(tester);
 
@@ -102,9 +104,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(AppBar), findsNothing);
 
+      // Cuenta y Más llevan el fondo oscuro con destellos (una imagen).
       await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
-      expect(barColor(), Colors.white);
+      expect(barColor(), Colors.black);
     });
 
     testWidgets('el inicio no lleva logo', (tester) async {
@@ -190,7 +193,7 @@ void main() {
     testWidgets('el carrito del buscador cuenta las unidades', (tester) async {
       await _openHome(tester);
       final cart = tester
-          .element(find.byType(NavigationBar, skipOffstage: false))
+          .element(find.byType(MainNavBar, skipOffstage: false))
           .read<CartProvider>();
 
       await cart.add(product(5, 'Driver', stock: 9), quantity: 3);
@@ -234,7 +237,7 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
 
-      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(MainNavBar), findsOneWidget);
       expect(find.text('Driver'), findsWidgets);
     });
   });
