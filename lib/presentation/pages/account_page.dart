@@ -12,7 +12,6 @@ import '../providers/favorites_provider.dart';
 import '../providers/statement_provider.dart';
 import 'account/addresses_page.dart';
 import 'account/favorites_page.dart';
-import 'account/my_claims_page.dart';
 import 'account/personal_data_page.dart';
 import 'account/statement_page.dart';
 import 'account/purchases_page.dart';
@@ -21,10 +20,6 @@ import '../widgets/profile_photo.dart';
 import 'cart_page.dart';
 import 'login_page.dart';
 import 'promotions/coupons_page.dart';
-import 'support/support_page.dart';
-import 'more/about_page.dart';
-import 'more/claim_book_page.dart';
-import 'more/contact_page.dart';
 
 /// Pestaña "Cuenta": inicio de sesión, o el menú de la cuenta del cliente.
 class AccountPage extends StatelessWidget {
@@ -136,11 +131,6 @@ class _AccountMenu extends StatelessWidget {
             onTap: () => _open(context, const CouponsPage()),
           ),
           MenuItem(
-            icon: Icons.menu_book_outlined,
-            title: 'Mis reclamos',
-            onTap: () => _open(context, const MyClaimsPage()),
-          ),
-          MenuItem(
             icon: Icons.shopping_cart_outlined,
             title: 'Mi carrito',
             onTap: () => _open(context, const CartPage()),
@@ -151,28 +141,6 @@ class _AccountMenu extends StatelessWidget {
           MenuGroup(title: 'Seguridad', children: [
             const _BiometricLockItem(),
           ]),
-        MenuGroup(title: 'Ayuda', children: [
-          MenuItem(
-            icon: Icons.help_outline_rounded,
-            title: 'Ayuda y preguntas frecuentes',
-            onTap: () => _open(context, const SupportPage()),
-          ),
-          MenuItem(
-            icon: Icons.menu_book_outlined,
-            title: 'Libro de reclamaciones',
-            onTap: () => _open(context, const ClaimBookPage()),
-          ),
-          MenuItem(
-            icon: Icons.support_agent_outlined,
-            title: 'Contáctanos',
-            onTap: () => _open(context, const ContactPage()),
-          ),
-          MenuItem(
-            icon: Icons.business_outlined,
-            title: 'Sobre nosotros',
-            onTap: () => _open(context, const AboutPage()),
-          ),
-        ]),
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppConstants.defaultPadding, 16, AppConstants.defaultPadding, 0,

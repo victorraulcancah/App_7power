@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:appecommerce/core/errors/exceptions.dart';
+import 'package:appecommerce/presentation/pages/account_page.dart';
 import 'package:appecommerce/data/models/address_model.dart';
 import 'package:appecommerce/data/models/product_model.dart';
 import 'package:appecommerce/data/models/purchase_model.dart';
@@ -283,9 +284,6 @@ void main() {
         'Datos personales',
         'Direcciones',
         'Mi carrito',
-        'Libro de reclamaciones',
-        'Contáctanos',
-        'Sobre nosotros',
         'Cerrar sesión',
       ]) {
         await tester.scrollUntilVisible(
@@ -294,6 +292,23 @@ void main() {
           scrollable: find.byType(Scrollable).first,
         );
         expect(find.text(entry), findsOneWidget, reason: entry);
+      }
+      // Ayuda y reclamos viven en la pestaña "Más", no en la cuenta.
+      for (final entry in [
+        'Mis reclamos',
+        'Ayuda y preguntas frecuentes',
+        'Libro de reclamaciones',
+        'Contáctanos',
+        'Sobre nosotros',
+      ]) {
+        expect(
+          find.descendant(
+            of: find.byType(AccountPage),
+            matching: find.text(entry, skipOffstage: false),
+          ),
+          findsNothing,
+          reason: entry,
+        );
       }
     });
 

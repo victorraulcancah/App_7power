@@ -158,9 +158,10 @@ class CheckoutRemoteDataSourceImpl implements CheckoutRemoteDataSource {
         'costo_envio': 0,
         'numero_documento': d.documentNumber,
         'departamento_id': a.departmentCode,
-        'provincia_id': _join([a.departmentCode, a.provinceCode]),
-        'distrito_id':
-            _join([a.departmentCode, a.provinceCode, a.districtCode]),
+        // Como la web: el código de cada nivel solo ("15", "01", "22"), no
+        // encadenado. Los pedidos guardan 2 dígitos por nivel y rechazan más.
+        'provincia_id': a.provinceCode,
+        'distrito_id': a.districtCode,
         'departamento_nombre': a.department,
         'provincia_nombre': a.province,
         'distrito_nombre': a.district,
@@ -179,10 +180,6 @@ class CheckoutRemoteDataSourceImpl implements CheckoutRemoteDataSource {
             ))
         .toList();
   }
-
-  /// Une los códigos de ubicación ("15" + "01" = "1501"); null si falta alguno.
-  String? _join(List<String?> parts) =>
-      parts.any((p) => p == null) ? null : parts.join();
 
   @override
   Future<PaymentResult> pay(PaymentOrder order) async {

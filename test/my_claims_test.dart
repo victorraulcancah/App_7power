@@ -20,8 +20,14 @@ Future<void> _openMyClaims(WidgetTester tester, TestEnv env) async {
   await env.authRepo.login('ana@correo.com', 'secreto');
   await tester.pumpWidget(env.app());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cuenta'));
+  // "Mis reclamos" está en la pestaña "Más", en Atención al cliente.
+  await tester.tap(find.text('Más'));
   await tester.pumpAndSettle();
+  await tester.scrollUntilVisible(
+    find.text('Mis reclamos'),
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
   await tester.tap(find.text('Mis reclamos'));
   await tester.pumpAndSettle();
 }

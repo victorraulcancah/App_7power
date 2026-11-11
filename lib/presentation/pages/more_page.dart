@@ -8,8 +8,10 @@ import '../../domain/entities/company_info_entity.dart';
 import '../../domain/entities/product_filters.dart';
 import '../../theme/app_theme.dart';
 import '../components/components.dart';
+import '../providers/auth_provider.dart';
 import '../providers/company_provider.dart';
 import '../utils/open_url.dart';
+import 'account/my_claims_page.dart';
 import 'brands_page.dart';
 import 'more/about_page.dart';
 import 'more/claim_book_page.dart';
@@ -101,6 +103,14 @@ class MorePage extends StatelessWidget {
             subtitle: 'Registra un reclamo o una queja',
             onTap: () => _open(context, const ClaimBookPage()),
           ),
+          // Los reclamos del cliente: solo con sesión iniciada.
+          if (context.select<AuthProvider, bool>((a) => a.isAuthenticated))
+            MenuItem(
+              icon: Icons.menu_book_outlined,
+              title: 'Mis reclamos',
+              subtitle: 'Los que registraste con tu cuenta',
+              onTap: () => _open(context, const MyClaimsPage()),
+            ),
           MenuItem(
             icon: Icons.manage_search_outlined,
             title: 'Consultar un reclamo',

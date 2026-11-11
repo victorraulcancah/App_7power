@@ -315,8 +315,12 @@ void main() {
       expect(sent['forma_envio'], 'delivery');
       expect(sent['costo_envio'], 0);
       expect(sent['departamento_id'], '15');
-      expect(sent['provincia_id'], '1501');
-      expect(sent['distrito_id'], '150122');
+      // Códigos de 2 dígitos por nivel, como los manda la web: los pedidos no
+      // admiten más (con "1501" el servidor fallaba al crear el pedido).
+      expect(sent['provincia_id'], '01');
+      expect(sent['distrito_id'], '22');
+      expect((sent['provincia_id'] as String).length, lessThanOrEqualTo(2));
+      expect((sent['distrito_id'] as String).length, lessThanOrEqualTo(2));
       expect(sent['ubicacion_completa'], 'MIRAFLORES, LIMA, LIMA');
       // La cotización no admite cupón.
       expect(sent.containsKey('cupon_codigo'), isFalse);

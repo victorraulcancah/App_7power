@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'package:appecommerce/core/errors/exceptions.dart';
+import 'package:appecommerce/presentation/pages/account_page.dart';
 import 'package:appecommerce/core/network/api_client.dart';
 import 'package:appecommerce/data/datasources/info_remote_datasource.dart';
 import 'package:appecommerce/data/models/info_model.dart';
@@ -539,7 +540,7 @@ void main() {
   });
 
   group('Cuenta', () {
-    testWidgets('también ofrece libro de reclamaciones, contacto y nosotros',
+    testWidgets('ya no repite ayuda, reclamos, contacto ni nosotros',
         (tester) async {
       final env = TestEnv();
       await env.authRepo.login('ana@correo.com', 'secreto');
@@ -549,10 +550,41 @@ void main() {
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Libro de reclamaciones'), findsOneWidget);
+      for (final entry in [
+        'Mis reclamos',
+        'Ayuda y preguntas frecuentes',
+        'Libro de reclamaciones',
+        'Contáctanos',
+        'Sobre nosotros',
+      ]) {
+        expect(
+          find.descendant(
+            of: find.byType(AccountPage),
+            matching: find.text(entry, skipOffstage: false),
+          ),
+          findsNothing,
+          reason: entry,
+        );
+      }
+    });
+
+    testWidgets('con sesión, "Más" ofrece Mis reclamos y el libro de reclamaciones',
+        (tester) async {
+      final env = TestEnv();
+      await env.authRepo.login('ana@correo.com', 'secreto');
+      await _openMore(tester, env);
+
+      expect(find.text('Mis reclamos'), findsOneWidget);
       await tester.tap(find.text('Libro de reclamaciones'));
       await tester.pumpAndSettle();
       expect(find.text('1. Tus datos'), findsOneWidget);
+    });
+
+    testWidgets('sin sesión, "Más" no muestra Mis reclamos', (tester) async {
+      await _openMore(tester, TestEnv());
+
+      expect(find.text('Mis reclamos'), findsNothing);
+      expect(find.text('Consultar un reclamo'), findsOneWidget);
     });
   });
 }
