@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Una pestaña de [MainNavBar].
 class MainNavTab {
-  /// El nombre que se ve bajo el ícono.
+  /// El nombre de la pestaña (no se dibuja: es para quien usa lector de pantalla).
   final String label;
-
-  /// Lo que dice al mantener pulsado y a los lectores de pantalla.
   final String tooltip;
   final IconData icon;
 
@@ -21,9 +19,9 @@ const mainNavTabs = [
   MainNavTab(label: 'Más', tooltip: 'Más', icon: Icons.more_horiz_rounded),
 ];
 
-/// La barra de abajo: una píldora oscura flotante sobre el fondo blanco, con el
-/// ícono y el nombre de cada pestaña. La pestaña elegida lleva un cuadro rojo
-/// con brillo.
+/// La barra de abajo: una píldora oscura flotante sobre el fondo blanco, solo
+/// con los íconos. La pestaña elegida lleva un cuadro con degradado de rojo a
+/// negro y borde brillante.
 class MainNavBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelected;
@@ -32,7 +30,6 @@ class MainNavBar extends StatelessWidget {
 
   static const _pill = Color(0xFF0B0B0C);
   static const _pillBorder = Color(0xFF2B2B2E);
-  static const _glow = Color(0xFFE02424);
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +40,7 @@ class MainNavBar extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
           child: Container(
-            height: 72,
+            height: 68,
             padding: const EdgeInsets.symmetric(horizontal: 6),
             decoration: BoxDecoration(
               color: _pill,
@@ -85,6 +82,9 @@ class _NavItem extends StatelessWidget {
 
     return Tooltip(
       message: tab.tooltip,
+      // Sin globo de texto al tocar o mantener pulsado.
+      triggerMode: TooltipTriggerMode.manual,
+      excludeFromSemantics: true,
       child: Semantics(
         button: true,
         selected: selected,
@@ -96,44 +96,32 @@ class _NavItem extends StatelessWidget {
             child: AnimatedContainer(
               duration: still ? Duration.zero : const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
-              width: 62,
-              height: 58,
+              width: 68,
+              height: 60,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
+                // De rojo vivo en la esquina a casi negro al otro lado.
                 gradient: selected
                     ? const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF4A0A0A), Color(0xFF9B1111)],
+                        colors: [Color(0xFFC81E1E), Color(0xFF560A0A), Color(0xFF100505)],
+                        stops: [0.0, 0.55, 1.0],
                       )
                     : null,
                 border: selected
-                    ? Border.all(color: MainNavBar._glow, width: 1.4)
+                    ? Border.all(color: const Color(0xFFFF3B30), width: 1.2)
                     : null,
                 boxShadow: selected
-                    ? const [BoxShadow(color: Color(0x66E02424), blurRadius: 14)]
+                    ? const [
+                        BoxShadow(color: Color(0x66E02424), blurRadius: 16),
+                        BoxShadow(color: Color(0x33FF3B30), blurRadius: 6),
+                      ]
                     : null,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(tab.icon, color: Colors.white, size: 26),
-                  const SizedBox(height: 2),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      tab.label,
-                      maxLines: 1,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        height: 1.1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              // Solo el ícono: el nombre queda como descripción para los lectores
+              // de pantalla.
+              child: Icon(tab.icon, color: Colors.white, size: 28),
             ),
           ),
         ),

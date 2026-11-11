@@ -44,16 +44,21 @@ void main() {
       expect(_bar(tester).selectedIndex, 2);
     });
 
-    testWidgets('cada pestaña lleva su ícono con el nombre debajo', (tester) async {
+    testWidgets('la barra es solo de íconos: sin texto', (tester) async {
       await _open(tester);
 
-      for (final label in ['Inicio', 'Tienda', 'Categorías', 'Mi Cuenta', 'Más']) {
+      // Ninguna pestaña dibuja su nombre (en la barra); queda como descripción.
+      for (final label in ['Inicio', 'Tienda', 'Mi Cuenta', 'Más']) {
         expect(
           find.descendant(of: find.byType(MainNavBar), matching: find.text(label)),
-          findsOneWidget,
+          findsNothing,
           reason: label,
         );
       }
+      expect(
+        find.descendant(of: find.byType(MainNavBar), matching: find.byType(Text)),
+        findsNothing,
+      );
       for (final name in ['Inicio', 'Tienda', 'Categorías', 'Cuenta', 'Más']) {
         expect(find.byTooltip(name), findsOneWidget, reason: name);
       }

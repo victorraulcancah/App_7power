@@ -6,7 +6,6 @@ import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_constants.dart';
 import '../../domain/entities/company_info_entity.dart';
 import '../../domain/entities/product_filters.dart';
-import '../../theme/app_theme.dart';
 import '../components/components.dart';
 import '../providers/auth_provider.dart';
 import '../providers/company_provider.dart';
@@ -209,7 +208,8 @@ class MorePage extends StatelessWidget {
   }
 }
 
-/// Tarjeta de portada con el logo y los datos básicos de la empresa.
+/// Portada de "Más": fondo oscuro con destellos rojos, el eslogan, el 7 grande y
+/// las tres ventajas de la marca. Debajo, la dirección y el correo.
 class _BrandCard extends StatelessWidget {
   final CompanyInfoEntity? info;
 
@@ -217,25 +217,104 @@ class _BrandCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Rojo de la marca con degradado: el negro es solo de la barra superior y
-    // del footer.
-    const onColor = Colors.white;
     final theme = Theme.of(context);
+    const red = Color(0xFFE02424);
+
+    Widget feature(IconData icon, Color color, String text) => Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 5),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  height: 1.15,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Widget divider() => Container(
+      width: 1,
+      height: 28,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      color: Colors.white24,
+    );
 
     return Container(
       margin: const EdgeInsets.all(AppConstants.defaultPadding),
-      padding: const EdgeInsets.all(AppConstants.defaultPadding * 1.25),
-      decoration: BoxDecoration(
-        gradient: AppTheme.gradient,
-        borderRadius: BorderRadius.circular(18),
-      ),
       child: Column(
         children: [
-          Text(
-            'Audio automotriz, multimedia, seguridad y energía para tu vehículo.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: onColor.withValues(alpha: 0.85)),
+          Container(
+            clipBehavior: Clip.antiAlias,
+            padding: const EdgeInsets.fromLTRB(18, 18, 14, 14),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(18),
+              image: const DecorationImage(
+                image: AssetImage('assets/images/top_bg.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Audio automotriz, multimedia, seguridad y energía para tu vehículo.',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              height: 1.2,
+                              fontWeight: FontWeight.w800,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(width: 56, height: 3, color: red),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 3,
+                      child: Image.asset(
+                        'assets/images/seven.png',
+                        height: 112,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    feature(Icons.verified_user_outlined, red, 'Calidad\ngarantizada'),
+                    divider(),
+                    feature(Icons.local_shipping_outlined, Colors.white, 'Envíos a\ntodo el Perú'),
+                    divider(),
+                    feature(Icons.handshake_outlined, Colors.white, 'Tu mejor aliado\nautomotriz'),
+                  ],
+                ),
+              ],
+            ),
           ),
           if (info?.email != null || info?.address != null) ...[
             const SizedBox(height: 12),
@@ -245,9 +324,9 @@ class _BrandCard extends StatelessWidget {
               runSpacing: 4,
               children: [
                 if (info?.address != null)
-                  _Fact(Icons.location_on_outlined, info!.address!, onColor),
+                  _Fact(Icons.location_on_outlined, info!.address!, theme.colorScheme.outline),
                 if (info?.email != null)
-                  _Fact(Icons.mail_outline, info!.email!, onColor),
+                  _Fact(Icons.mail_outline, info!.email!, theme.colorScheme.outline),
               ],
             ),
           ],

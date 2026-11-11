@@ -12,6 +12,8 @@ import 'package:appecommerce/data/datasources/product_remote_datasource.dart';
 import 'package:appecommerce/domain/entities/product_filters.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 const _sevenPower = BrandEntity(id: 25, name: '7POWER', productsCount: 404);
@@ -53,7 +55,7 @@ Future<TestEnv> _openShop(WidgetTester tester, [TestEnv? given]) async {
 }
 
 ProductsProvider _provider(WidgetTester tester) => tester
-    .element(find.byType(NavigationBar, skipOffstage: false))
+    .element(find.byType(MainNavBar, skipOffstage: false))
     .read<ProductsProvider>();
 
 Future<void> _chooseCategory(WidgetTester tester, String label) async {
