@@ -107,7 +107,21 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
 
     final result = await getCategoriesUseCase();
     result.fold((_) {}, (categories) => _categories = categories);
+    _categoriesLoaded = true;
     notifyListeners();
+  }
+
+  bool _categoriesLoaded = false;
+
+  /// Ya se pidieron las categorías al servidor (con o sin éxito): permite
+  /// distinguir "todavía cargando" de "no hay".
+  bool get categoriesLoaded => _categoriesLoaded;
+
+  /// Vuelve a pedir las categorías (el "Reintentar" de la pestaña Categorías).
+  Future<void> reloadCategories() {
+    _categoriesLoaded = false;
+    notifyListeners();
+    return _loadCategories();
   }
 
   /// Las marcas son un extra: si no cargan, el filtro de marcas no se muestra.

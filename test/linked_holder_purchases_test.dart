@@ -8,6 +8,7 @@ import 'package:http/testing.dart';
 import 'package:appecommerce/core/network/api_client.dart';
 import 'package:appecommerce/data/datasources/auth_local_datasource.dart';
 import 'package:appecommerce/data/datasources/auth_remote_datasource.dart';
+import 'package:appecommerce/data/models/product_model.dart';
 import 'package:appecommerce/data/models/purchase_model.dart';
 import 'package:appecommerce/data/models/user_model.dart';
 import 'package:appecommerce/presentation/components/components.dart';
@@ -372,6 +373,111 @@ void main() {
       expect(find.text('2 un.'), findsOneWidget);
       expect(find.text('S/ 50.00 c/u'), findsOneWidget);
       expect(find.byType(ProductImage), findsWidgets);
+    });
+
+    testWidgets(
+        'si el servidor no manda marca ni foto, se completan con el catálogo por código',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final env = TestEnv(catalog: [
+        const ProductModel(
+          id: 9,
+          name: 'CARGADOR DE CELULAR PARED',
+          price: 11,
+          stock: 5,
+          brand: 'PIONEER',
+          code: 'CAR1',
+          imageUrl: 'http://api.test/storage/productos/c.jpg',
+        ),
+        product(3, 'Cable', brand: 'JBL'),
+      ]);
+      env.purchasesRemote.store = StorePurchasesModel.fromJson({
+        'vinculado': true,
+        'compras': [
+          {
+            'id': 1,
+            'documento': 'V001-7310',
+            'moneda': 's',
+            'total': 14,
+            'productos': [
+              // Como viene del ERP: solo el código.
+              {'codigo': 'CAR1', 'nombre': 'CARGADOR', 'cantidad': 1, 'precio': 11, 'subtotal': 11},
+              // Un código que no está en el catálogo: se queda sin marca.
+              {'codigo': 'MERCH', 'nombre': 'MERCHANDISING', 'cantidad': 1, 'precio': 3, 'subtotal': 3},
+            ],
+          },
+        ],
+      });
+      await env.authRepo.login('ana@correo.com', 'secreto');
+      await tester.pumpWidget(env.app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cuenta'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Compras'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('En tienda'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('V001-7310'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PIONEER'), findsOneWidget);
+      expect(find.text('Código: CAR1'), findsOneWidget);
+      // El que no está en el catálogo se muestra igual, sin marca.
+      expect(find.text('MERCHANDISING'), findsOneWidget);
+      expect(find.text('Código: MERCH'), findsOneWidget);
+      // Cada código se pidió una sola vez.
+      expect(
+        env.products.searchRequests.where((r) => r.$1 == 'CAR1'),
+        hasLength(1),
+      );
+    });
+
+    testWidgets('si la compra ya trae marca y foto no se consulta el catálogo',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final env = TestEnv(catalog: [product(3, 'Cable', brand: 'JBL')]);
+      env.purchasesRemote.store = StorePurchasesModel.fromJson({
+        'vinculado': true,
+        'compras': [
+          {
+            'id': 1,
+            'documento': 'V001-1',
+            'moneda': 's',
+            'total': 11,
+            'productos': [
+              {
+                'codigo': 'CAR1',
+                'nombre': 'CARGADOR',
+                'cantidad': 1,
+                'precio': 11,
+                'subtotal': 11,
+                'marca': '7POWER',
+                'imagen_url': 'http://api.test/storage/productos/c.jpg',
+              },
+            ],
+          },
+        ],
+      });
+      await env.authRepo.login('ana@correo.com', 'secreto');
+      await tester.pumpWidget(env.app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cuenta'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Compras'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('En tienda'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('V001-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('7POWER'), findsOneWidget);
+      expect(env.products.searchRequests, isEmpty);
     });
 
     testWidgets('el detalle de una compra en tienda también', (tester) async {

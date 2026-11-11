@@ -98,6 +98,32 @@ class ProductSearchProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  final Map<String, Future<ProductEntity?>> _byCode = {};
+
+  /// El producto del catálogo con ese código exacto. Sirve para completar la
+  /// foto y la marca de lo comprado cuando el servidor no las manda (las
+  /// compras en tienda vienen del ERP, que solo trae el código). Recuerda lo
+  /// encontrado: cada código se pide una sola vez.
+  Future<ProductEntity?> lookupByCode(String code) {
+    final clean = code.trim();
+    final key = clean.toUpperCase();
+    if (clean.length < minLength) return Future.value(null);
+
+    return _byCode.putIfAbsent(key, () async {
+      final result = await searchProductsUseCase(clean);
+      return result.fold((_) {
+        // Si falló (sin red) se vuelve a intentar la próxima vez.
+        _byCode.remove(key);
+        return null;
+      }, (products) {
+        for (final p in products) {
+          if ((p.code ?? '').trim().toUpperCase() == key) return p;
+        }
+        return null;
+      });
+    });
+  }
+
   /// Vacía todo (al abrir o cerrar el buscador).
   void reset() {
     _timer?.cancel();

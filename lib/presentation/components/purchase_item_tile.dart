@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../domain/entities/product_entity.dart';
+import '../providers/product_search_provider.dart';
 import 'product_image.dart';
 
 /// Un producto de una compra, como en la web: su foto, la marca, el nombre y el
 /// código, y a la derecha las unidades y lo que costó. Lo usan el detalle de las
 /// compras en línea y el de las compras en tienda.
-class PurchaseItemTile extends StatelessWidget {
+///
+/// Si la compra no trae la foto o la marca (las compras en tienda vienen del
+/// ERP, que solo conoce el código), se completan buscando el producto en el
+/// catálogo por su código.
+class PurchaseItemTile extends StatefulWidget {
   final String name;
   final String? imageUrl;
   final String? brand;
@@ -33,7 +40,46 @@ class PurchaseItemTile extends StatelessWidget {
   });
 
   @override
+  State<PurchaseItemTile> createState() => _PurchaseItemTileState();
+}
+
+class _PurchaseItemTileState extends State<PurchaseItemTile> {
+  Future<ProductEntity?>? _lookup;
+
+  @override
+  void initState() {
+    super.initState();
+    final missing = widget.brand == null || widget.imageUrl == null;
+    final code = widget.code;
+    if (!missing || code == null) return;
+
+    // Sin el buscador disponible (una prueba aislada) se muestra lo que hay.
+    try {
+      _lookup = context.read<ProductSearchProvider>().lookupByCode(code);
+    } catch (_) {
+      _lookup = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final lookup = _lookup;
+    if (lookup == null) return _content(context, widget.brand, widget.imageUrl);
+
+    return FutureBuilder<ProductEntity?>(
+      future: lookup,
+      builder: (context, snapshot) {
+        final found = snapshot.data;
+        return _content(
+          context,
+          widget.brand ?? found?.brand,
+          widget.imageUrl ?? found?.imageUrl,
+        );
+      },
+    );
+  }
+
+  Widget _content(BuildContext context, String? brand, String? imageUrl) {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.outline;
 
@@ -65,19 +111,21 @@ class PurchaseItemTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // La marca encima del nombre, en mayúsculas y con más cuerpo
+                // que antes para que se note.
                 if (brand != null)
                   Text(
-                    brand!.toUpperCase(),
+                    brand.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: muted,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.4,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 Text(
-                  name,
+                  widget.name,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -85,11 +133,11 @@ class PurchaseItemTile extends StatelessWidget {
                     height: 1.25,
                   ),
                 ),
-                if (code != null)
+                if (widget.code != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      'Código: $code',
+                      'Código: ${widget.code}',
                       style: theme.textTheme.bodySmall?.copyWith(color: muted),
                     ),
                   ),
@@ -100,15 +148,16 @@ class PurchaseItemTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(quantity, style: theme.textTheme.bodySmall?.copyWith(color: muted)),
+              Text(widget.quantity,
+                  style: theme.textTheme.bodySmall?.copyWith(color: muted)),
               const SizedBox(height: 2),
               Text(
-                total,
+                widget.total,
                 style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
-              if (unitPrice != null)
+              if (widget.unitPrice != null)
                 Text(
-                  '$unitPrice c/u',
+                  '${widget.unitPrice} c/u',
                   style: theme.textTheme.labelSmall?.copyWith(color: muted),
                 ),
             ],

@@ -14,6 +14,7 @@ import 'package:appecommerce/data/models/product_detail_model.dart';
 import 'package:appecommerce/data/models/product_model.dart';
 import 'package:appecommerce/domain/entities/company_info_entity.dart';
 import 'package:appecommerce/presentation/components/components.dart';
+import 'package:appecommerce/presentation/pages/home_page.dart';
 import 'package:appecommerce/presentation/pages/startup_gate.dart';
 import 'package:appecommerce/presentation/providers/company_provider.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
@@ -385,7 +386,12 @@ void main() {
     await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
-    expect(find.text('Categorías'), findsOneWidget);
+    // El título de la sección y la pestaña de la barra inferior.
+    expect(find.text('Categorías'), findsNWidgets(2));
+    expect(
+      find.descendant(of: find.byType(HomePage), matching: find.text('Categorías')),
+      findsOneWidget,
+    );
     // "Driver" es la categoría y también su pestaña en "Recomendado para ti".
     expect(find.text('Driver'), findsNWidgets(2));
     expect(find.text('Recomendado para ti'), findsOneWidget);

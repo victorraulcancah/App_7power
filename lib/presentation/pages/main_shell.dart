@@ -9,20 +9,23 @@ import '../providers/products_provider.dart';
 import '../widgets/home_header.dart';
 import 'account_page.dart';
 import 'cart_page.dart';
+import 'categories_page.dart';
 import 'home_page.dart';
 import 'more_page.dart';
 import 'products_page.dart';
+import 'search_page.dart';
 import 'support/support_page.dart';
 
 /// Estructura principal: barra superior con el logo, contenido por pestañas y
-/// navegación inferior (Inicio, Tienda, Cuenta y Más).
+/// navegación inferior (Inicio, Tienda, Categorías, Cuenta y Más).
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
   static final ValueNotifier<int?> _tabRequest = ValueNotifier<int?>(null);
 
   /// Pide que la pantalla principal cambie de pestaña (0 inicio, 1 tienda,
-  /// 2 cuenta, 3 más); por ejemplo, desde la pantalla de compra realizada.
+  /// 2 categorías, 3 cuenta, 4 más); por ejemplo, desde la pantalla de compra
+  /// realizada.
   static void requestTab(int tab) => _tabRequest.value = tab;
 
   @override
@@ -32,6 +35,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   static const int _homeTab = 0;
   static const int _shopTab = 1;
+  static const int _categoriesTab = 2;
 
   int _tab = _homeTab;
 
@@ -84,6 +88,26 @@ class _MainShellState extends State<MainShell> {
       // primera fila de la pantalla (ver `ProductsPage`).
       appBar: _tab == _shopTab
           ? null
+          : _tab == _categoriesTab
+          // Categorías: barra clara con el título, la búsqueda y el carrito.
+          ? AppBar(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF26262B),
+              surfaceTintColor: Colors.transparent,
+              systemOverlayStyle: SystemUiOverlayStyle.dark,
+              shape: const Border(bottom: BorderSide(color: Color(0xFFE6E6EA))),
+              title: const Text('Categorías'),
+              actions: [
+                IconButton(
+                  tooltip: 'Buscar',
+                  icon: const Icon(Icons.search),
+                  onPressed: () =>
+                      SearchPage.open(context, onSubmit: _openSearch),
+                ),
+                const CartButton(plain: true),
+                const SizedBox(width: 4),
+              ],
+            )
           : _tab == 0
           // El inicio no lleva logo: el buscador ocupa la barra, con la lista
           // de favoritos, el carrito y la ayuda a su lado.
@@ -128,6 +152,7 @@ class _MainShellState extends State<MainShell> {
             children: [
               HomePage(onOpenShop: _openShop, onOpenBrand: _openBrand),
               const ProductsPage(),
+              CategoriesPage(onOpenShop: _openShop),
               const AccountPage(),
               MorePage(onOpenBrand: _openBrand),
             ],
@@ -147,6 +172,11 @@ class _MainShellState extends State<MainShell> {
             icon: Icon(Icons.storefront_outlined),
             selectedIcon: Icon(Icons.storefront_rounded),
             label: 'Tienda',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.category_outlined),
+            selectedIcon: Icon(Icons.category_rounded),
+            label: 'Categorías',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
