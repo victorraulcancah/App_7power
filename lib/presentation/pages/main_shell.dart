@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../domain/entities/product_filters.dart';
 import '../components/components.dart';
+import '../providers/company_provider.dart';
 import '../providers/products_provider.dart';
 import '../widgets/home_header.dart';
 import 'account_page.dart';
@@ -34,7 +35,6 @@ class _MainShellState extends State<MainShell> {
   static const int _homeTab = 0;
   static const int _shopTab = 1;
   static const int _categoriesTab = 2;
-  static const int _accountTab = 3;
 
   int _tab = _homeTab;
 
@@ -80,6 +80,8 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final company = context.watch<CompanyProvider>().info;
+
     return Scaffold(
       // La tienda no lleva barra: su buscador, el filtro y el carrito van en la
       // primera fila de la pantalla (ver `ProductsPage`).
@@ -130,15 +132,24 @@ class _MainShellState extends State<MainShell> {
                 SizedBox(width: 4),
               ],
             )
-          // Cuenta y Más: barra clara con el título y el carrito pequeño, sin
-          // logo ni WhatsApp.
+          // Cuenta y Más: barra clara con el logo al centro y el carrito pequeño
+          // (sin WhatsApp). El logo es blanco: va sobre una pastilla oscura.
           : AppBar(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF26262B),
               surfaceTintColor: Colors.transparent,
               systemOverlayStyle: SystemUiOverlayStyle.dark,
               shape: const Border(bottom: BorderSide(color: Color(0xFFE6E6EA))),
-              title: Text(_tab == _accountTab ? 'Cuenta' : 'Más'),
+              centerTitle: true,
+              title: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).appBarTheme.backgroundColor ??
+                      Colors.black,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: BrandLogo(url: company?.logoUrl, height: 30),
+              ),
               actions: const [CartButton(plain: true), SizedBox(width: 4)],
             ),
       // Sin barra en la tienda, la hora y la batería del teléfono van en oscuro

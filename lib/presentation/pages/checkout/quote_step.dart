@@ -76,7 +76,13 @@ class _QuoteStepState extends State<QuoteStep> {
     final hasUsd = totals.containsKey('d');
 
     return ListView(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      padding: EdgeInsets.fromLTRB(
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        // Los botones del teléfono no deben tapar el último botón.
+        AppConstants.defaultPadding + 24 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         Text('Forma de pago', style: theme.textTheme.titleMedium),
         const SizedBox(height: 4),
@@ -135,7 +141,13 @@ class _CurrencyBlock extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(top: 16),
       child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        padding: EdgeInsets.fromLTRB(
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        // Los botones del teléfono no deben tapar el último botón.
+        AppConstants.defaultPadding + 24 + MediaQuery.paddingOf(context).bottom,
+      ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

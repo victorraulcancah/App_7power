@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/utils/format_utils.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../theme/app_theme.dart';
 import '../components/components.dart';
@@ -234,7 +233,7 @@ class _Header extends StatelessWidget {
                 // Con la cuenta vinculada, el nombre del cliente del ERP; si no, el
                 // del cliente registrado en la tienda.
                 Text(
-                  'Hola, ${FormatUtils.titleCase(user.displayName)}',
+                  'Hola, ${user.greetingName}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleLarge?.copyWith(

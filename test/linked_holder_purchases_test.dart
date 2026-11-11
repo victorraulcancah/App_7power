@@ -195,7 +195,7 @@ void main() {
         (tester) async {
       await _openAccount(tester, user: _linkedUser, holder: _erpHolder);
 
-      expect(find.text('Hola, Grupo Marquina E.i.r.l.'), findsOneWidget);
+      expect(find.text('Hola, Grupo Marquina'), findsOneWidget);
       expect(find.text('RUC: 20601234567'), findsOneWidget);
       expect(find.text('Cuenta vinculada · CLI00264'), findsOneWidget);
       // Ya no sale el nombre con que se registró.

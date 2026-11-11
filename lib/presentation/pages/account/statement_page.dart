@@ -84,7 +84,7 @@ class _StatementPageState extends State<StatementPage> {
   }
 
   Widget _content(BuildContext context, StatementProvider statement) {
-    final movements = statement.movements;
+    final rows = _groupByDocument(statement.movements);
 
     // Si lo cargado no llena la pantalla no hay scroll que pida más (por
     // ejemplo, con una búsqueda que deja pocas filas): se piden las páginas
@@ -104,16 +104,33 @@ class _StatementPageState extends State<StatementPage> {
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        // Cabecera + movimientos + pie (cargando / cuántos se ven).
-        itemCount: movements.length + 2,
+        // Cabecera + documentos + pie (cargando / cuántos se ven).
+        itemCount: rows.length + 2,
         itemBuilder: (context, i) {
           if (i == 0) return _Header(onPickRange: _pickRange);
-          if (i == movements.length + 1) return _Footer(statement: statement);
-          return _MovementCard(movement: movements[i - 1]);
+          if (i == rows.length + 1) return _Footer(statement: statement);
+          final row = rows[i - 1];
+          return row.length == 1 && row.first.document == '-'
+              ? _MovementCard(movement: row.first)
+              : _DocumentCard(lines: row);
         },
       ),
     );
   }
+}
+
+/// Junta en un solo documento las líneas seguidas que son del mismo (una venta
+/// llega del ERP una fila por producto). Los pagos van cada uno por su lado.
+List<List<AccountMovement>> _groupByDocument(List<AccountMovement> movements) {
+  final rows = <List<AccountMovement>>[];
+  for (final m in movements) {
+    if (m.document != '-' && rows.isNotEmpty && rows.last.first.document == m.document) {
+      rows.last.add(m);
+    } else {
+      rows.add([m]);
+    }
+  }
+  return rows;
 }
 
 /// Fondo gris muy claro de las pantallas con tarjetas.
@@ -458,6 +475,152 @@ class _MovementCard extends StatelessWidget {
       footerColor: amountColor,
     );
   }
+}
+
+/// Un documento (venta) como una sola tarjeta, como en las cotizaciones: fecha,
+/// cuántos productos y el monto total. Al tocarla se ve el detalle.
+class _DocumentCard extends StatelessWidget {
+  final List<AccountMovement> lines;
+
+  const _DocumentCard({required this.lines});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final first = lines.first;
+    final voided = lines.any((l) => l.isVoided);
+    final (label, tagType, icon, tint) = voided
+        ? ('Anulada', StatusTagType.error, Icons.block, theme.colorScheme.error)
+        : ('Venta', StatusTagType.info, Icons.shopping_bag_outlined, Colors.blue.shade700);
+    final soles = lines.fold<double>(0, (n, l) => n + l.soles);
+    final dollars = lines.fold<double>(0, (n, l) => n + l.dollars);
+
+    return DataCard(
+      icon: icon,
+      iconColor: tint,
+      badge: first.document,
+      trailing: StatusTag(label: label, type: tagType),
+      fields: [
+        if (first.date != null)
+          DataField('Fecha', FormatUtils.date(first.date!.toLocal())),
+      ],
+      footerLabel: 'Monto',
+      footerValue: _amount(soles, dollars),
+      footerColor: voided ? theme.colorScheme.error : null,
+      onTap: () => _showDocument(context, lines),
+      // Todos los productos del documento en la misma tarjeta.
+      children: [
+        const SizedBox(height: 4),
+        for (final l in lines)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(l.description, style: theme.textTheme.bodyMedium),
+                ),
+                if (l.quantity != null) ...[
+                  const SizedBox(width: 12),
+                  Text(
+                    '× ${l.quantity}',
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: theme.colorScheme.outline),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+String _amount(double soles, double dollars) => dollars > 0 && soles == 0
+    ? FormatUtils.money(dollars, currency: 'd')
+    : FormatUtils.money(soles);
+
+/// El detalle de un documento: cada producto con su cantidad y su monto.
+void _showDocument(BuildContext context, List<AccountMovement> lines) {
+  final theme = Theme.of(context);
+  final first = lines.first;
+  final soles = lines.fold<double>(0, (n, l) => n + l.soles);
+  final dollars = lines.fold<double>(0, (n, l) => n + l.dollars);
+
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (context) => ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.8),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20, 0, 20, 20 + MediaQuery.paddingOf(context).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(first.document, style: theme.textTheme.titleLarge),
+            if (first.date != null)
+              Text(
+                FormatUtils.date(first.date!.toLocal()),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.outline),
+              ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: lines.length,
+                separatorBuilder: (_, _) => const Divider(height: 20),
+                itemBuilder: (context, i) {
+                  final l = lines[i];
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(l.description, style: theme.textTheme.bodyMedium),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            _amount(l.soles, l.dollars),
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          if (l.quantity != null)
+                            Text(
+                              'Cant. ${l.quantity}',
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(color: theme.colorScheme.outline),
+                            ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Text('Monto', style: theme.textTheme.titleMedium),
+                const Spacer(),
+                Text(
+                  _amount(soles, dollars),
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _Footer extends StatelessWidget {

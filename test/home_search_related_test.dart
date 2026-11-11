@@ -113,7 +113,7 @@ void main() {
       expect(find.byType(BrandLogo), findsNothing);
     });
 
-    testWidgets('Cuenta y Más no llevan logo ni WhatsApp, solo el carrito',
+    testWidgets('Cuenta y Más llevan el logo en la barra, sin WhatsApp',
         (tester) async {
       await _openHome(tester);
 
@@ -121,13 +121,13 @@ void main() {
         await tester.tap(find.byTooltip(tab));
         await tester.pumpAndSettle();
 
+        // El logo solo va en la barra: la portada de Más ya no lo repite.
+        expect(find.byType(BrandLogo), findsOneWidget, reason: tab);
         expect(
           find.descendant(of: find.byType(AppBar), matching: find.byType(BrandLogo)),
-          findsNothing,
+          findsOneWidget,
           reason: tab,
         );
-        // La portada de Más tampoco lleva logo.
-        expect(find.byType(BrandLogo), findsNothing, reason: tab);
         expect(find.byKey(const Key('home-search')), findsNothing, reason: tab);
         expect(find.byTooltip('Carrito'), findsOneWidget, reason: tab);
         expect(find.byTooltip('Ayuda'), findsNothing, reason: tab);

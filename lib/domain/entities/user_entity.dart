@@ -54,6 +54,59 @@ class UserEntity {
           ? holderName!.trim()
           : fullName;
 
+  /// Cómo se saluda al cliente ("Hola, …"):
+  /// - empresa (RUC 20): la razón social sin "SAC", "EIRL", etc.
+  ///   ("GRUPO GM IMPORTACIONES SAC" → "Grupo GM Importaciones");
+  /// - persona: un nombre y un apellido ("Anthony Gustavo").
+  String get greetingName {
+    final document = displayDocument ?? '';
+    if (RegExp(r'^20\d{9}$').hasMatch(document)) {
+      return _companyName(displayName);
+    }
+    return _personName();
+  }
+
+  static final _legalSuffix = RegExp(
+    r'[\s,.]+(S\.?\s?A\.?\s?C\.?|E\.?\s?I\.?\s?R\.?\s?L\.?|S\.?\s?R\.?\s?L\.?|'
+    r'S\.?\s?C\.?\s?R\.?\s?L\.?|S\.?\s?A\.?\s?A\.?|S\.?\s?A\.?)\s*$',
+    caseSensitive: false,
+  );
+
+  static String _companyName(String name) {
+    var result = name.trim();
+    // Por si lleva más de una forma legal seguida.
+    for (var i = 0; i < 3; i++) {
+      final next = result.replaceFirst(_legalSuffix, '').trim();
+      if (next == result || next.isEmpty) break;
+      result = next;
+    }
+    final words = result.split(RegExp(r'\s+'));
+    return [
+      for (final w in words)
+        w.length <= 3 ? w : w[0].toUpperCase() + w.substring(1).toLowerCase(),
+    ].join(' ');
+  }
+
+  String _personName() {
+    String cap(String w) =>
+        w.isEmpty ? w : w[0].toUpperCase() + w.substring(1).toLowerCase();
+    List<String> words(String? text) =>
+        (text ?? '').trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+
+    // Con el nombre y el apellido por separado, el primero de cada uno.
+    final names = words(firstNames);
+    final surnames = words(lastNames);
+    if (names.isNotEmpty && surnames.isNotEmpty) {
+      return '${cap(names.first)} ${cap(surnames.first)}';
+    }
+    // Si solo hay el nombre completo: el primer nombre y el primer apellido
+    // (con cuatro palabras o más, el apellido es la tercera).
+    final all = words(displayName);
+    if (all.length < 2) return all.map(cap).join(' ');
+    final surname = all.length >= 4 ? all[2] : all[1];
+    return '${cap(all.first)} ${cap(surname)}';
+  }
+
   /// El documento que corresponde a [displayName]: el del ERP si está vinculada,
   /// si no el del registro. Los provisionales de las cuentas creadas con Google
   /// (`GOOGLE_...`) no son un documento real y no se muestran.

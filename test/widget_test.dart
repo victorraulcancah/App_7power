@@ -369,10 +369,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(logo, findsNothing);
 
-    // Cuenta y Más tampoco llevan logo.
+    // En Cuenta y Más el logo va en la barra.
     await tester.tap(find.byTooltip('Cuenta'));
     await tester.pumpAndSettle();
-    expect(logo, findsNothing);
+    expect(logo, findsOneWidget);
   });
 
   testWidgets('La portada muestra categorías y productos, sin footer',

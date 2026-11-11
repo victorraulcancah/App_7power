@@ -295,7 +295,13 @@ class _DeliveryStep extends StatelessWidget {
     final delivery = form.toDelivery();
 
     return ListView(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      padding: EdgeInsets.fromLTRB(
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        // Los botones del teléfono no deben tapar el último botón.
+        AppConstants.defaultPadding + 24 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         Text('Dirección de entrega', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),

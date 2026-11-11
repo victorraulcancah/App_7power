@@ -11,6 +11,10 @@ class QuantitySelector extends StatelessWidget {
   /// el número.
   final String? unit;
 
+  /// Barra a todo lo ancho (como el carrito de las tiendas grandes): fondo gris
+  /// con el − y el + en los extremos y la cantidad en una caja blanca al centro.
+  final bool wide;
+
   const QuantitySelector({
     super.key,
     required this.value,
@@ -18,12 +22,55 @@ class QuantitySelector extends StatelessWidget {
     this.min = 1,
     this.max,
     this.unit,
+    this.wide = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final canDecrease = value > min;
     final canIncrease = max == null || value < max!;
+    final label = unit == null ? '$value' : '$value $unit';
+
+    if (wide) {
+      final scheme = Theme.of(context).colorScheme;
+      return Container(
+        height: 46,
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove),
+              onPressed: canDecrease ? () => onChanged(value - 1) : null,
+            ),
+            Expanded(
+              child: Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: canIncrease ? () => onChanged(value + 1) : null,
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -41,7 +88,7 @@ class QuantitySelector extends StatelessWidget {
           SizedBox(
             width: unit == null ? 32 : 56,
             child: Text(
-              unit == null ? '$value' : '$value $unit',
+              label,
               textAlign: TextAlign.center,
               maxLines: 1,
               style: Theme.of(context).textTheme.titleMedium,

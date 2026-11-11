@@ -70,7 +70,13 @@ class PaymentSuccessPage extends StatelessWidget {
           automaticallyImplyLeading: false,
         ),
         body: ListView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          padding: EdgeInsets.fromLTRB(
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        // Los botones del teléfono no deben tapar el último botón.
+        AppConstants.defaultPadding + 24 + MediaQuery.paddingOf(context).bottom,
+      ),
           children: [
             const SizedBox(height: 8),
             Center(
@@ -363,7 +369,13 @@ class QuotesCreatedPage extends StatelessWidget {
           automaticallyImplyLeading: false,
         ),
         body: ListView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          padding: EdgeInsets.fromLTRB(
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+        // Los botones del teléfono no deben tapar el último botón.
+        AppConstants.defaultPadding + 24 + MediaQuery.paddingOf(context).bottom,
+      ),
           children: [
             Icon(Icons.description, size: 72, color: theme.colorScheme.primary),
             const SizedBox(height: 8),

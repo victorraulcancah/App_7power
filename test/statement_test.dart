@@ -350,6 +350,38 @@ void main() {
       expect(find.text('US\$ 120.00'), findsOneWidget);
     });
 
+    testWidgets('las líneas de un mismo documento salen en una sola tarjeta',
+        (tester) async {
+      AccountMovement line(String id, String doc, String text, double soles) =>
+          AccountMovement(
+            id: id,
+            date: DateTime(2026, 10, 10),
+            document: doc,
+            description: text,
+            quantity: 1,
+            soles: soles,
+            dollars: 0,
+          );
+      await _openStatement(tester, movements: [
+        line('1', 'V001-6943', 'GXT6.4 | SET MEDIO RANGO | 7POWER', 117),
+        line('2', 'V001-6943', 'GX6.4B | MEDIO RANGO | 7POWER', 78),
+        line('3', 'V001-7000', 'GTR-12.4D | SUBWOOFER | 7POWER', 156),
+      ]);
+
+      // Un documento = una tarjeta: el número sale una vez, con el monto sumado.
+      expect(find.text('V001-6943'), findsOneWidget);
+      expect(find.text('GXT6.4 | SET MEDIO RANGO | 7POWER'), findsOneWidget);
+      expect(find.text('GX6.4B | MEDIO RANGO | 7POWER'), findsOneWidget);
+      expect(find.text('S/ 195.00'), findsOneWidget);
+      expect(find.text('V001-7000'), findsOneWidget);
+
+      // Al tocarla se ve el detalle con cada monto.
+      await tester.tap(find.text('V001-6943'));
+      await tester.pumpAndSettle();
+      expect(find.text('S/ 117.00'), findsOneWidget);
+      expect(find.text('S/ 78.00'), findsOneWidget);
+    });
+
     testWidgets('sin código de ERP avisa que la cuenta no está vinculada', (tester) async {
       final env = await _openStatement(tester, erpCode: null);
 

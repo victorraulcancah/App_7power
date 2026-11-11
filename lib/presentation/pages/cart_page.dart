@@ -257,7 +257,7 @@ class _CartLine extends StatelessWidget {
       return error == null;
     }
 
-    return Row(
+    final top = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ProductImage(
@@ -301,32 +301,13 @@ class _CartLine extends StatelessWidget {
               const SizedBox(height: 2),
               StockLabel(stock: item.stock),
               const SizedBox(height: 4),
-              if (showPrice)
-                PriceText(price: item.price, currency: item.currency)
-              else
-                const LockedPrice(),
-              const SizedBox(height: 8),
-              // En pantallas angostas el total baja a la línea de abajo.
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 8,
-                runSpacing: 4,
+              // Precio unitario y, a la derecha, el total de la línea.
+              Row(
                 children: [
-                  Opacity(
-                    opacity: busy ? 0.5 : 1,
-                    child: IgnorePointer(
-                      ignoring: busy,
-                      child: QuantitySelector(
-                        value: item.quantity,
-                        // Unidad de medida: los productos se venden por unidad.
-                        unit: 'un',
-                        // Como la web: tope en el stock (o 1 si no hay dato).
-                        max: item.stock > 0 ? item.stock : 1,
-                        onChanged: (v) =>
-                            run(() => cart.setQuantity(item.productId, v)),
-                      ),
-                    ),
+                  Expanded(
+                    child: showPrice
+                        ? PriceText(price: item.price, currency: item.currency)
+                        : const LockedPrice(),
                   ),
                   if (showPrice)
                     Text(
@@ -336,6 +317,30 @@ class _CartLine extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ),
+      ],
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        top,
+        const SizedBox(height: 10),
+        // La cantidad va a todo lo ancho, debajo del producto.
+        Opacity(
+          opacity: busy ? 0.5 : 1,
+          child: IgnorePointer(
+            ignoring: busy,
+            child: QuantitySelector(
+              wide: true,
+              value: item.quantity,
+              // Unidad de medida: los productos se venden por unidad.
+              unit: 'un',
+              // Como la web: tope en el stock (o 1 si no hay dato).
+              max: item.stock > 0 ? item.stock : 1,
+              onChanged: (v) => run(() => cart.setQuantity(item.productId, v)),
+            ),
           ),
         ),
       ],
