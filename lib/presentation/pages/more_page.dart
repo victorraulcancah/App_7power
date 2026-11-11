@@ -231,8 +231,6 @@ class _BrandCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          BrandLogo(url: info?.logoUrl, height: 48),
-          const SizedBox(height: 10),
           Text(
             'Audio automotriz, multimedia, seguridad y energía para tu vehículo.',
             textAlign: TextAlign.center,

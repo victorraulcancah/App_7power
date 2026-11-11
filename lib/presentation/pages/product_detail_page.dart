@@ -118,8 +118,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     Text(product.name, style: theme.textTheme.titleLarge),
                     const SizedBox(height: 8),
                     if (product.code != null)
-                      Text('Código: ${product.code}',
-                          style: theme.textTheme.bodySmall),
+                      Text('${product.code}',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 8),
                     StockLabel(
                       stock: product.stock,

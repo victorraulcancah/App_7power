@@ -278,4 +278,58 @@ void main() {
       expect(find.text('No encontramos productos con "zzz".'), findsOneWidget);
     });
   });
+
+  group('Búsqueda activa', () {
+    testWidgets('las marcas del filtro son las que tienen resultados', (tester) async {
+      final env = _env();
+      await _openShop(tester, env);
+
+      await _provider(tester).search('amplificador');
+      await tester.pumpAndSettle();
+
+      // Solo 7POWER tiene un "Amplificador": elegir JBL daría "Sin productos".
+      expect(_provider(tester).availableBrands.map((b) => b.name), ['7POWER']);
+      expect(_provider(tester).availableBrands.single.productsCount, 1);
+
+      await _provider(tester).clearSearch();
+      await tester.pumpAndSettle();
+      expect(_provider(tester).availableBrands.map((b) => b.name),
+          ['7POWER', 'BLAUPUNKT', 'JBL']);
+    });
+
+    testWidgets('la búsqueda se ve como filtro y se puede quitar', (tester) async {
+      await _openShop(tester);
+      await _provider(tester).search('amplificador');
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(InputChip, '"amplificador"'), findsOneWidget);
+      expect(find.text('Limpiar todo'), findsOneWidget);
+
+      await tester.tap(find.descendant(
+        of: find.widgetWithText(InputChip, '"amplificador"'),
+        matching: find.byIcon(Icons.cancel),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(_provider(tester).query, isEmpty);
+      expect(find.byType(InputChip), findsNothing);
+      expect(find.text('Parlante'), findsOneWidget);
+    });
+
+    testWidgets('"Limpiar todo" quita también la búsqueda y la categoría',
+        (tester) async {
+      final env = await _openShop(tester);
+      await _chooseCategory(tester, 'RCA');
+      await _provider(tester).search('cable');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Limpiar todo'));
+      await tester.pumpAndSettle();
+
+      expect(_provider(tester).query, isEmpty);
+      expect(_provider(tester).selectedCategoryId, isNull);
+      expect(env.products.lastCategoryId, isNull);
+      expect(find.text('Parlante'), findsOneWidget);
+    });
+  });
 }

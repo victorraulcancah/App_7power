@@ -302,9 +302,10 @@ class _SuggestionTile extends StatelessWidget {
                   ),
                   if (product.code != null && product.code!.isNotEmpty)
                     Text(
-                      'Código: ${product.code}',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.outline),
+                      '${product.code}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w800),
                     ),
                   const SizedBox(height: 2),
                   if (soldOut)

@@ -238,7 +238,7 @@ void main() {
 
       await _type(tester, 'drv2');
       expect(find.text('Driver 400W'), findsOneWidget);
-      expect(find.text('Código: DRV2'), findsOneWidget);
+      expect(find.text('DRV2'), findsOneWidget);
 
       await _type(tester, 'jbl');
       expect(find.text('Cable'), findsOneWidget);

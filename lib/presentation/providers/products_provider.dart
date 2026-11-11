@@ -61,8 +61,54 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
 
   /// Las marcas que ofrece la hoja de filtros: las de la categoría elegida, o
   /// todas si no hay categoría.
-  List<BrandEntity> get availableBrands =>
-      _categoryId == null ? _brands : (_categoryBrands ?? _brands);
+  List<BrandEntity> get availableBrands {
+    final base = _categoryId == null ? _brands : (_categoryBrands ?? _brands);
+    final scoped = _searchBrandCounts;
+    if (scoped == null) return base;
+    // Con una búsqueda activa, solo las marcas que tienen resultados en ella
+    // (y con la cantidad de esa búsqueda): elegir otra daría "Sin productos".
+    return [
+      for (final b in base)
+        if (scoped.containsKey(b.name.toLowerCase()))
+          BrandEntity(
+            id: b.id,
+            name: b.name,
+            productsCount: scoped[b.name.toLowerCase()]!,
+            imageUrl: b.imageUrl,
+            inShowcase: b.inShowcase,
+            showcaseOrder: b.showcaseOrder,
+          ),
+    ];
+  }
+
+  /// Marcas (en minúsculas) con la cantidad de productos que tienen en la
+  /// búsqueda actual; null si no hay búsqueda o todavía no llega.
+  Map<String, int>? _searchBrandCounts;
+  int _searchScopeId = 0;
+
+  Future<void> _loadSearchBrands() async {
+    final scope = ++_searchScopeId;
+    _searchBrandCounts = null;
+    if (_query.isEmpty) return;
+
+    final result = await getProductsUseCase(
+      search: _query,
+      categoryId: _categoryId,
+      limit: 500,
+    );
+    // Si mientras tanto cambió la búsqueda o la categoría, ya no sirve.
+    if (scope != _searchScopeId) return;
+    result.fold((_) {}, (page) {
+      final counts = <String, int>{};
+      for (final p in page.items) {
+        final brand = p.brand?.trim().toLowerCase();
+        if (brand == null || brand.isEmpty) continue;
+        counts[brand] = (counts[brand] ?? 0) + 1;
+      }
+      _searchBrandCounts = counts;
+      notifyListeners();
+    });
+  }
 
   int? get selectedCategoryId => _categoryId;
 
@@ -206,6 +252,7 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   Future<void> search(String query) {
     if (query == _query) return Future.value();
     _query = query;
+    unawaited(_loadSearchBrands());
     return loadProducts();
   }
 
@@ -218,6 +265,7 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
     _categoryBrands = null;
     _filters = ProductFilters.none;
     final loading = loadProducts();
+    unawaited(_loadSearchBrands());
     if (categoryId != null) unawaited(_loadCategoryBrands(categoryId));
     return loading;
   }
@@ -227,6 +275,7 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
     _categoryId = categoryId;
     _categoryBrands = null;
     final loading = loadProducts();
+    unawaited(_loadSearchBrands());
     if (categoryId != null) unawaited(_loadCategoryBrands(categoryId));
     return loading;
   }
@@ -255,4 +304,17 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
   }
 
   Future<void> clearFilters() => applyFilters(ProductFilters.none);
+
+  /// Quita todo lo que esté puesto: la búsqueda, la categoría y los filtros.
+  Future<void> clearAll() {
+    _query = '';
+    _categoryId = null;
+    _categoryBrands = null;
+    _filters = ProductFilters.none;
+    unawaited(_loadSearchBrands());
+    return loadProducts();
+  }
+
+  /// Quita solo el texto buscado.
+  Future<void> clearSearch() => search('');
 }

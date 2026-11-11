@@ -79,7 +79,8 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
           if (provider.categories.isNotEmpty)
             _CategoryFilter(provider: provider),
-          if (provider.filters.isActive) _ActiveFilters(provider: provider),
+          if (provider.filters.isActive || provider.query.isNotEmpty)
+            _ActiveFilters(provider: provider),
           if (provider.status == ProductsStatus.loaded)
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -179,6 +180,7 @@ class _NoResults extends StatelessWidget {
     ];
 
     final canClearFilters = filters.isActive;
+    final canClearSearch = provider.query.isNotEmpty;
     final canClearCategory = provider.selectedCategoryId != null;
 
     return Column(
@@ -192,9 +194,13 @@ class _NoResults extends StatelessWidget {
               : 'No encontramos productos con ese filtro.',
           actionLabel: canClearFilters
               ? 'Quitar filtros'
+              : canClearSearch
+              ? 'Quitar la búsqueda'
               : (canClearCategory ? 'Ver todas las categorías' : null),
           onAction: canClearFilters
               ? provider.clearFilters
+              : canClearSearch
+              ? provider.clearSearch
               : (canClearCategory ? () => provider.selectCategory(null) : null),
         ),
         // Con filtros y categoría a la vez, también se puede soltar solo la
@@ -261,6 +267,9 @@ class _ActiveFilters extends StatelessWidget {
           horizontal: AppConstants.defaultPadding,
         ),
         children: [
+          // La búsqueda también es un filtro: se ve y se quita desde aquí.
+          if (provider.query.isNotEmpty)
+            _chip('"${provider.query}"', provider.clearSearch),
           for (final id in filters.brandIds)
             _chip(
               brandNames[id] ?? 'Marca',
@@ -282,7 +291,7 @@ class _ActiveFilters extends StatelessWidget {
               ),
             ),
           TextButton(
-            onPressed: provider.clearFilters,
+            onPressed: provider.clearAll,
             child: const Text('Limpiar todo'),
           ),
         ],

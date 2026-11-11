@@ -137,8 +137,10 @@ class _PurchaseItemTileState extends State<PurchaseItemTile> {
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      'Código: ${widget.code}',
-                      style: theme.textTheme.bodySmall?.copyWith(color: muted),
+                      widget.code!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w800),
                     ),
                   ),
               ],

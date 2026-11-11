@@ -89,7 +89,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('la barra del inicio es blanca; en las otras pestañas, la de la marca',
+    testWidgets('la barra del inicio y la de Cuenta son blancas',
         (tester) async {
       await _openHome(tester);
 
@@ -104,8 +104,7 @@ void main() {
 
       await tester.tap(find.byTooltip('Cuenta'));
       await tester.pumpAndSettle();
-      // Sin color propio: toma el de la marca del tema.
-      expect(barColor(), isNull);
+      expect(barColor(), Colors.white);
     });
 
     testWidgets('el inicio no lleva logo', (tester) async {
@@ -114,23 +113,24 @@ void main() {
       expect(find.byType(BrandLogo), findsNothing);
     });
 
-    testWidgets('Cuenta y Más siguen con el logo, el carrito y la ayuda',
+    testWidgets('Cuenta y Más no llevan logo ni WhatsApp, solo el carrito',
         (tester) async {
       await _openHome(tester);
 
       for (final tab in ['Cuenta', 'Más']) {
-        await tester.tap(find.text(tab));
+        await tester.tap(find.byTooltip(tab));
         await tester.pumpAndSettle();
 
-        // (La pestaña Más tiene además su portada con el logo.)
         expect(
           find.descendant(of: find.byType(AppBar), matching: find.byType(BrandLogo)),
-          findsOneWidget,
+          findsNothing,
           reason: tab,
         );
+        // La portada de Más tampoco lleva logo.
+        expect(find.byType(BrandLogo), findsNothing, reason: tab);
         expect(find.byKey(const Key('home-search')), findsNothing, reason: tab);
         expect(find.byTooltip('Carrito'), findsOneWidget, reason: tab);
-        expect(find.byTooltip('Ayuda'), findsOneWidget, reason: tab);
+        expect(find.byTooltip('Ayuda'), findsNothing, reason: tab);
       }
     });
 

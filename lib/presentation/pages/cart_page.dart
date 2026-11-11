@@ -294,9 +294,10 @@ class _CartLine extends StatelessWidget {
                 ],
               ),
               if (item.code != null)
-                Text('Código: ${item.code}',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.outline)),
+                Text(item.code!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w800)),
               const SizedBox(height: 2),
               StockLabel(stock: item.stock),
               const SizedBox(height: 4),
@@ -476,9 +477,10 @@ class _SavedSection extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium),
                       if (item.code != null)
-                        Text('Código: ${item.code}',
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: theme.colorScheme.outline)),
+                        Text(item.code!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w800)),
                       const SizedBox(height: 4),
                       if (loggedIn || item.hasPrice)
                         PriceText(price: item.price, currency: item.currency)

@@ -108,11 +108,13 @@ class ProductCard extends StatelessWidget {
                   ),
                   if (code != null && code!.isNotEmpty)
                     Text(
-                      'Código: $code',
+                      code!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.outline),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   const SizedBox(height: 4),
                   StockLabel(stock: stock),

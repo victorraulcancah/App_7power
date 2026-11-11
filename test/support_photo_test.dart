@@ -81,15 +81,19 @@ void main() {
     });
     tearDown(() => WhatsAppSupport.opener = (_, _) async {});
 
-    testWidgets('el ícono de la barra lleva a la ayuda y abre el chat', (tester) async {
+    testWidgets('la ayuda de "Más" abre el chat', (tester) async {
+      tester.view.physicalSize = const Size(800, 2800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
 
-      // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
-      await tester.tap(find.byTooltip('Cuenta'));
+      // La ayuda ya no está en la barra: se llega desde "Más".
+      await tester.tap(find.byTooltip('Más'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Ayuda'));
+      await tester.tap(find.text('Ayuda y preguntas frecuentes'));
       await tester.pumpAndSettle();
       expect(find.text('¿Necesitas ayuda?'), findsOneWidget);
 
@@ -125,10 +129,10 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
-      await tester.tap(find.byTooltip('Cuenta'));
+      // La ayuda ya no está en la barra: se llega desde "Más".
+      await tester.tap(find.byTooltip('Más'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Ayuda'));
+      await tester.tap(find.text('Ayuda y preguntas frecuentes'));
       await tester.pumpAndSettle();
 
       expect(find.text('¿Qué métodos de pago hay?'), findsOneWidget);
@@ -147,10 +151,10 @@ void main() {
       final env = TestEnv(catalog: [product(1, 'Driver')]);
       await tester.pumpWidget(env.app());
       await tester.pumpAndSettle();
-      // El ícono de ayuda ya no está en el inicio: sigue en las demás pestañas.
-      await tester.tap(find.byTooltip('Cuenta'));
+      // La ayuda ya no está en la barra: se llega desde "Más".
+      await tester.tap(find.byTooltip('Más'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Ayuda'));
+      await tester.tap(find.text('Ayuda y preguntas frecuentes'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('¿Los productos tienen garantía?'));

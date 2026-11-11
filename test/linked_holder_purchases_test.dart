@@ -369,7 +369,7 @@ void main() {
 
       expect(find.text('7POWER'), findsOneWidget);
       expect(find.text('1.5" DRIVER 2VC'), findsOneWidget);
-      expect(find.text('Código: DRV2'), findsOneWidget);
+      expect(find.text('DRV2'), findsOneWidget);
       expect(find.text('2 un.'), findsOneWidget);
       expect(find.text('S/ 50.00 c/u'), findsOneWidget);
       expect(find.byType(ProductImage), findsWidgets);
@@ -424,10 +424,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('PIONEER'), findsOneWidget);
-      expect(find.text('Código: CAR1'), findsOneWidget);
+      expect(find.text('CAR1'), findsOneWidget);
       // El que no está en el catálogo se muestra igual, sin marca.
       expect(find.text('MERCHANDISING'), findsOneWidget);
-      expect(find.text('Código: MERCH'), findsOneWidget);
+      expect(find.text('MERCH'), findsOneWidget);
       // Cada código se pidió una sola vez.
       expect(
         env.products.searchRequests.where((r) => r.$1 == 'CAR1'),
@@ -530,11 +530,11 @@ void main() {
 
       // Con marca, código y foto.
       expect(find.text('7POWER'), findsOneWidget);
-      expect(find.text('Código: CAR1'), findsOneWidget);
+      expect(find.text('CAR1'), findsOneWidget);
       expect(find.text('1 un.'), findsOneWidget);
       // Sin marca ni foto en el catálogo: se muestra igual, solo con lo que hay.
       expect(find.text('MERCHANDISING'), findsOneWidget);
-      expect(find.text('Código: MERCH'), findsOneWidget);
+      expect(find.text('MERCH'), findsOneWidget);
       expect(find.text('3 un.'), findsOneWidget);
       expect(find.text('S/ 50.00 c/u'), findsOneWidget);
       expect(find.byType(PurchaseItemTile), findsNWidgets(2));

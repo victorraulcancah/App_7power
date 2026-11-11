@@ -42,6 +42,16 @@ void main() {
       expect(_bar(tester).selectedIndex, 2);
     });
 
+    testWidgets('la barra es solo de íconos: sin texto, con su nombre como descripción',
+        (tester) async {
+      await _open(tester);
+
+      expect(_bar(tester).labelBehavior, NavigationDestinationLabelBehavior.alwaysHide);
+      for (final name in ['Inicio', 'Tienda', 'Categorías', 'Cuenta', 'Más']) {
+        expect(find.byTooltip(name), findsOneWidget, reason: name);
+      }
+    });
+
     testWidgets('Cuenta y Más siguen funcionando con sus nuevos lugares',
         (tester) async {
       await _open(tester);
