@@ -76,6 +76,7 @@ class QuoteModel extends QuoteEntity {
           .map((p) => QuoteItemEntity(
                 productId: (p['producto_id'] as num?)?.toInt() ?? 0,
                 name: p['nombre']?.toString() ?? '',
+                code: _text(p['codigo']),
                 imageUrl: _text(p['imagen']),
                 quantity: FormatUtils.toDouble(p['cantidad']).toInt(),
                 unitPrice: FormatUtils.toDouble(p['precio_unitario']),

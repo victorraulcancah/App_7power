@@ -9,7 +9,9 @@ import '../../components/components.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/checkout_provider.dart';
 import '../../providers/load_status.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/quotes_provider.dart';
+import '../../utils/document_pdf.dart';
 import '../cart_page.dart';
 
 StatusTagType _tagType(QuoteEntity q) {
@@ -76,6 +78,7 @@ class _QuotesPageState extends State<QuotesPage> {
                               label: 'Vencida',
                               type: StatusTagType.error,
                             ),
+                          _PdfButton(quote: q),
                         ],
                       ),
                       fields: [
@@ -105,6 +108,28 @@ class _QuotesPageState extends State<QuotesPage> {
 
 /// Detalle de una cotización, con la opción de cancelarla mientras esté "En
 /// espera".
+/// El ícono para ver la cotización en PDF (con el diseño del ERP).
+class _PdfButton extends StatelessWidget {
+  final QuoteEntity quote;
+  final bool light;
+
+  const _PdfButton({required this.quote, this.light = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Ver PDF',
+      visualDensity: VisualDensity.compact,
+      color: light ? Colors.white : null,
+      icon: const Icon(Icons.picture_as_pdf_outlined),
+      onPressed: () => openDocumentPdf(
+        context,
+        pdfFromQuote(quote, user: context.read<AuthProvider>().user),
+      ),
+    );
+  }
+}
+
 class QuoteDetailPage extends StatelessWidget {
   final QuoteEntity quote;
 
@@ -245,7 +270,10 @@ class QuoteDetailPage extends StatelessWidget {
     String money(double v) => FormatUtils.money(v, currency: q.currency);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Cotización ${q.code}')),
+      appBar: AppBar(
+        title: Text('Cotización ${q.code}'),
+        actions: [_PdfButton(quote: q, light: true)],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         children: [

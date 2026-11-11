@@ -1,6 +1,7 @@
 class QuoteItemEntity {
   final int productId;
   final String name;
+  final String? code;
   final String? imageUrl;
   final int quantity;
   final double unitPrice;
@@ -13,6 +14,7 @@ class QuoteItemEntity {
     required this.unitPrice,
     required this.subtotal,
     this.imageUrl,
+    this.code,
   });
 }
 

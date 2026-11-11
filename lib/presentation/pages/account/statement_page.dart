@@ -8,6 +8,7 @@ import '../../../theme/app_theme.dart';
 import '../../components/components.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/load_status.dart';
+import '../../utils/document_pdf.dart';
 import '../../providers/statement_provider.dart';
 
 /// "Estado de cuenta": crédito, deuda y movimientos del cliente en el ERP.
@@ -499,7 +500,19 @@ class _DocumentCard extends StatelessWidget {
       icon: icon,
       iconColor: tint,
       badge: first.document,
-      trailing: StatusTag(label: label, type: tagType),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StatusTag(label: label, type: tagType),
+          if (first.sale != null)
+            IconButton(
+              tooltip: 'Ver PDF',
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              onPressed: () => _openPdf(context, lines),
+            ),
+        ],
+      ),
       fields: [
         if (first.date != null)
           DataField('Fecha', FormatUtils.date(first.date!.toLocal())),
@@ -536,6 +549,12 @@ class _DocumentCard extends StatelessWidget {
   }
 }
 
+/// Abre el PDF del documento (nota de venta, con el diseño del ERP).
+void _openPdf(BuildContext context, List<AccountMovement> lines) {
+  final sale = lines.first.sale;
+  if (sale != null) openDocumentPdf(context, pdfFromSale(sale));
+}
+
 String _amount(double soles, double dollars) => dollars > 0 && soles == 0
     ? FormatUtils.money(dollars, currency: 'd')
     : FormatUtils.money(soles);
@@ -562,7 +581,19 @@ void _showDocument(BuildContext context, List<AccountMovement> lines) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(first.document, style: theme.textTheme.titleLarge),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(first.document, style: theme.textTheme.titleLarge),
+                ),
+                if (first.sale != null)
+                  IconButton.filledTonal(
+                    tooltip: 'Ver PDF',
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    onPressed: () => _openPdf(context, lines),
+                  ),
+              ],
+            ),
             if (first.date != null)
               Text(
                 FormatUtils.date(first.date!.toLocal()),

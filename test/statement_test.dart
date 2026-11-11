@@ -361,6 +361,8 @@ void main() {
             quantity: 1,
             soles: soles,
             dollars: 0,
+            // Con la venta a mano el documento se puede imprimir.
+            sale: SaleDocumentEntity(number: doc, title: 'Nota de Venta', clientName: 'ANA', lines: const []),
           );
       await _openStatement(tester, movements: [
         line('1', 'V001-6943', 'GXT6.4 | SET MEDIO RANGO | 7POWER', 117),
@@ -374,12 +376,16 @@ void main() {
       expect(find.text('GX6.4B | MEDIO RANGO | 7POWER'), findsOneWidget);
       expect(find.text('S/ 195.00'), findsOneWidget);
       expect(find.text('V001-7000'), findsOneWidget);
+      // Cada documento tiene su ícono para ver el PDF.
+      expect(find.byTooltip('Ver PDF'), findsNWidgets(2));
 
       // Al tocarla se ve el detalle con cada monto.
       await tester.tap(find.text('V001-6943'));
       await tester.pumpAndSettle();
       expect(find.text('S/ 117.00'), findsOneWidget);
       expect(find.text('S/ 78.00'), findsOneWidget);
+      // El detalle también trae el botón del PDF.
+      expect(find.byTooltip('Ver PDF'), findsNWidgets(3));
     });
 
     testWidgets('sin código de ERP avisa que la cuenta no está vinculada', (tester) async {
