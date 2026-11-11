@@ -197,12 +197,15 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
 
   /// Búsqueda desde el inicio: en todo el catálogo, sin la categoría ni los
   /// filtros que hubiera de antes (una sola consulta).
-  Future<void> searchEverywhere(String query) {
+  Future<void> searchEverywhere(String query, {int? categoryId}) {
     _query = query.trim();
-    _categoryId = null;
+    // Con la categoría elegida en el buscador se busca solo en ella.
+    _categoryId = categoryId;
     _categoryBrands = null;
     _filters = ProductFilters.none;
-    return loadProducts();
+    final loading = loadProducts();
+    if (categoryId != null) unawaited(_loadCategoryBrands(categoryId));
+    return loading;
   }
 
   Future<void> selectCategory(int? categoryId) {

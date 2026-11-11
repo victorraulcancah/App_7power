@@ -2,6 +2,7 @@ import '../../core/errors/failures.dart';
 import '../../core/utils/either.dart';
 import '../entities/category_entity.dart';
 import '../entities/product_detail_entity.dart';
+import '../entities/product_entity.dart';
 import '../entities/product_filters.dart';
 import '../entities/products_page_entity.dart';
 
@@ -14,6 +15,14 @@ abstract class ProductRepository {
     int? categoryId,
     int? limit,
     ProductFilters filters = ProductFilters.none,
+  });
+
+  /// Las sugerencias del buscador: hasta 10 productos que coinciden con
+  /// [query] (nombre, código, marca o categoría), opcionalmente de una
+  /// categoría.
+  Future<Either<Failure, List<ProductEntity>>> searchProducts(
+    String query, {
+    int? categoryId,
   });
 
   Future<Either<Failure, List<CategoryEntity>>> getCategories();

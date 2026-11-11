@@ -133,5 +133,7 @@ class ApiConstants {
   // Catálogo público
   static const String productosEndpoint = '/productos-publicos';
   static const String productoDetalleEndpoint = '/productos-publicos/{id}';
+  /// Sugerencias del buscador (hasta 10 productos): `?q=texto&categoria=id`.
+  static const String searchEndpoint = '/productos/buscar';
   static const String categoriasEndpoint = '/categorias/publicas';
   static const String marcasEndpoint = '/marcas/publicas';}

@@ -18,6 +18,11 @@ abstract class ProductRemoteDataSource {
     ProductFilters filters = ProductFilters.none,
   });
 
+  /// Las sugerencias del buscador: hasta 10 productos que coinciden con
+  /// [query] (nombre, código, marca o categoría), opcionalmente de una
+  /// categoría.
+  Future<List<ProductModel>> searchProducts(String query, {int? categoryId});
+
   Future<List<CategoryModel>> getCategories();
 
   /// Las marcas con productos. Con [categoryId], solo las que tienen productos
@@ -149,6 +154,24 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     // Solo la lista completa se guarda: la de una categoría es parcial.
     if (categoryId == null) await cache?.write(_brandsKey, text);
     return brands;
+  }
+
+  @override
+  Future<List<ProductModel>> searchProducts(
+    String query, {
+    int? categoryId,
+  }) async {
+    final response = await client.get(
+      ApiConstants.searchEndpoint,
+      queryParameters: {
+        'q': query,
+        if (categoryId != null) 'categoria': '$categoryId',
+      },
+    );
+    return (jsonDecode(utf8.decode(response.bodyBytes)) as List)
+        .cast<Map<String, dynamic>>()
+        .map(ProductModel.fromSuggestionJson)
+        .toList();
   }
 
   @override

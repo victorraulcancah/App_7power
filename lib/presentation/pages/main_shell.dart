@@ -60,8 +60,10 @@ class _MainShellState extends State<MainShell> {
   }
 
   /// La tienda con los resultados de lo buscado en el inicio.
-  void _openSearch(String query) {
-    context.read<ProductsProvider>().searchEverywhere(query);
+  void _openSearch(String query, int? categoryId) {
+    context
+        .read<ProductsProvider>()
+        .searchEverywhere(query, categoryId: categoryId);
     setState(() => _tab = _shopTab);
   }
 

@@ -66,7 +66,7 @@ void main() {
       expect(find.byTooltip('Ayuda'), findsNothing);
     });
 
-    testWidgets('en un teléfono de 360 px el buscador es ancho y su botón queda dentro',
+    testWidgets('en un teléfono de 360 px el buscador es ancho y no pisa los íconos',
         (tester) async {
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1;
@@ -76,7 +76,6 @@ void main() {
       await tester.pumpAndSettle();
 
       final search = tester.getRect(find.byKey(const Key('home-search')));
-      final button = tester.getRect(find.byTooltip('Buscar'));
       final cart = tester.getRect(find.byTooltip('Carrito'));
 
       // Sin WhatsApp, el buscador ocupa más de dos tercios de la pantalla.
@@ -87,11 +86,6 @@ void main() {
       }
       expect(search.right, lessThan(tester.getRect(find.byTooltip('Favoritos')).left));
       expect(cart.right, lessThanOrEqualTo(360));
-      // El botón rojo está dentro del óvalo, no se sale.
-      expect(button.left, greaterThanOrEqualTo(search.left));
-      expect(button.right, lessThanOrEqualTo(search.right));
-      expect(button.top, greaterThanOrEqualTo(search.top));
-      expect(button.bottom, lessThanOrEqualTo(search.bottom));
       expect(tester.takeException(), isNull);
     });
 
@@ -234,7 +228,9 @@ void main() {
         (tester) async {
       await _openHome(tester);
 
-      await tester.enterText(find.byKey(const Key('home-search')), 'driver');
+      await tester.tap(find.byKey(const Key('home-search')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('search-field')), 'driver');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
 

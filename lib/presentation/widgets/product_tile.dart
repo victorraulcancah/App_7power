@@ -20,6 +20,7 @@ class ProductTile extends StatelessWidget {
       child: ProductCard(
         name: product.name,
         brand: product.brand,
+        code: product.code,
         imageUrl: product.imageUrl,
         price: product.price,
         currency: product.currency,

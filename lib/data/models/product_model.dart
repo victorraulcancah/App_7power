@@ -41,6 +41,26 @@ class ProductModel extends ProductEntity {
     );
   }
 
+  /// Sugerencia del buscador (`GET /productos/buscar`): trae la imagen en
+  /// `imagen_url` y el precio ya resuelto para el cliente.
+  factory ProductModel.fromSuggestionJson(Map<String, dynamic> json) {
+    final image = json['imagen_url']?.toString();
+
+    return ProductModel(
+      id: (json['id'] as num).toInt(),
+      name: json['nombre']?.toString() ?? '',
+      code: json['codigo_producto']?.toString(),
+      brand: json['marca']?.toString(),
+      category: json['categoria']?.toString(),
+      categoryId: (json['categoria_id'] as num?)?.toInt(),
+      imageUrl: (image != null && image.startsWith('http')) ? image : null,
+      price: FormatUtils.toDouble(json['precio']),
+      currency: json['moneda']?.toString(),
+      stock: FormatUtils.toDouble(json['stock']).toInt(),
+      priceVisible: json['precio_visible'] != false,
+    );
+  }
+
   /// Producto dentro de un favorito (`GET /favoritos`): `precio` y `moneda`
   /// ya vienen resueltos para el cliente; el precio base (`precio_venta`) es
   /// siempre 0 y no se usa.

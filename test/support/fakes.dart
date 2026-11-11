@@ -31,6 +31,7 @@ import 'package:appecommerce/domain/usecases/get_categories_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_company_info_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_product_detail_usecase.dart';
 import 'package:appecommerce/domain/usecases/get_products_usecase.dart';
+import 'package:appecommerce/domain/usecases/search_products_usecase.dart';
 import 'package:appecommerce/core/utils/format_utils.dart';
 import 'package:appecommerce/domain/entities/product_filters.dart';
 import 'package:appecommerce/domain/usecases/get_brands_usecase.dart';
@@ -96,6 +97,7 @@ import 'package:appecommerce/presentation/providers/cart_provider.dart';
 import 'package:appecommerce/presentation/providers/company_provider.dart';
 import 'package:appecommerce/presentation/providers/home_provider.dart';
 import 'package:appecommerce/presentation/providers/product_detail_provider.dart';
+import 'package:appecommerce/presentation/providers/product_search_provider.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 
 /// Catálogo falso: filtra en memoria como lo haría el backend y devuelve los
@@ -197,6 +199,31 @@ class FakeProductRepo implements ProductRepository {
       priceMin: priceMin,
       priceMax: priceMax,
     ));
+  }
+
+  /// Lo que se pidió al buscador: texto y categoría, en orden.
+  final List<(String, int?)> searchRequests = [];
+
+  /// Si es true, las sugerencias fallan (sin red).
+  bool searchFails = false;
+
+  /// Como el servidor: busca en nombre, código y marca, con tope de 10.
+  @override
+  Future<Either<Failure, List<ProductEntity>>> searchProducts(
+    String query, {
+    int? categoryId,
+  }) async {
+    searchRequests.add((query, categoryId));
+    if (searchFails) return Either.left(const ServerFailure('sin red'));
+
+    final q = query.toLowerCase();
+    return Either.right(products.where((p) {
+      if (categoryId != null && p.categoryId != categoryId) return false;
+      if (q.length < 2) return true;
+      return p.name.toLowerCase().contains(q) ||
+          (p.code ?? '').toLowerCase().contains(q) ||
+          (p.brand ?? '').toLowerCase().contains(q);
+    }).take(10).toList());
   }
 
   @override
@@ -369,6 +396,10 @@ class FakeProductRemote implements ProductRemoteDataSource {
 
   @override
   Future<List<BrandEntity>> getBrands({int? categoryId}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<List<ProductModel>> searchProducts(String query, {int? categoryId}) =>
       throw UnimplementedError();
 
   @override
@@ -1179,6 +1210,13 @@ class TestEnv {
             getBrandsUseCase: GetBrandsUseCase(products),
             getCachedCategoriesUseCase: GetCachedCategoriesUseCase(products),
             getCachedBrandsUseCase: GetCachedBrandsUseCase(products),
+          ),
+        ),
+        ChangeNotifierProvider<ProductSearchProvider>(
+          create: (_) => ProductSearchProvider(
+            searchProductsUseCase: SearchProductsUseCase(products),
+            // Sin la pausa real: las pruebas esperan con `pumpAndSettle`.
+            debounce: const Duration(milliseconds: 10),
           ),
         ),
         DependencyInjection.authAware<ProductDetailProvider>(

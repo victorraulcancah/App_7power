@@ -78,12 +78,19 @@ void main() {
   });
 
   group('Buscador del inicio', () {
+    /// Toca el campo de la barra: abre el buscador a pantalla completa.
+    Future<void> openSearchPage(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('home-search')));
+      await tester.pumpAndSettle();
+    }
+
     testWidgets('al enviar abre la tienda con los resultados y el texto escrito',
         (tester) async {
       await _openHome(tester);
       expect(find.byKey(const Key('home-search')), findsOneWidget);
 
-      await tester.enterText(find.byKey(const Key('home-search')), 'rca');
+      await openSearchPage(tester);
+      await tester.enterText(find.byKey(const Key('search-field')), 'rca');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
 
@@ -102,8 +109,9 @@ void main() {
       await provider.applyFilters(const ProductFilters(brandIds: {25}));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byKey(const Key('home-search')), 'parlante');
-      await tester.tap(find.byTooltip('Buscar'));
+      await openSearchPage(tester);
+      await tester.enterText(find.byKey(const Key('search-field')), 'parlante');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
 
       expect(provider.selectedCategoryId, isNull);
@@ -111,13 +119,19 @@ void main() {
       expect(provider.query, 'parlante');
     });
 
-    testWidgets('con el campo vacío no hace nada', (tester) async {
+    testWidgets('con el campo vacío y sin categoría no hace nada', (tester) async {
       await _openHome(tester);
 
-      await tester.tap(find.byTooltip('Buscar'));
+      await openSearchPage(tester);
+      await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
 
-      expect(_selectedTab(tester), 0);
+      // Sigue en el buscador, sin abrir la tienda.
+      expect(find.byKey(const Key('search-field')), findsOneWidget);
+      final bar = tester.widget<NavigationBar>(
+        find.byType(NavigationBar, skipOffstage: false),
+      );
+      expect(bar.selectedIndex, 0);
     });
   });
 

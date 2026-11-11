@@ -4,40 +4,19 @@ import 'package:provider/provider.dart';
 import '../components/components.dart';
 import '../pages/account/favorites_page.dart';
 import '../pages/login_page.dart';
+import '../pages/search_page.dart';
 import '../providers/auth_provider.dart';
 import '../providers/favorites_provider.dart';
 
-/// Buscador de la barra superior del inicio, como el de la web: al enviar el
-/// texto se abre la tienda con los resultados (no busca mientras se escribe).
-/// Es más bajo que el de la tienda porque comparte la barra con los atajos a
+/// Buscador de la barra superior del inicio. Es un campo que, al tocarlo, abre
+/// el buscador a pantalla completa (con selector de categoría y sugerencias,
+/// como el de la web). Es bajo porque comparte la barra con los atajos a
 /// favoritos y carrito.
-class HomeSearchField extends StatefulWidget {
+class HomeSearchField extends StatelessWidget {
   /// Abre la tienda con los resultados de lo que se buscó.
-  final ValueChanged<String> onSearch;
+  final void Function(String query, int? categoryId) onSearch;
 
   const HomeSearchField({super.key, required this.onSearch});
-
-  @override
-  State<HomeSearchField> createState() => _HomeSearchFieldState();
-}
-
-class _HomeSearchFieldState extends State<HomeSearchField> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final query = _controller.text.trim();
-    if (query.isEmpty) return;
-    FocusScope.of(context).unfocus();
-    // Queda vacío para la próxima vez que se vuelva al inicio.
-    _controller.clear();
-    widget.onSearch(query);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,15 +24,15 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
       flat: true,
       child: TextField(
         key: const Key('home-search'),
-        controller: _controller,
-        textInputAction: TextInputAction.search,
+        // No se escribe aquí: al tocarlo se abre el buscador.
+        readOnly: true,
+        showCursor: false,
+        onTap: () => SearchPage.open(context, onSubmit: onSearch),
         style: const TextStyle(fontSize: 14),
-        onSubmitted: (_) => _submit(),
         decoration: SearchBox.decoration(
           context,
-          hint: 'Buscar productos',
+          hint: 'Buscar productos, marcas o códigos',
           compact: true,
-          suffix: SearchSubmitButton(onPressed: _submit, compact: true),
         ),
       ),
     );

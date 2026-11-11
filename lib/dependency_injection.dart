@@ -74,6 +74,7 @@ import 'domain/usecases/get_cached_home_usecases.dart';
 import 'domain/usecases/get_company_info_usecase.dart';
 import 'domain/usecases/get_product_detail_usecase.dart';
 import 'domain/usecases/get_products_usecase.dart';
+import 'domain/usecases/search_products_usecase.dart';
 
 // Presentation Layer
 import 'presentation/providers/addresses_provider.dart';
@@ -90,6 +91,7 @@ import 'presentation/providers/cart_provider.dart';
 import 'presentation/providers/company_provider.dart';
 import 'presentation/providers/home_provider.dart';
 import 'presentation/providers/product_detail_provider.dart';
+import 'presentation/providers/product_search_provider.dart';
 import 'presentation/providers/products_provider.dart';
 
 class DependencyInjection {
@@ -227,6 +229,12 @@ class DependencyInjection {
             getCachedCategoriesUseCase:
                 GetCachedCategoriesUseCase(_productRepository),
             getCachedBrandsUseCase: GetCachedBrandsUseCase(_productRepository),
+          ),
+        ),
+        // Sugerencias del buscador: se piden al escribir y se vacían al cerrarlo.
+        ChangeNotifierProvider<ProductSearchProvider>(
+          create: (_) => ProductSearchProvider(
+            searchProductsUseCase: SearchProductsUseCase(_productRepository),
           ),
         ),
         authAware<ProductDetailProvider>(

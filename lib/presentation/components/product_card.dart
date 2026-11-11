@@ -15,6 +15,9 @@ import 'stock_label.dart';
 class ProductCard extends StatelessWidget {
   final String name;
   final String? brand;
+
+  /// Código del producto ("Código: DRV2"), como en la ficha y el carrito.
+  final String? code;
   final String? imageUrl;
   final double price;
   final double? oldPrice;
@@ -33,6 +36,7 @@ class ProductCard extends StatelessWidget {
     required this.price,
     required this.stock,
     this.brand,
+    this.code,
     this.imageUrl,
     this.oldPrice,
     this.currency,
@@ -69,7 +73,13 @@ class ProductCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  ProductImage(url: imageUrl),
+                  // La foto completa dentro de su cuadro (sin recortarla), sobre
+                  // blanco, como en los catálogos de las tiendas grandes.
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(8),
+                    child: ProductImage(url: imageUrl, fit: BoxFit.contain),
+                  ),
                   if (!available)
                     Container(color: Colors.white.withValues(alpha: 0.55)),
                   if (topAction != null)
@@ -96,6 +106,14 @@ class ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium,
                   ),
+                  if (code != null && code!.isNotEmpty)
+                    Text(
+                      'Código: $code',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.colorScheme.outline),
+                    ),
                   const SizedBox(height: 4),
                   StockLabel(stock: stock),
                   const SizedBox(height: 6),
