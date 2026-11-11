@@ -93,7 +93,10 @@ class SearchBox extends StatelessWidget {
 
   final Widget child;
 
-  const SearchBox({super.key, required this.child});
+  /// Sin la sombra roja (para la barra clara del inicio).
+  final bool flat;
+
+  const SearchBox({super.key, required this.child, this.flat = false});
 
   /// Decoración del `TextField` que va dentro de un [SearchBox]. [suffix] es lo
   /// que va a la derecha (borrar, o el botón de buscar).
@@ -131,14 +134,22 @@ class SearchBox extends StatelessWidget {
       suffixIconConstraints:
           compact ? const BoxConstraints(minWidth: 36, minHeight: 36) : null,
       contentPadding: EdgeInsets.symmetric(vertical: compact ? 10 : 15, horizontal: 8),
-      border: border(primary.withValues(alpha: 0.55), 1.2),
-      enabledBorder: border(primary.withValues(alpha: 0.55), 1.2),
-      focusedBorder: border(primary, 2),
+      // El compacto va sobre una barra blanca: borde gris fino, sin el rojo.
+      border: compact
+          ? border(const Color(0xFFCFCFD6), 1)
+          : border(primary.withValues(alpha: 0.55), 1.2),
+      enabledBorder: compact
+          ? border(const Color(0xFFCFCFD6), 1)
+          : border(primary.withValues(alpha: 0.55), 1.2),
+      focusedBorder: border(primary, compact ? 1.5 : 2),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Sin sombra: el campo plano de la barra del inicio.
+    if (flat) return child;
+
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),

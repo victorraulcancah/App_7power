@@ -87,6 +87,20 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('la barra del inicio es blanca; en las otras pestañas, la de la marca',
+        (tester) async {
+      await _openHome(tester);
+
+      Color? barColor() => tester.widget<AppBar>(find.byType(AppBar)).backgroundColor;
+
+      expect(barColor(), Colors.white);
+
+      await tester.tap(find.text('Tienda'));
+      await tester.pumpAndSettle();
+      // Sin color propio: toma el de la marca del tema.
+      expect(barColor(), isNull);
+    });
+
     testWidgets('el inicio no lleva logo', (tester) async {
       await _openHome(tester);
 

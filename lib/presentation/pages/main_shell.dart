@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/entities/product_filters.dart';
@@ -81,6 +82,14 @@ class _MainShellState extends State<MainShell> {
           // El inicio no lleva logo: el buscador ocupa la barra, con la lista
           // de favoritos, el carrito y la ayuda a su lado.
           ? AppBar(
+              // Barra clara, como el ejemplo: buscador de borde gris e íconos
+              // oscuros sobre blanco, con una línea fina debajo.
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF26262B),
+              surfaceTintColor: Colors.transparent,
+              // La hora y la batería del teléfono, en oscuro sobre el blanco.
+              systemOverlayStyle: SystemUiOverlayStyle.dark,
+              shape: const Border(bottom: BorderSide(color: Color(0xFFE6E6EA))),
               centerTitle: false,
               titleSpacing: 12,
               title: SizedBox(

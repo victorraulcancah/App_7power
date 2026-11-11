@@ -42,6 +42,7 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
   @override
   Widget build(BuildContext context) {
     return SearchBox(
+      flat: true,
       child: TextField(
         key: const Key('home-search'),
         controller: _controller,
