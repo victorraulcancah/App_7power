@@ -6,10 +6,12 @@ import 'package:appecommerce/data/models/cart_item_model.dart';
 import 'package:appecommerce/presentation/components/components.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar, skipOffstage: false));
+    tester.element(find.byType(MainNavBar, skipOffstage: false));
 
 CartItemModel _item(
   int id,

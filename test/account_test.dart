@@ -13,10 +13,12 @@ import 'package:appecommerce/domain/entities/purchase_entity.dart';
 import 'package:appecommerce/presentation/providers/auth_provider.dart';
 
 import 'package:appecommerce/presentation/components/product_card.dart';
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar, skipOffstage: false));
+    tester.element(find.byType(MainNavBar, skipOffstage: false));
 
 /// App con una sesión iniciada, en la pestaña Cuenta.
 Future<void> _openAccount(WidgetTester tester, TestEnv env) async {

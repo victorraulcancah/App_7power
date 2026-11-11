@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../domain/entities/user_entity.dart';
-import '../../theme/app_theme.dart';
 import '../components/components.dart';
 import '../providers/app_lock_provider.dart';
 import '../providers/auth_provider.dart';
@@ -214,7 +213,12 @@ class _Header extends StatelessWidget {
         AppConstants.defaultPadding * 1.25, 24,
       ),
       decoration: const BoxDecoration(
-        gradient: AppTheme.gradient,
+        color: Colors.black,
+        image: DecorationImage(
+          image: AssetImage('assets/images/top_bg.jpg'),
+          fit: BoxFit.cover,
+          alignment: Alignment.centerLeft,
+        ),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(

@@ -450,14 +450,10 @@ class _MovementCard extends StatelessWidget {
     final (label, tagType, icon, tint) = m.isVoided
         ? ('Anulada', StatusTagType.error, Icons.block, theme.colorScheme.error)
         : m.isPayment
-            ? ('Pago', StatusTagType.success, Icons.payments_outlined, Colors.green.shade700)
+            ? ('Pago', StatusTagType.error, Icons.payments_outlined, theme.colorScheme.error)
             : ('Venta', StatusTagType.info, Icons.shopping_bag_outlined, Colors.blue.shade700);
-    // Un pago baja la deuda: va en verde; una venta anulada, en rojo.
-    final amountColor = m.isVoided
-        ? theme.colorScheme.error
-        : m.isPayment
-            ? Colors.green.shade700
-            : null;
+    // Como en el ERP, los pagos y las ventas anuladas van en rojo.
+    final amountColor = m.isVoided || m.isPayment ? theme.colorScheme.error : null;
 
     return DataCard(
       icon: icon,
@@ -504,11 +500,14 @@ class _DocumentCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           StatusTag(label: label, type: tagType),
+          // El ícono del PDF a la derecha y sin agrandar la fila: la tarjeta
+          // queda a la misma altura que la de un pago.
           if (first.sale != null)
             IconButton(
               tooltip: 'Ver PDF',
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.picture_as_pdf_outlined),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+              icon: const Icon(Icons.picture_as_pdf_outlined, size: 22),
               onPressed: () => _openPdf(context, lines),
             ),
         ],

@@ -7,6 +7,7 @@ import '../components/components.dart';
 import '../providers/company_provider.dart';
 import '../providers/products_provider.dart';
 import '../widgets/home_header.dart';
+import '../widgets/main_nav_bar.dart';
 import 'account_page.dart';
 import 'cart_page.dart';
 import 'categories_page.dart';
@@ -132,30 +133,28 @@ class _MainShellState extends State<MainShell> {
                 SizedBox(width: 4),
               ],
             )
-          // Cuenta y Más: barra clara con el logo al centro y el carrito pequeño
-          // (sin WhatsApp). El logo es blanco: va sobre una pastilla oscura.
+          // Cuenta y Más: el fondo oscuro con destellos rojos, el logo blanco al
+          // centro y el carrito pequeño (sin WhatsApp).
           : AppBar(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF26262B),
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
-              systemOverlayStyle: SystemUiOverlayStyle.dark,
-              shape: const Border(bottom: BorderSide(color: Color(0xFFE6E6EA))),
-              centerTitle: true,
-              title: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).appBarTheme.backgroundColor ??
-                      Colors.black,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: BrandLogo(url: company?.logoUrl, height: 30),
+              systemOverlayStyle: SystemUiOverlayStyle.light,
+              flexibleSpace: Image.asset(
+                'assets/images/top_bg.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.centerLeft,
               ),
+              centerTitle: true,
+              title: BrandLogo(url: company?.logoUrl, height: 32),
               actions: const [CartButton(plain: true), SizedBox(width: 4)],
             ),
       // Sin barra en la tienda, la hora y la batería del teléfono van en oscuro
       // sobre el blanco.
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: (_tab == 3 || _tab == 4)
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         child: _TabFade(
           index: _tab,
           child: IndexedStack(
@@ -170,40 +169,9 @@ class _MainShellState extends State<MainShell> {
           ),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: MainNavBar(
         selectedIndex: _tab,
-        // Solo íconos: el nombre queda como descripción (mantener pulsado) y
-        // para los lectores de pantalla.
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-        height: 60,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Inicio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront_rounded),
-            label: 'Tienda',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.category_outlined),
-            selectedIcon: Icon(Icons.category_rounded),
-            label: 'Categorías',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Cuenta',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu_rounded),
-            selectedIcon: Icon(Icons.menu_rounded),
-            label: 'Más',
-          ),
-        ],
+        onSelected: (i) => setState(() => _tab = i),
       ),
     );
   }

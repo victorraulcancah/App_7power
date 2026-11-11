@@ -13,12 +13,14 @@ import 'package:appecommerce/data/models/cart_item_model.dart';
 import 'package:appecommerce/presentation/providers/auth_provider.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 /// Contexto del shell, aunque haya otra pantalla encima (queda fuera de
 /// escena pero sigue en el árbol).
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar, skipOffstage: false));
+    tester.element(find.byType(MainNavBar, skipOffstage: false));
 
 void main() {
   group('ApiClient', () {

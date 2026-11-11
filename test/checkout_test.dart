@@ -18,10 +18,12 @@ import 'package:appecommerce/domain/entities/payment_plan.dart';
 import 'package:appecommerce/domain/usecases/checkout_usecases.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 BuildContext _context(WidgetTester tester) =>
-    tester.element(find.byType(NavigationBar, skipOffstage: false));
+    tester.element(find.byType(MainNavBar, skipOffstage: false));
 
 const _transfer =
     PaymentTypeEntity(id: 1, name: 'Transferencia', code: 'transferencia');
@@ -726,7 +728,7 @@ void main() {
 
       await tester.tap(find.text(button));
       await tester.pumpAndSettle();
-      return tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
+      return tester.widget<MainNavBar>(find.byType(MainNavBar)).selectedIndex;
     }
 
     testWidgets('"Seguir comprando" lleva a la tienda', (tester) async {

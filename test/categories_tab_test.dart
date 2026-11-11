@@ -6,6 +6,8 @@ import 'package:appecommerce/domain/entities/category_entity.dart';
 import 'package:appecommerce/presentation/pages/categories_page.dart';
 import 'package:appecommerce/presentation/providers/products_provider.dart';
 
+import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
+
 import 'support/fakes.dart';
 
 TestEnv _env() => TestEnv(catalog: [
@@ -26,8 +28,8 @@ Future<TestEnv> _open(WidgetTester tester, [TestEnv? given]) async {
   return env;
 }
 
-NavigationBar _bar(WidgetTester tester) =>
-    tester.widget<NavigationBar>(find.byType(NavigationBar));
+MainNavBar _bar(WidgetTester tester) =>
+    tester.widget<MainNavBar>(find.byType(MainNavBar));
 
 void main() {
   group('Barra inferior', () {
@@ -35,18 +37,23 @@ void main() {
         (tester) async {
       await _open(tester);
 
-      final labels = [
-        for (final d in _bar(tester).destinations) (d as NavigationDestination).label,
-      ];
-      expect(labels, ['Inicio', 'Tienda', 'Categorías', 'Cuenta', 'Más']);
+      expect(
+        [for (final tab in mainNavTabs) tab.label],
+        ['Inicio', 'Tienda', 'Categorías', 'Mi Cuenta', 'Más'],
+      );
       expect(_bar(tester).selectedIndex, 2);
     });
 
-    testWidgets('la barra es solo de íconos: sin texto, con su nombre como descripción',
-        (tester) async {
+    testWidgets('cada pestaña lleva su ícono con el nombre debajo', (tester) async {
       await _open(tester);
 
-      expect(_bar(tester).labelBehavior, NavigationDestinationLabelBehavior.alwaysHide);
+      for (final label in ['Inicio', 'Tienda', 'Categorías', 'Mi Cuenta', 'Más']) {
+        expect(
+          find.descendant(of: find.byType(MainNavBar), matching: find.text(label)),
+          findsOneWidget,
+          reason: label,
+        );
+      }
       for (final name in ['Inicio', 'Tienda', 'Categorías', 'Cuenta', 'Más']) {
         expect(find.byTooltip(name), findsOneWidget, reason: name);
       }
@@ -99,7 +106,7 @@ void main() {
 
       expect(_bar(tester).selectedIndex, 1);
       final provider = tester
-          .element(find.byType(NavigationBar))
+          .element(find.byType(MainNavBar))
           .read<ProductsProvider>();
       expect(provider.selectedCategoryId, 2);
       expect(env.products.lastCategoryId, 2);
@@ -110,7 +117,7 @@ void main() {
         (tester) async {
       await _open(tester);
       final provider = tester
-          .element(find.byType(NavigationBar))
+          .element(find.byType(MainNavBar))
           .read<ProductsProvider>();
       await provider.selectCategory(2);
       await tester.pumpAndSettle();
@@ -136,7 +143,7 @@ void main() {
 
       expect(_bar(tester).selectedIndex, 1);
       expect(
-        tester.element(find.byType(NavigationBar)).read<ProductsProvider>().query,
+        tester.element(find.byType(MainNavBar)).read<ProductsProvider>().query,
         'cable',
       );
     });

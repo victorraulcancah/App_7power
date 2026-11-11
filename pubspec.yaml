@@ -101,6 +101,8 @@ flutter:
   assets:
     # Logo de la tienda web: se usa cuando el logo de la empresa no carga.
     - assets/images/logo.svg
+    # Fondo oscuro con destellos rojos de la barra de Cuenta y Más.
+    - assets/images/top_bg.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

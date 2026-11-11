@@ -358,8 +358,11 @@ void main() {
     await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
 
-    final logo =
-        find.descendant(of: find.byType(AppBar), matching: find.byType(Image));
+    // El logo (no el fondo con destellos que lleva la barra de Cuenta y Más).
+    final logo = find.descendant(
+      of: find.byType(AppBar),
+      matching: find.byWidgetPredicate((w) => w is Image && w.image is NetworkImage),
+    );
 
     // En el inicio el buscador ocupa la barra: sin logo.
     expect(logo, findsNothing);
