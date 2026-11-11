@@ -28,6 +28,8 @@ class CartButton extends StatelessWidget {
       return IconButton(
         tooltip: 'Carrito',
         visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const CartPage())),
         // Rebota cada vez que cambia la cantidad (al agregar algo).
@@ -43,7 +45,7 @@ class CartButton extends StatelessWidget {
               ),
             ),
             backgroundColor: const Color(0xFFFFC107),
-            child: const Icon(Icons.shopping_cart_outlined, size: 26),
+            child: const Icon(Icons.shopping_cart_outlined, size: 22),
           ),
         ),
       );

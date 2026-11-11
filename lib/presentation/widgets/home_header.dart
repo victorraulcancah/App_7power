@@ -71,7 +71,10 @@ class FavoritesShortcut extends StatelessWidget {
 
     return IconButton(
       tooltip: 'Favoritos',
+      // Más chico y sin el relleno de siempre: así el buscador tiene más ancho.
       visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
       onPressed: () {
         if (!context.read<AuthProvider>().isAuthenticated) {
           AppSnackbar.info(context, 'Inicia sesión para ver tus favoritos.');
@@ -87,7 +90,7 @@ class FavoritesShortcut extends StatelessWidget {
         backgroundColor: const Color(0xFFFFC107),
         textColor: Colors.black,
         label: Text('$count'),
-        child: const Icon(Icons.favorite_border, size: 26),
+        child: const Icon(Icons.favorite_border, size: 22),
       ),
     );
   }
