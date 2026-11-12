@@ -504,9 +504,8 @@ class _DocumentCard extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          StatusTag(label: label, type: tagType),
-          // El ícono del PDF a la derecha y sin agrandar la fila: la tarjeta
-          // queda a la misma altura que la de un pago.
+          // El ícono del PDF, sin agrandar la fila (la tarjeta queda a la misma
+          // altura que la de un pago)...
           if (first.sale != null)
             IconButton(
               tooltip: 'Ver PDF',
@@ -515,6 +514,9 @@ class _DocumentCard extends StatelessWidget {
               icon: const Icon(Icons.picture_as_pdf_outlined, size: 22),
               onPressed: () => _openPdf(context, lines),
             ),
+          if (first.sale != null) const SizedBox(width: 4),
+          // ...y la etiqueta pegada al borde derecho, donde está "Pago".
+          StatusTag(label: label, type: tagType),
         ],
       ),
       fields: [
