@@ -11,6 +11,7 @@ import 'package:appecommerce/data/models/quote_model.dart';
 import 'package:appecommerce/data/models/user_model.dart';
 import 'package:appecommerce/domain/entities/purchase_entity.dart';
 import 'package:appecommerce/presentation/providers/auth_provider.dart';
+import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
 import 'package:appecommerce/presentation/components/product_card.dart';
 import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
@@ -383,6 +384,40 @@ void main() {
       expect(find.text('Parlante'), findsOneWidget);
       expect(find.text('Quedan 5 unidades'), findsOneWidget);
       expect(find.text('Agotado'), findsOneWidget);
+      expect(find.text('Sin stock'), findsOneWidget);
+    });
+
+    testWidgets('cada favorito tiene su cantidad (− 1 un +) y agrega esa cantidad',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final env = TestEnv();
+      env.favoritesRemote.items = [_favorite(1, 'Driver 400W', stock: 9)];
+      await _openAccount(tester, env);
+      await _openSection(tester, 'Favoritos (1)');
+
+      expect(find.text('1 un'), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pump();
+      expect(find.text('3 un'), findsOneWidget);
+
+      await tester.tap(find.text('Agregar'));
+      await tester.pumpAndSettle();
+
+      final cart = _context(tester).read<CartProvider>();
+      expect(cart.items.single.quantity, 3);
+    });
+
+    testWidgets('sin stock el favorito no ofrece cantidad', (tester) async {
+      final env = TestEnv();
+      env.favoritesRemote.items = [_favorite(2, 'Parlante', stock: 0)];
+      await _openAccount(tester, env);
+      await _openSection(tester, 'Favoritos (1)');
+
+      expect(find.textContaining(' un'), findsNothing);
       expect(find.text('Sin stock'), findsOneWidget);
     });
 

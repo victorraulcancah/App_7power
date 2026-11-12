@@ -70,10 +70,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 }
 
-class _FavoriteRow extends StatelessWidget {
+class _FavoriteRow extends StatefulWidget {
   final ProductEntity product;
 
   const _FavoriteRow({required this.product});
+
+  @override
+  State<_FavoriteRow> createState() => _FavoriteRowState();
+}
+
+class _FavoriteRowState extends State<_FavoriteRow> {
+  /// Cuántas unidades se agregan al carrito.
+  int _quantity = 1;
+
+  ProductEntity get product => widget.product;
 
   @override
   Widget build(BuildContext context) {
@@ -86,54 +96,74 @@ class _FavoriteRow extends StatelessWidget {
         onTap: () => ProductDetailPage.open(context, product),
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ProductImage(
-                url: product.imageUrl,
-                width: 84,
-                height: 84,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium),
-                    const SizedBox(height: 4),
-                    StockLabel(stock: product.stock),
-                    const SizedBox(height: 4),
-                    if (product.priceVisible)
-                      PriceText(price: product.price, currency: product.currency)
-                    else
-                      const LockedPrice(),
-                    const SizedBox(height: 8),
-                    Row(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ProductImage(
+                    url: product.imageUrl,
+                    width: 84,
+                    height: 84,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: AppButton(
-                            label: canBuy ? 'Agregar' : 'Sin stock',
-                            icon: Icons.add_shopping_cart,
-                            variant: AppButtonVariant.secondary,
-                            onPressed: canBuy
-                                ? () => CartActions.add(context, product)
-                                : null,
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: 'Quitar de favoritos',
-                          icon: const Icon(Icons.favorite),
-                          color: theme.colorScheme.error,
-                          onPressed: () => _remove(context),
-                        ),
+                        Text(product.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium),
+                        const SizedBox(height: 4),
+                        StockLabel(stock: product.stock),
+                        const SizedBox(height: 4),
+                        if (product.priceVisible)
+                          PriceText(price: product.price, currency: product.currency)
+                        else
+                          const LockedPrice(),
                       ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              // La cantidad, a todo lo ancho, como en el carrito.
+              if (canBuy) ...[
+                const SizedBox(height: 10),
+                QuantitySelector(
+                  wide: true,
+                  unit: 'un',
+                  value: _quantity.clamp(1, product.stock),
+                  max: product.stock,
+                  onChanged: (v) => setState(() => _quantity = v),
                 ),
+              ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: canBuy ? 'Agregar' : 'Sin stock',
+                      icon: Icons.add_shopping_cart,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: canBuy
+                          ? () => CartActions.add(
+                                context,
+                                product,
+                                quantity: _quantity.clamp(1, product.stock),
+                              )
+                          : null,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Quitar de favoritos',
+                    icon: const Icon(Icons.favorite),
+                    color: theme.colorScheme.error,
+                    onPressed: () => _remove(context),
+                  ),
+                ],
               ),
             ],
           ),
