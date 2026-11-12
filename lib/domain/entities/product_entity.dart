@@ -20,6 +20,10 @@ class ProductEntity {
   /// oculta ("Precio solo para clientes") y se pide iniciar sesión.
   final bool priceVisible;
 
+  /// Unidad de medida que trae el backend ("unidad", "set", "par"...). Va en el
+  /// mensaje de stock ("Quedan 7 sets").
+  final String? unit;
+
   const ProductEntity({
     required this.id,
     required this.name,
@@ -33,6 +37,7 @@ class ProductEntity {
     this.imageUrl,
     this.currency,
     this.priceVisible = true,
+    this.unit,
   });
 
   bool get isAvailable => stock > 0;
@@ -51,5 +56,6 @@ class ProductEntity {
         imageUrl: imageUrl,
         currency: currency ?? this.currency,
         priceVisible: priceVisible,
+        unit: unit,
       );
 }

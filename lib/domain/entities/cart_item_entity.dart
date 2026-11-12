@@ -18,6 +18,9 @@ class CartItemEntity {
   /// ni en el total.
   final bool savedForLater;
 
+  /// Unidad de medida del producto (la usa el mensaje de stock).
+  final String? unit;
+
   const CartItemEntity({
     required this.productId,
     required this.name,
@@ -28,6 +31,7 @@ class CartItemEntity {
     this.code,
     this.currency,
     this.savedForLater = false,
+    this.unit,
   });
 
   bool get hasPrice => price > 0;
@@ -43,5 +47,6 @@ class CartItemEntity {
         code: code,
         currency: currency,
         savedForLater: savedForLater ?? this.savedForLater,
+        unit: unit,
       );
 }

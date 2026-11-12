@@ -23,6 +23,9 @@ class ProductCard extends StatelessWidget {
   final double? oldPrice;
   final String? currency;
   final int stock;
+
+  /// Unidad de medida del producto, para el mensaje de stock.
+  final String? unit;
   final bool priceVisible;
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
@@ -35,6 +38,7 @@ class ProductCard extends StatelessWidget {
     required this.name,
     required this.price,
     required this.stock,
+    this.unit,
     this.brand,
     this.code,
     this.imageUrl,
@@ -117,7 +121,7 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(height: 4),
-                  StockLabel(stock: stock),
+                  StockLabel(stock: stock, unit: unit),
                   const SizedBox(height: 6),
                   Row(
                     children: [

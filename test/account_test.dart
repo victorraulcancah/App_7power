@@ -14,6 +14,7 @@ import 'package:appecommerce/presentation/providers/auth_provider.dart';
 import 'package:appecommerce/presentation/providers/cart_provider.dart';
 
 import 'package:appecommerce/presentation/components/product_card.dart';
+import 'package:appecommerce/presentation/components/quantity_selector.dart';
 import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
 
 import 'support/fakes.dart';
@@ -384,31 +385,85 @@ void main() {
       expect(find.text('Parlante'), findsOneWidget);
       expect(find.text('Quedan 5 unidades'), findsOneWidget);
       expect(find.text('Agotado'), findsOneWidget);
-      expect(find.text('Sin stock'), findsOneWidget);
+      // Cada favorito tiene su casilla; el agotado no se puede marcar.
+      final boxes = tester.widgetList<Checkbox>(find.byType(Checkbox)).toList();
+      // La primera es "Seleccionar todos"; luego Driver (activa) y Parlante (no).
+      expect(boxes, hasLength(3));
+      expect(boxes[1].onChanged, isNotNull);
+      expect(boxes[2].onChanged, isNull);
     });
 
-    testWidgets('cada favorito tiene su cantidad (− 1 un +) y agrega esa cantidad',
+    testWidgets('se marcan los favoritos y un botón agrega todos con su cantidad',
         (tester) async {
-      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.physicalSize = const Size(800, 2600);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final env = TestEnv();
-      env.favoritesRemote.items = [_favorite(1, 'Driver 400W', stock: 9)];
+      env.favoritesRemote.items = [
+        _favorite(1, 'Driver 400W', stock: 9),
+        _favorite(2, 'Parlante', stock: 9),
+        _favorite(3, 'Cable', stock: 9),
+      ];
       await _openAccount(tester, env);
-      await _openSection(tester, 'Favoritos (1)');
+      await _openSection(tester, 'Favoritos (3)');
 
-      expect(find.text('1 un'), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.add));
+      // Sin marcar nada, el botón avisa en vez de agregar.
+      await tester.tap(find.text('Agregar al carrito'));
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pump();
-      expect(find.text('3 un'), findsOneWidget);
+      expect(find.text('Marca los productos que quieres agregar.'), findsOneWidget);
+      // Se espera a que el aviso se vaya (si no, tapa el botón).
+      await tester.pump(const Duration(seconds: 8));
+      await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Agregar'));
+      // El primero: 3 unidades.
+      final plus = find.byIcon(Icons.add);
+      await tester.tap(plus.first);
+      await tester.pump();
+      await tester.tap(plus.first);
+      await tester.pump();
+      expect(find.text('3'), findsOneWidget);
+
+      // Se marcan el primero y el tercero (índice 0 es "Seleccionar todos").
+      final boxes = find.byType(Checkbox);
+      await tester.tap(boxes.at(1));
+      await tester.pump();
+      await tester.tap(boxes.at(3));
+      await tester.pump();
+      expect(find.text('Agregar al carrito (2)'), findsOneWidget);
+
+      await tester.tap(find.text('Agregar al carrito (2)'));
       await tester.pumpAndSettle();
 
       final cart = _context(tester).read<CartProvider>();
-      expect(cart.items.single.quantity, 3);
+      expect(cart.items.map((i) => i.productId).toSet(), {1, 3});
+      expect(cart.items.firstWhere((i) => i.productId == 1).quantity, 3);
+      expect(cart.items.firstWhere((i) => i.productId == 3).quantity, 1);
+      // Lo agregado se desmarca.
+      expect(find.text('Agregar al carrito'), findsOneWidget);
+    });
+
+    testWidgets('"Seleccionar todos" marca todos los que se pueden agregar',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final env = TestEnv();
+      env.favoritesRemote.items = [
+        _favorite(1, 'Driver 400W', stock: 9),
+        _favorite(2, 'Parlante', stock: 0),
+        _favorite(3, 'Cable', stock: 5),
+      ];
+      await _openAccount(tester, env);
+      await _openSection(tester, 'Favoritos (3)');
+
+      await tester.tap(find.text('Seleccionar todos'));
+      await tester.pump();
+      // El agotado no cuenta.
+      expect(find.text('Agregar al carrito (2)'), findsOneWidget);
+
+      await tester.tap(find.text('Seleccionar todos'));
+      await tester.pump();
+      expect(find.text('Agregar al carrito'), findsOneWidget);
     });
 
     testWidgets('sin stock el favorito no ofrece cantidad', (tester) async {
@@ -417,8 +472,8 @@ void main() {
       await _openAccount(tester, env);
       await _openSection(tester, 'Favoritos (1)');
 
-      expect(find.textContaining(' un'), findsNothing);
-      expect(find.text('Sin stock'), findsOneWidget);
+      expect(find.byType(QuantitySelector), findsNothing);
+      expect(find.text('Agotado'), findsOneWidget);
     });
 
     testWidgets('sin favoritos muestra el estado vacío', (tester) async {

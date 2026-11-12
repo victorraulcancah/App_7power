@@ -144,6 +144,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       padding: const EdgeInsets.only(top: 8),
                       child: StockLabel(
                         stock: product.stock,
+                        unit: product.unit,
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),

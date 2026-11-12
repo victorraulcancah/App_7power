@@ -42,8 +42,49 @@ void main() {
       expect(StockUtils.label(4), 'Quedan 4 unidades');
       expect(StockUtils.label(7), 'Quedan 7 unidades');
       expect(StockUtils.label(9), 'Quedan 9 unidades');
-      expect(StockUtils.label(10), 'Disponible');
-      expect(StockUtils.label(544), 'Disponible');
+      expect(StockUtils.label(10), 'Disponible: +10 unidades');
+      expect(StockUtils.label(544), 'Disponible: +10 unidades');
+    });
+
+    test('la unidad de medida del backend va en el mensaje', () {
+      expect(StockUtils.label(7, unit: 'set'), 'Quedan 7 sets');
+      expect(StockUtils.label(4, unit: 'par'), 'Quedan 4 pares');
+      expect(StockUtils.label(25, unit: 'SET'), 'Disponible: +10 sets');
+      expect(StockUtils.label(25, unit: 'caja'), 'Disponible: +10 cajas');
+      // Género: unidad y caja son femeninas; set y par, masculinas.
+      expect(StockUtils.label(1, unit: 'unidad'), '¡Última unidad!');
+      expect(StockUtils.label(1, unit: 'set'), '¡Último set!');
+      expect(StockUtils.label(3, unit: 'set'), '¡Últimos 3 sets!');
+      expect(StockUtils.label(2, unit: 'par'), '¡Últimos 2 pares!');
+      expect(StockUtils.label(3, unit: 'caja'), '¡Últimas 3 cajas!');
+      // Sin unidad: "unidades".
+      expect(StockUtils.label(5), 'Quedan 5 unidades');
+      expect(StockUtils.label(5, unit: '  '), 'Quedan 5 unidades');
+      expect(StockUtils.plural('luz'), 'luces');
+      expect(StockUtils.plural('kit'), 'kits');
+    });
+
+    test('el modelo lee la unidad de medida que manda el backend', () {
+      final fromList = ProductModel.fromJson({'id': 1, 'nombre': 'A', 'stock': 5, 'unidad_medida': 'set'});
+      final fromFavorite = ProductModel.fromFavoriteJson({'id': 2, 'nombre': 'B', 'stock': 5, 'unidad_medida': 'par'});
+      final fromSuggestion = ProductModel.fromSuggestionJson({'id': 3, 'nombre': 'C', 'stock': 5, 'unidad_medida': 'caja'});
+      final without = ProductModel.fromJson({'id': 4, 'nombre': 'D', 'stock': 5});
+
+      expect(fromList.unit, 'set');
+      expect(fromFavorite.unit, 'par');
+      expect(fromSuggestion.unit, 'caja');
+      expect(without.unit, isNull);
+    });
+
+    testWidgets('la tarjeta muestra la unidad del producto', (tester) async {
+      final env = TestEnv(catalog: [
+        ProductModel(id: 1, name: 'Parlantes', price: 80, stock: 7, unit: 'par'),
+      ]);
+      await tester.pumpWidget(env.app());
+      await tester.pumpAndSettle();
+      await _goToShop(tester);
+
+      expect(find.text('Quedan 7 pares'), findsOneWidget);
     });
 
     testWidgets('la tarjeta usa esos textos y deshabilita sin stock',
@@ -57,7 +98,7 @@ void main() {
       await tester.pumpAndSettle();
       await _goToShop(tester);
 
-      expect(find.text('Disponible'), findsOneWidget);
+      expect(find.text('Disponible: +10 unidades'), findsOneWidget);
       expect(find.text('Quedan 4 unidades'), findsOneWidget);
       expect(find.text('Agotado'), findsOneWidget);
 

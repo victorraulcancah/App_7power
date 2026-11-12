@@ -241,19 +241,21 @@ void main() {
   });
 
   group('Pantalla del carrito', () {
-    testWidgets('la cantidad lleva la unidad de medida', (tester) async {
+    testWidgets('la cantidad es solo el número, sin la unidad', (tester) async {
       await _openCart(tester, [_item(1, 'Driver', quantity: 5)]);
 
-      expect(find.text('5 un'), findsOneWidget);
+      // La unidad de medida ya se dice en el mensaje de stock.
+      expect(find.text('5'), findsOneWidget);
+      expect(find.text('5 un'), findsNothing);
     });
 
-    testWidgets('la unidad sigue al cambiar la cantidad', (tester) async {
+    testWidgets('el número sigue al cambiar la cantidad', (tester) async {
       await _openCart(tester, [_item(1, 'Driver', quantity: 1)]);
 
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
 
-      expect(find.text('2 un'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
     });
 
     testWidgets('los 3 puntos ofrecen guardar para después y eliminar',

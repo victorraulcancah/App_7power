@@ -299,7 +299,7 @@ class _CartLine extends StatelessWidget {
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w800)),
               const SizedBox(height: 2),
-              StockLabel(stock: item.stock),
+              StockLabel(stock: item.stock, unit: item.unit),
               const SizedBox(height: 4),
               // Precio unitario y, a la derecha, el total de la línea.
               Row(
@@ -327,19 +327,21 @@ class _CartLine extends StatelessWidget {
       children: [
         top,
         const SizedBox(height: 10),
-        // La cantidad va a todo lo ancho, debajo del producto.
-        Opacity(
-          opacity: busy ? 0.5 : 1,
-          child: IgnorePointer(
-            ignoring: busy,
-            child: QuantitySelector(
-              wide: true,
-              value: item.quantity,
-              // Unidad de medida: los productos se venden por unidad.
-              unit: 'un',
-              // Como la web: tope en el stock (o 1 si no hay dato).
-              max: item.stock > 0 ? item.stock : 1,
-              onChanged: (v) => run(() => cart.setQuantity(item.productId, v)),
+        // La cantidad, debajo del producto, en una barra angosta y centrada.
+        Align(
+          alignment: Alignment.center,
+          child: Opacity(
+            opacity: busy ? 0.5 : 1,
+            child: IgnorePointer(
+              ignoring: busy,
+              child: QuantitySelector(
+                wide: true,
+                width: 150,
+                value: item.quantity,
+                // Como la web: tope en el stock (o 1 si no hay dato).
+                max: item.stock > 0 ? item.stock : 1,
+                onChanged: (v) => run(() => cart.setQuantity(item.productId, v)),
+              ),
             ),
           ),
         ),

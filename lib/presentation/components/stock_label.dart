@@ -3,12 +3,16 @@ import 'package:flutter/material.dart';
 import '../../core/utils/stock_utils.dart';
 
 /// El stock como lo muestra el cliente: "Agotado", "¡Últimas 3 unidades!" (rojo),
-/// "Quedan 7 unidades" (marrón) o "Disponible" (verde).
+/// "Quedan 7 sets" (marrón) o "Disponible: +10 sets" (verde), con la unidad de
+/// medida del producto.
 class StockLabel extends StatelessWidget {
   final int stock;
+
+  /// Unidad de medida del producto (la del backend); sin ella, "unidad".
+  final String? unit;
   final TextStyle? style;
 
-  const StockLabel({super.key, required this.stock, this.style});
+  const StockLabel({super.key, required this.stock, this.unit, this.style});
 
   /// Los colores del mensaje.
   static Color colorOf(BuildContext context, StockLevel level) => switch (level) {
@@ -30,7 +34,7 @@ class StockLabel extends StatelessWidget {
         const SizedBox(width: 4),
         Flexible(
           child: Text(
-            StockUtils.label(stock),
+            StockUtils.label(stock, unit: unit),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: (style ?? Theme.of(context).textTheme.labelSmall)

@@ -25,6 +25,7 @@ class ProductTile extends StatelessWidget {
         price: product.price,
         currency: product.currency,
         stock: product.stock,
+        unit: product.unit,
         priceVisible: product.priceVisible,
         onTap: () => ProductDetailPage.open(context, product),
         onAddToCart: () => CartActions.add(context, product),

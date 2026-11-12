@@ -16,6 +16,7 @@ class ProductModel extends ProductEntity {
     super.imageUrl,
     super.currency,
     super.priceVisible,
+    super.unit,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +39,7 @@ class ProductModel extends ProductEntity {
       stock: FormatUtils.toDouble(json['stock']).toInt(),
       // Solo un `false` explícito oculta el precio (igual que la web).
       priceVisible: json['precio_visible'] != false,
+      unit: json['unidad_medida']?.toString(),
     );
   }
 
@@ -58,6 +60,7 @@ class ProductModel extends ProductEntity {
       currency: json['moneda']?.toString(),
       stock: FormatUtils.toDouble(json['stock']).toInt(),
       priceVisible: json['precio_visible'] != false,
+      unit: json['unidad_medida']?.toString(),
     );
   }
 
@@ -76,6 +79,7 @@ class ProductModel extends ProductEntity {
       currency: json['moneda']?.toString(),
       stock: FormatUtils.toDouble(json['stock']).toInt(),
       priceVisible: json['precio_visible'] != false,
+      unit: json['unidad_medida']?.toString(),
     );
   }
 
@@ -98,6 +102,7 @@ class ProductModel extends ProductEntity {
       currency: json['moneda']?.toString(),
       stock: FormatUtils.toDouble(json['stock']).toInt(),
       priceVisible: json['precio_visible'] != false,
+      unit: json['unidad_medida']?.toString(),
     );
   }
 }

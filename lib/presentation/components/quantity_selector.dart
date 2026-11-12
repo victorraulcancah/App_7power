@@ -11,9 +11,12 @@ class QuantitySelector extends StatelessWidget {
   /// el número.
   final String? unit;
 
-  /// Barra a todo lo ancho (como el carrito de las tiendas grandes): fondo gris
-  /// con el − y el + en los extremos y la cantidad en una caja blanca al centro.
+  /// Barra (como el carrito de las tiendas grandes): fondo gris con el − y el +
+  /// en los extremos y la cantidad en una caja blanca al centro.
   final bool wide;
+
+  /// Ancho de la barra; sin él ocupa todo el ancho disponible.
+  final double? width;
 
   const QuantitySelector({
     super.key,
@@ -23,6 +26,7 @@ class QuantitySelector extends StatelessWidget {
     this.max,
     this.unit,
     this.wide = false,
+    this.width,
   });
 
   @override
@@ -34,6 +38,7 @@ class QuantitySelector extends StatelessWidget {
     if (wide) {
       final scheme = Theme.of(context).colorScheme;
       return Container(
+        width: width,
         height: 46,
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest,
