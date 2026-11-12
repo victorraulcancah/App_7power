@@ -132,6 +132,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       PriceText(
                         price: product.price,
                         currency: product.currency,
+                        unit: product.unit,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.primary,

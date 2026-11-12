@@ -7,12 +7,12 @@ enum StockLevel { available, few, last, out }
 ///   0        → "Agotado"
 ///   1 a 3    → "¡Últimas 3 unidades!" ("¡Última unidad!", "¡Últimos 3 sets!")
 ///   4 a 9    → "Quedan 7 sets"
-///   10 o más → "Disponible: +10 sets"
+///   10 o más → "Disponible" (la unidad va junto al precio)
 class StockUtils {
   /// Hasta cuántas unidades se avisa "¡Últimas N!".
   static const int lastMax = 3;
 
-  /// Hasta cuántas unidades se avisa "Quedan N"; desde ahí, "Disponible: +10".
+  /// Hasta cuántas unidades se avisa "Quedan N"; desde ahí, "Disponible".
   static const int fewMax = 9;
 
   /// Lo que se dice cuando el producto no trae unidad.
@@ -37,7 +37,7 @@ class StockUtils {
           ? (feminine ? '¡Última $one!' : '¡Último $one!')
           : (feminine ? '¡Últimas $stock $many!' : '¡Últimos $stock $many!'),
       StockLevel.few => 'Quedan $stock $many',
-      StockLevel.available => 'Disponible: +${fewMax + 1} $many',
+      StockLevel.available => 'Disponible',
     };
   }
 

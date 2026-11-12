@@ -10,12 +10,17 @@ class PriceText extends StatelessWidget {
   final String? currency;
   final TextStyle? style;
 
+  /// Unidad de medida ("set", "par", "unidad"...): sale al lado del monto, como
+  /// "S/ 40.00 / set".
+  final String? unit;
+
   const PriceText({
     super.key,
     required this.price,
     this.oldPrice,
     this.currency,
     this.style,
+    this.unit,
   });
 
   @override
@@ -32,6 +37,14 @@ class PriceText extends StatelessWidget {
       spacing: 8,
       children: [
         Text(FormatUtils.money(price, currency: currency), style: base),
+        if (unit != null && unit!.trim().isNotEmpty)
+          Text(
+            '/ ${unit!.trim().toLowerCase()}',
+            style: (base ?? theme.textTheme.titleMedium)?.copyWith(
+              fontWeight: FontWeight.w400,
+              color: theme.colorScheme.outline,
+            ),
+          ),
         if (oldPrice != null && oldPrice! > price)
           Text(
             FormatUtils.money(oldPrice!, currency: currency),

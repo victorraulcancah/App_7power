@@ -13,6 +13,8 @@ import 'package:appecommerce/presentation/providers/cart_provider.dart';
 import 'package:appecommerce/presentation/components/product_card.dart';
 import 'package:appecommerce/presentation/widgets/main_nav_bar.dart';
 
+import 'package:appecommerce/presentation/components/price_text.dart';
+
 import 'support/fakes.dart';
 
 /// Contexto del shell, aunque haya otra pantalla encima.
@@ -42,15 +44,16 @@ void main() {
       expect(StockUtils.label(4), 'Quedan 4 unidades');
       expect(StockUtils.label(7), 'Quedan 7 unidades');
       expect(StockUtils.label(9), 'Quedan 9 unidades');
-      expect(StockUtils.label(10), 'Disponible: +10 unidades');
-      expect(StockUtils.label(544), 'Disponible: +10 unidades');
+      expect(StockUtils.label(10), 'Disponible');
+      expect(StockUtils.label(544), 'Disponible');
     });
 
     test('la unidad de medida del backend va en el mensaje', () {
       expect(StockUtils.label(7, unit: 'set'), 'Quedan 7 sets');
       expect(StockUtils.label(4, unit: 'par'), 'Quedan 4 pares');
-      expect(StockUtils.label(25, unit: 'SET'), 'Disponible: +10 sets');
-      expect(StockUtils.label(25, unit: 'caja'), 'Disponible: +10 cajas');
+      // Con 10 o más solo "Disponible": la unidad sale junto al precio.
+      expect(StockUtils.label(25, unit: 'SET'), 'Disponible');
+      expect(StockUtils.label(25, unit: 'caja'), 'Disponible');
       // Género: unidad y caja son femeninas; set y par, masculinas.
       expect(StockUtils.label(1, unit: 'unidad'), '¡Última unidad!');
       expect(StockUtils.label(1, unit: 'set'), '¡Último set!');
@@ -76,6 +79,26 @@ void main() {
       expect(without.unit, isNull);
     });
 
+    testWidgets('el precio lleva la unidad de medida al lado del monto', (tester) async {
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(
+          body: Column(children: [
+            PriceText(price: 40, currency: 's', unit: 'SET'),
+            PriceText(price: 25, currency: 's'),
+          ]),
+        ),
+      ));
+
+      expect(find.text('S/ 40.00'), findsOneWidget);
+      expect(find.text('/ set'), findsOneWidget);
+      // Sin unidad no se agrega nada.
+      expect(find.text('S/ 25.00'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is Text && (w.data ?? '').startsWith('/')),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('la tarjeta muestra la unidad del producto', (tester) async {
       final env = TestEnv(catalog: [
         ProductModel(id: 1, name: 'Parlantes', price: 80, stock: 7, unit: 'par'),
@@ -98,7 +121,7 @@ void main() {
       await tester.pumpAndSettle();
       await _goToShop(tester);
 
-      expect(find.text('Disponible: +10 unidades'), findsOneWidget);
+      expect(find.text('Disponible'), findsOneWidget);
       expect(find.text('Quedan 4 unidades'), findsOneWidget);
       expect(find.text('Agotado'), findsOneWidget);
 
