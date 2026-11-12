@@ -93,17 +93,23 @@ class UserEntity {
     List<String> words(String? text) =>
         (text ?? '').trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
 
-    // Con el nombre y el apellido por separado, el primero de cada uno.
-    final names = words(firstNames);
-    final surnames = words(lastNames);
-    if (names.isNotEmpty && surnames.isNotEmpty) {
-      return '${cap(names.first)} ${cap(surnames.first)}';
+    // Con la cuenta vinculada manda el nombre del ERP: los nombres con que se
+    // registró en la tienda pueden ser otros (o cualquier cosa).
+    final linked = erpCode != null && (holderName?.trim().isNotEmpty ?? false);
+    if (!linked) {
+      final names = words(firstNames);
+      final surnames = words(lastNames);
+      if (names.isNotEmpty && surnames.isNotEmpty) {
+        return '${cap(names.first)} ${cap(surnames.first)}';
+      }
     }
-    // Si solo hay el nombre completo: el primer nombre y el primer apellido
-    // (con cuatro palabras o más, el apellido es la tercera).
+
+    // El nombre completo viene como "Nombres Apellido-paterno Apellido-materno"
+    // ("ANTHONY KENER GUSTAVO MIRANDA PUN"): el primer nombre y el primer
+    // apellido, que es el penúltimo (con dos palabras, la segunda).
     final all = words(displayName);
     if (all.length < 2) return all.map(cap).join(' ');
-    final surname = all.length >= 4 ? all[2] : all[1];
+    final surname = all.length >= 3 ? all[all.length - 2] : all[1];
     return '${cap(all.first)} ${cap(surname)}';
   }
 

@@ -93,45 +93,51 @@ class DataCard extends StatelessWidget {
                     padding: EdgeInsets.only(
                       bottom: fields.isNotEmpty || children.isNotEmpty ? 12 : 0,
                     ),
+                    // Ícono y rótulo a la izquierda; las etiquetas, pegadas a la
+                    // derecha (con y sin rótulo, a la misma altura).
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (icon != null) ...[
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: tint.withValues(alpha: 0.10),
-                            foregroundColor: tint,
-                            child: Icon(icon, size: 17),
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (icon != null) ...[
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: tint.withValues(alpha: 0.10),
+                                  foregroundColor: tint,
+                                  child: Icon(icon, size: 17),
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                              if (badge != null)
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF0F0F2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      badge!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          const SizedBox(width: 10),
+                        ),
+                        if (trailing != null) ...[
+                          const SizedBox(width: 8),
+                          Flexible(child: trailing!),
                         ],
-                        if (badge != null)
-                          Flexible(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF0F0F2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                badge!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.labelMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                          ),
-                        const SizedBox(width: 8),
-                        if (trailing != null)
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: trailing!,
-                            ),
-                          ),
                       ],
                     ),
                   ),

@@ -280,12 +280,14 @@ void main() {
 
       expect(find.text('S/ 15,000.00'), findsOneWidget); // línea de crédito
       expect(find.text('S/ 7,550.00'), findsOneWidget); // disponible
-      expect(find.text('COD1 | DRIVER | 7POWER'), findsOneWidget);
-      expect(find.text('COD2 | PARLANTE | 7POWER'), findsOneWidget);
+      // Cada venta es una tarjeta con la descripción genérica (sin detallar).
+      expect(find.text('V001-0001'), findsOneWidget);
+      expect(find.text('V001-0002'), findsOneWidget);
       // Como la pantalla es alta y lo cargado no la llena, sigue pidiendo
       // páginas hasta tener todo.
       expect(env.statementRemote.pagesAsked, [1, 2]);
-      expect(find.text('COD3 | DRIVER | 7POWER'), findsOneWidget);
+      expect(find.text('V001-0003'), findsOneWidget);
+      expect(find.text('Compra de producto'), findsNWidgets(3));
       expect(find.text('Mostrando 3 de 3 movimientos'), findsOneWidget);
     });
 
@@ -313,8 +315,8 @@ void main() {
       await tester.enterText(find.byType(TextField), 'parlante');
       await tester.pumpAndSettle();
 
-      expect(find.text('COD2 | PARLANTE | 7POWER'), findsOneWidget);
-      expect(find.text('COD1 | DRIVER | 7POWER'), findsNothing);
+      expect(find.text('V001-0002'), findsOneWidget);
+      expect(find.text('V001-0001'), findsNothing);
     });
 
     testWidgets('los pagos y las ventas anuladas se marcan', (tester) async {
@@ -370,10 +372,12 @@ void main() {
         line('3', 'V001-7000', 'GTR-12.4D | SUBWOOFER | 7POWER', 156),
       ]);
 
-      // Un documento = una tarjeta: el número sale una vez, con el monto sumado.
+      // Un documento = una tarjeta: el número sale una vez, con el monto sumado
+      // y una descripción genérica (plural si son varios productos).
       expect(find.text('V001-6943'), findsOneWidget);
-      expect(find.text('GXT6.4 | SET MEDIO RANGO | 7POWER'), findsOneWidget);
-      expect(find.text('GX6.4B | MEDIO RANGO | 7POWER'), findsOneWidget);
+      expect(find.text('Compra de productos'), findsOneWidget);
+      expect(find.text('Compra de producto'), findsOneWidget);
+      expect(find.text('GXT6.4 | SET MEDIO RANGO | 7POWER'), findsNothing);
       expect(find.text('S/ 195.00'), findsOneWidget);
       expect(find.text('V001-7000'), findsOneWidget);
       // Cada documento tiene su ícono para ver el PDF.
@@ -384,6 +388,7 @@ void main() {
       await tester.tap(find.text('V001-6943'));
       await tester.pumpAndSettle();
       expect(find.text('Productos'), findsOneWidget);
+      expect(find.text('GXT6.4 | SET MEDIO RANGO | 7POWER'), findsOneWidget);
       expect(find.text('S/ 117.00'), findsOneWidget);
       expect(find.text('S/ 78.00'), findsOneWidget);
       expect(find.text('S/ 195.00'), findsOneWidget);
@@ -427,7 +432,7 @@ void main() {
       await tester.tap(find.text('Reintentar'));
       await tester.pumpAndSettle();
 
-      expect(find.text('COD1 | DRIVER | 7POWER'), findsOneWidget);
+      expect(find.text('V001-0001'), findsOneWidget);
     });
   });
 }

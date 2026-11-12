@@ -111,7 +111,7 @@ class _StatementPageState extends State<StatementPage> {
           if (i == 0) return _Header(onPickRange: _pickRange);
           if (i == rows.length + 1) return _Footer(statement: statement);
           final row = rows[i - 1];
-          return row.length == 1 && row.first.document == '-'
+          return row.first.isPayment || row.first.document == '-'
               ? _MovementCard(movement: row.first)
               : _DocumentCard(lines: row);
         },
@@ -125,7 +125,12 @@ class _StatementPageState extends State<StatementPage> {
 List<List<AccountMovement>> _groupByDocument(List<AccountMovement> movements) {
   final rows = <List<AccountMovement>>[];
   for (final m in movements) {
-    if (m.document != '-' && rows.isNotEmpty && rows.last.first.document == m.document) {
+    // Un pago nunca se junta con la venta: va en su propia tarjeta.
+    if (!m.isPayment &&
+        m.document != '-' &&
+        rows.isNotEmpty &&
+        !rows.last.first.isPayment &&
+        rows.last.first.document == m.document) {
       rows.last.add(m);
     } else {
       rows.add([m]);
@@ -515,6 +520,14 @@ class _DocumentCard extends StatelessWidget {
       fields: [
         if (first.date != null)
           DataField('Fecha', FormatUtils.date(first.date!.toLocal())),
+        // Sin listar cada producto: el detalle está al tocar la tarjeta.
+        DataField(
+          'Descripción',
+          // Los productos de la venta (o, si no se conocen, las líneas vistas).
+          (first.sale?.lines.isNotEmpty ?? false ? first.sale!.lines.length : lines.length) == 1
+              ? 'Compra de producto'
+              : 'Compra de productos',
+        ),
       ],
       footerLabel: 'Monto',
       footerValue: _amount(soles, dollars),
@@ -522,30 +535,6 @@ class _DocumentCard extends StatelessWidget {
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => StatementDocumentPage(lines: lines)),
       ),
-      // Todos los productos del documento en la misma tarjeta.
-      children: [
-        const SizedBox(height: 4),
-        for (final l in lines)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(l.description, style: theme.textTheme.bodyMedium),
-                ),
-                if (l.quantity != null) ...[
-                  const SizedBox(width: 12),
-                  Text(
-                    '× ${l.quantity}',
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: theme.colorScheme.outline),
-                  ),
-                ],
-              ],
-            ),
-          ),
-      ],
     );
   }
 }

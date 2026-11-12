@@ -390,9 +390,8 @@ void main() {
     final env = TestEnv(catalog: [product(1, 'Driver 400W')]);
     await tester.pumpWidget(env.app());
     await tester.pumpAndSettle();
-    // El título de la sección (la barra inferior ya no lleva nombres).
     // El título de la sección y la pestaña de la barra inferior.
-    expect(find.text('Categorías'), findsOneWidget);
+    expect(find.text('Categorías'), findsNWidgets(2));
     expect(
       find.descendant(of: find.byType(HomePage), matching: find.text('Categorías')),
       findsOneWidget,
