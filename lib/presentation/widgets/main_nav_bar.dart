@@ -25,37 +25,27 @@ const mainNavTabs = [
   MainNavTab(label: 'Más', tooltip: 'Más', icon: Icons.more_horiz_rounded),
 ];
 
-/// La barra de abajo: una píldora negra flotante sobre el fondo blanco, con el
-/// ícono y el nombre de cada pestaña en blanco. La pestaña elegida lleva un
-/// cuadro con degradado de rojo a negro y borde rojo brillante.
+/// La barra de abajo: fondo blanco, íconos y nombres en gris. La pestaña elegida
+/// lleva un cuadro rosado suave, con su ícono y su nombre en rojo.
 class MainNavBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelected;
 
   const MainNavBar({super.key, required this.selectedIndex, required this.onSelected});
 
-  static const _pill = Color(0xFF0B0B0C);
-  static const _pillBorder = Color(0xFF2B2B2E);
-
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.white,
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE6E6EA))),
+      ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
-          child: Container(
-            height: 76,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: BoxDecoration(
-              color: _pill,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: _pillBorder),
-              boxShadow: const [
-                BoxShadow(color: Color(0x33000000), blurRadius: 14, offset: Offset(0, 4)),
-              ],
-            ),
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+          child: SizedBox(
+            height: 68,
             child: Row(
               children: [
                 for (var i = 0; i < mainNavTabs.length; i++)
@@ -75,6 +65,9 @@ class MainNavBar extends StatelessWidget {
   }
 }
 
+/// El gris de las pestañas que no están elegidas.
+const _gray = Color(0xFF6B6B73);
+
 class _NavItem extends StatelessWidget {
   final MainNavTab tab;
   final bool selected;
@@ -85,6 +78,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Tooltip(
       message: tab.tooltip,
@@ -103,42 +97,26 @@ class _NavItem extends StatelessWidget {
               duration: still ? Duration.zero : const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
               width: 70,
-              height: 64,
+              height: 62,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                // De rojo vivo en la esquina a casi negro al otro lado.
-                gradient: selected
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFFC81E1E), Color(0xFF560A0A), Color(0xFF100505)],
-                        stops: [0.0, 0.55, 1.0],
-                      )
-                    : null,
-                border: selected
-                    ? Border.all(color: const Color(0xFFFF3B30), width: 1.2)
-                    : null,
-                boxShadow: selected
-                    ? const [
-                        BoxShadow(color: Color(0x66E02424), blurRadius: 16),
-                        BoxShadow(color: Color(0x33FF3B30), blurRadius: 6),
-                      ]
-                    : null,
+                // Rosado suave, como los cuadros de los íconos de los menús.
+                color: selected ? primary.withValues(alpha: 0.12) : null,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(tab.icon, color: Colors.white, size: 27),
+                  Icon(tab.icon, color: selected ? primary : _gray, size: 26),
                   const SizedBox(height: 3),
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
                       tab.label,
                       maxLines: 1,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: selected ? primary : _gray,
                         fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                         height: 1.1,
                       ),
                     ),

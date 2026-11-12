@@ -604,6 +604,9 @@ void main() {
       await _openAccount(tester, env);
       await _openSection(tester, 'Direcciones');
 
+      // Cada tarjeta se titula por su lugar en la lista, no por el nombre guardado.
+      expect(find.text('Dirección 1'), findsOneWidget);
+      expect(find.text('Dirección 2'), findsOneWidget);
       expect(find.text('Av. Larco 123'), findsOneWidget);
       expect(find.text('Predeterminada'), findsOneWidget);
       expect(find.text('MIRAFLORES, LIMA, LIMA'), findsNWidgets(2));

@@ -96,6 +96,7 @@ class _AddressesPageState extends State<AddressesPage> {
                     final a = addresses.items[i];
                     return _AddressCard(
                       address: a,
+                      number: i + 1,
                       onEdit: () => AddressFormPage.open(context, address: a),
                       onDelete: () => _delete(a),
                       onSetDefault: () => _setDefault(a),
@@ -110,12 +111,16 @@ class _AddressesPageState extends State<AddressesPage> {
 
 class _AddressCard extends StatelessWidget {
   final AddressEntity address;
+
+  /// Su lugar en la lista: la tarjeta se titula "Dirección 1", "Dirección 2"...
+  final int number;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onSetDefault;
 
   const _AddressCard({
     required this.address,
+    required this.number,
     required this.onEdit,
     required this.onDelete,
     required this.onSetDefault,
@@ -134,7 +139,7 @@ class _AddressCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(address.recipient,
+                  child: Text('Dirección $number',
                       style: theme.textTheme.titleSmall),
                 ),
                 if (address.isDefault)
