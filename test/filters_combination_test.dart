@@ -281,6 +281,31 @@ void main() {
     });
   });
 
+  group('Topes del precio', () {
+    testWidgets('el deslizador llega al producto más caro de todo el catálogo',
+        (tester) async {
+      final env = _env();
+      env.products.priceBounds = true;
+      await _openShop(tester, env);
+      final provider = _provider(tester);
+
+      expect(provider.priceMin, 30);
+      expect(provider.priceMax, 500);
+
+      // La categoría RCA solo tiene un producto de S/ 30: el resultado no da
+      // rango, pero el deslizador sigue con los topes de todo el catálogo.
+      await provider.selectCategory(2);
+      await tester.pumpAndSettle();
+      expect(provider.priceMin, 30);
+      expect(provider.priceMax, 500);
+      expect(provider.canFilterByPrice, isTrue);
+
+      await provider.search('zzz');
+      await tester.pumpAndSettle();
+      expect(provider.priceMax, 500);
+    });
+  });
+
   group('Búsqueda activa', () {
     testWidgets('las marcas del filtro son las que tienen resultados', (tester) async {
       final env = _env();

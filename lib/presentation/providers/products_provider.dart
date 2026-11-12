@@ -130,18 +130,56 @@ class ProductsProvider extends ChangeNotifier with AuthAwareReload {
 
   /// Topes del deslizador de precio. Null si el cliente no tiene lista de
   /// precios o no hay rango que elegir.
-  double? get priceMin => _priceMin;
-  double? get priceMax => _priceMax;
-  bool get canFilterByPrice =>
-      _priceMin != null && _priceMax != null && _priceMax! > _priceMin!;
+  ///
+  /// Son los topes de TODO el catálogo (del precio más bajo al más alto), no
+  /// los del resultado de la categoría o la búsqueda: así el deslizador siempre
+  /// llega al producto más caro. Mientras no llegan, se usan los del resultado.
+  double? get priceMin => _catalogPriceMin ?? _priceMin;
+  double? get priceMax {
+    final catalog = _catalogPriceMax;
+    if (catalog == null) return _priceMax;
+    final current = _priceMax;
+    return current != null && current > catalog ? current : catalog;
+  }
+
+  bool get canFilterByPrice {
+    final min = priceMin;
+    final max = priceMax;
+    return min != null && max != null && max > min;
+  }
+
+  /// Los topes de precio de todo el catálogo (sin categoría, marca ni búsqueda).
+  double? _catalogPriceMin;
+  double? _catalogPriceMax;
+
+  /// Pide el precio más bajo y el más alto de todo el catálogo. Depende de la
+  /// lista de precios del cliente, por eso se vuelve a pedir al cambiar la sesión.
+  Future<void> _loadPriceBounds() async {
+    final result = await getProductsUseCase(limit: 1);
+    result.fold((_) {}, (page) {
+      if (page.priceMin == null || page.priceMax == null) return;
+      _catalogPriceMin = page.priceMin;
+      _catalogPriceMax = page.priceMax;
+      notifyListeners();
+    });
+  }
 
   /// Los precios dependen del cliente: al cambiar la sesión se recargan.
   @override
-  Future<void> reloadForAuthChange() => loadProducts();
+  Future<void> reloadForAuthChange() {
+    _catalogPriceMin = null;
+    _catalogPriceMax = null;
+    return Future.wait([loadProducts(), _loadPriceBounds()]);
+  }
 
-  /// Carga inicial: categorías, marcas y primera página de productos.
+  /// Carga inicial: categorías, marcas, primera página de productos y topes de precio.
   Future<void> init() async {
-    await Future.wait([_loadCategories(), _loadBrands(), loadProducts()]);
+    await Future.wait([
+      _loadCategories(),
+      _loadBrands(),
+      loadProducts(),
+      _loadPriceBounds(),
+    ]);
   }
 
   Future<void> _loadCategories() async {

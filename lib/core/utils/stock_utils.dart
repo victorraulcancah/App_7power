@@ -1,25 +1,30 @@
-enum StockLevel { high, low, out }
+enum StockLevel { available, few, last, out }
 
-/// Cómo se informa el stock, igual que en la web: por encima de 10 no se
-/// revela la cantidad real ("+10 unidades"); de 1 a 10 se muestra el número;
-/// en 0 el producto está agotado.
+/// Cómo se informa el stock al cliente (igual que el backend y la web): no se
+/// muestra la cantidad en existencia sino un mensaje según el rango.
+///
+///   0        → "Agotado"
+///   1 a 3    → "¡Últimas N unidades!" (o "¡Última unidad!")
+///   4 a 9    → "Quedan N unidades"
+///   10 o más → "Disponible"
 class StockUtils {
-  static const int highThreshold = 10;
+  /// Hasta cuántas unidades se avisa "¡Últimas N unidades!".
+  static const int lastMax = 3;
+
+  /// Hasta cuántas unidades se avisa "Quedan N unidades"; desde ahí, "Disponible".
+  static const int fewMax = 9;
 
   static StockLevel level(int stock) {
-    if (stock > highThreshold) return StockLevel.high;
-    if (stock > 0) return StockLevel.low;
-    return StockLevel.out;
+    if (stock <= 0) return StockLevel.out;
+    if (stock <= lastMax) return StockLevel.last;
+    if (stock <= fewMax) return StockLevel.few;
+    return StockLevel.available;
   }
 
-  /// "Stock: +10 unidades", "Stock: 4 unidades" o "Agotado".
   static String label(int stock) => switch (level(stock)) {
-        StockLevel.high => 'Stock: +$highThreshold unidades',
-        StockLevel.low => 'Stock: $stock unidades',
         StockLevel.out => 'Agotado',
+        StockLevel.last => stock == 1 ? '¡Última unidad!' : '¡Últimas $stock unidades!',
+        StockLevel.few => 'Quedan $stock unidades',
+        StockLevel.available => 'Disponible',
       };
-
-  /// "+10 unidades" o "4 unidades" (ficha del producto: "Disponible: ...").
-  static String units(int stock) =>
-      stock > highThreshold ? '+$highThreshold unidades' : '$stock unidades';
 }

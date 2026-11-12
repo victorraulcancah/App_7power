@@ -27,19 +27,23 @@ Future<void> _goToShop(WidgetTester tester) async {
 /// Reglas de precio, moneda y stock copiadas de la tienda web.
 void main() {
   group('Stock', () {
-    test('umbrales: más de 10 no revela la cantidad, 1-10 sí, 0 agotado', () {
-      expect(StockUtils.level(11), StockLevel.high);
-      expect(StockUtils.level(10), StockLevel.low);
-      expect(StockUtils.level(1), StockLevel.low);
+    test('rangos: 0 agotado, 1-3 últimas, 4-9 quedan, 10 o más disponible', () {
       expect(StockUtils.level(0), StockLevel.out);
+      expect(StockUtils.level(1), StockLevel.last);
+      expect(StockUtils.level(3), StockLevel.last);
+      expect(StockUtils.level(4), StockLevel.few);
+      expect(StockUtils.level(9), StockLevel.few);
+      expect(StockUtils.level(10), StockLevel.available);
 
-      expect(StockUtils.label(544), 'Stock: +10 unidades');
-      expect(StockUtils.label(10), 'Stock: 10 unidades');
-      expect(StockUtils.label(3), 'Stock: 3 unidades');
       expect(StockUtils.label(0), 'Agotado');
-
-      expect(StockUtils.units(92), '+10 unidades');
-      expect(StockUtils.units(4), '4 unidades');
+      expect(StockUtils.label(1), '¡Última unidad!');
+      expect(StockUtils.label(2), '¡Últimas 2 unidades!');
+      expect(StockUtils.label(3), '¡Últimas 3 unidades!');
+      expect(StockUtils.label(4), 'Quedan 4 unidades');
+      expect(StockUtils.label(7), 'Quedan 7 unidades');
+      expect(StockUtils.label(9), 'Quedan 9 unidades');
+      expect(StockUtils.label(10), 'Disponible');
+      expect(StockUtils.label(544), 'Disponible');
     });
 
     testWidgets('la tarjeta usa esos textos y deshabilita sin stock',
@@ -53,8 +57,8 @@ void main() {
       await tester.pumpAndSettle();
       await _goToShop(tester);
 
-      expect(find.text('Stock: +10 unidades'), findsOneWidget);
-      expect(find.text('Stock: 4 unidades'), findsOneWidget);
+      expect(find.text('Disponible'), findsOneWidget);
+      expect(find.text('Quedan 4 unidades'), findsOneWidget);
       expect(find.text('Agotado'), findsOneWidget);
 
       final buttons = tester

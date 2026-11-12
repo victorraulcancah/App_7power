@@ -186,6 +186,8 @@ class FakeProductRepo implements ProductRepository {
         currentPage: 1,
         lastPage: 1,
         total: items.length,
+        priceMin: priceMin,
+        priceMax: priceMax,
       ));
     }
 

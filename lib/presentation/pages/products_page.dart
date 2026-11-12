@@ -55,28 +55,30 @@ class _ProductsPageState extends State<ProductsPage> {
       bottom: false,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppConstants.defaultPadding,
-              12,
-              6,
-              8,
+          // La misma barra clara del inicio: buscador de borde gris, el filtro
+          // (donde allá va el corazón) y el carrito, con una línea fina debajo.
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(bottom: BorderSide(color: Color(0xFFE6E6EA))),
             ),
+            padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
             child: Row(
               children: [
                 Expanded(
                   child: AppSearchField(
+                    compact: true,
                     onSearch: provider.search,
                     initialValue: provider.query,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 _FilterButton(provider: provider),
-                const SizedBox(width: 2),
                 const CartButton(plain: true),
               ],
             ),
           ),
+          const SizedBox(height: 8),
           if (provider.categories.isNotEmpty)
             _CategoryFilter(provider: provider),
           if (provider.filters.isActive || provider.query.isNotEmpty)
@@ -215,7 +217,8 @@ class _NoResults extends StatelessWidget {
   }
 }
 
-/// Botón de filtros con la cantidad de filtros activos.
+/// Ícono de filtros con la cantidad de filtros activos, suelto y angosto como
+/// los de la barra del inicio.
 class _FilterButton extends StatelessWidget {
   final ProductsProvider provider;
 
@@ -224,24 +227,19 @@ class _FilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = provider.filters.activeCount;
-    final theme = Theme.of(context);
 
-    return Badge(
-      isLabelVisible: count > 0,
-      label: Text('$count'),
-      child: IconButton.filledTonal(
-        tooltip: 'Filtros',
-        onPressed: () => showProductFilters(context, provider),
-        style: IconButton.styleFrom(
-          minimumSize: const Size(52, 52),
-          backgroundColor: count > 0
-              ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest,
-          foregroundColor: count > 0
-              ? theme.colorScheme.onPrimary
-              : theme.colorScheme.onSurface,
-        ),
-        icon: const Icon(Icons.tune),
+    return IconButton(
+      tooltip: 'Filtros',
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+      onPressed: () => showProductFilters(context, provider),
+      icon: Badge(
+        isLabelVisible: count > 0,
+        backgroundColor: const Color(0xFFFFC107),
+        textColor: Colors.black,
+        label: Text('$count'),
+        child: const Icon(Icons.tune, size: 22),
       ),
     );
   }

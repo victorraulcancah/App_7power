@@ -381,7 +381,7 @@ void main() {
 
       expect(find.text('Driver 400W'), findsOneWidget);
       expect(find.text('Parlante'), findsOneWidget);
-      expect(find.text('Stock: 5 unidades'), findsOneWidget);
+      expect(find.text('Quedan 5 unidades'), findsOneWidget);
       expect(find.text('Agotado'), findsOneWidget);
       expect(find.text('Sin stock'), findsOneWidget);
     });

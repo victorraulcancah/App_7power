@@ -358,7 +358,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Producto'), findsOneWidget);
-      expect(find.text('Stock: 9 unidades'), findsOneWidget);
+      expect(find.text('Quedan 9 unidades'), findsOneWidget);
       // La ficha es una lista: las secciones largas quedan bajo el pliegue.
       await tester.scrollUntilVisible(
         find.text('Descripción de Driver 400W'),

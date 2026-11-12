@@ -9,12 +9,17 @@ class AppSearchField extends StatefulWidget {
   final Duration debounce;
   final String? initialValue;
 
+  /// Bajo y de borde gris, sin la sombra roja: el de las barras claras (como el
+  /// del inicio).
+  final bool compact;
+
   const AppSearchField({
     super.key,
     required this.onSearch,
     this.hint = 'Buscar productos',
     this.debounce = const Duration(milliseconds: 400),
     this.initialValue,
+    this.compact = false,
   });
 
   @override
@@ -62,9 +67,11 @@ class _AppSearchFieldState extends State<AppSearchField> {
   @override
   Widget build(BuildContext context) {
     return SearchBox(
+      flat: widget.compact,
       child: TextField(
         controller: _controller,
         onChanged: _onChanged,
+        style: widget.compact ? const TextStyle(fontSize: 14) : null,
         textInputAction: TextInputAction.search,
         onSubmitted: (v) {
           _timer?.cancel();
@@ -73,6 +80,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
         decoration: SearchBox.decoration(
           context,
           hint: widget.hint,
+          compact: widget.compact,
           suffix: _controller.text.isEmpty
               ? null
               : IconButton(

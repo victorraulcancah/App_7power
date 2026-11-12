@@ -2,21 +2,26 @@ import 'package:flutter/material.dart';
 
 import '../../core/utils/stock_utils.dart';
 
-/// Stock con el formato de la web: verde "+10 unidades", ámbar con la cantidad
-/// de 1 a 10, rojo "Agotado".
+/// El stock como lo muestra el cliente: "Agotado", "¡Últimas 3 unidades!" (rojo),
+/// "Quedan 7 unidades" (marrón) o "Disponible" (verde).
 class StockLabel extends StatelessWidget {
   final int stock;
   final TextStyle? style;
 
   const StockLabel({super.key, required this.stock, this.style});
 
+  /// Los colores del mensaje.
+  static Color colorOf(BuildContext context, StockLevel level) => switch (level) {
+        StockLevel.available => const Color(0xFF166534),
+        StockLevel.few => const Color(0xFF92400E),
+        StockLevel.last => const Color(0xFF9B1C1C),
+        StockLevel.out => Theme.of(context).colorScheme.onSurface,
+      };
+
   @override
   Widget build(BuildContext context) {
-    final color = switch (StockUtils.level(stock)) {
-      StockLevel.high => Colors.green.shade700,
-      StockLevel.low => Colors.orange.shade800,
-      StockLevel.out => Theme.of(context).colorScheme.error,
-    };
+    final level = StockUtils.level(stock);
+    final color = colorOf(context, level);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
