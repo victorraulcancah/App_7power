@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:appecommerce/data/datasources/statement_remote_datasource.dart';
@@ -193,5 +194,29 @@ void main() {
     final bytes = await buildDocumentPdf(doc);
     expect(String.fromCharCodes(bytes.take(5)), '%PDF-');
     _save('cotizacion.pdf', bytes);
+  });
+
+  testWidgets('el visor del PDF tiene la lupa, que acerca y aleja', (tester) async {
+    final doc = pdfFromSale(saleDocumentFromRow(_row())!);
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => openDocumentPdf(context, doc),
+          child: const Text('abrir'),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('abrir'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('V001-7289'), findsOneWidget);
+    expect(find.byTooltip('Acercar'), findsOneWidget);
+    await tester.tap(find.byTooltip('Acercar'));
+    await tester.pump();
+    expect(find.byTooltip('Alejar'), findsOneWidget);
+    await tester.tap(find.byTooltip('Alejar'));
+    await tester.pump();
+    expect(find.byTooltip('Acercar'), findsOneWidget);
   });
 }

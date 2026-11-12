@@ -515,20 +515,172 @@ Future<Uint8List> buildDocumentPdf(PdfDocument d) async {
   return doc.save();
 }
 
-/// Abre el PDF en una pantalla con vista previa, compartir e imprimir.
+/// Abre el PDF en una pantalla con lupa (acercar y alejar), imprimir y compartir.
 Future<void> openDocumentPdf(BuildContext context, PdfDocument document) {
   return Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => Scaffold(
-        appBar: AppBar(title: Text(document.number)),
-        body: PdfPreview(
-          build: (_) => buildDocumentPdf(document),
-          pdfFileName: '${document.number}.pdf',
-          canChangeOrientation: false,
-          canChangePageFormat: false,
-          canDebug: false,
-        ),
-      ),
-    ),
+    MaterialPageRoute<void>(builder: (_) => _PdfViewerPage(document: document)),
   );
+}
+
+/// El PDF ya armado y sus páginas como imágenes.
+class _RenderedPdf {
+  final Uint8List bytes;
+  final List<Uint8List> pages;
+
+  const _RenderedPdf(this.bytes, this.pages);
+}
+
+/// Visor del PDF: la hoja sobre fondo gris, con la lupa en la barra (acerca y
+/// aleja), pellizco para acercar y los botones de imprimir y compartir.
+class _PdfViewerPage extends StatefulWidget {
+  final PdfDocument document;
+
+  const _PdfViewerPage({required this.document});
+
+  @override
+  State<_PdfViewerPage> createState() => _PdfViewerPageState();
+}
+
+class _PdfViewerPageState extends State<_PdfViewerPage> {
+  static const _zoomLevel = 2.6;
+
+  final _controller = TransformationController();
+  late final Future<_RenderedPdf> _rendered = _render();
+  bool _zoomed = false;
+
+  Future<_RenderedPdf> _render() async {
+    final bytes = await buildDocumentPdf(widget.document);
+    final pages = <Uint8List>[];
+    // Con buena resolución para que al acercar el texto se siga leyendo.
+    await for (final page in Printing.raster(bytes, dpi: 230)) {
+      pages.add(await page.toPng());
+    }
+    return _RenderedPdf(bytes, pages);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// La lupa: acerca al centro de la hoja o vuelve al tamaño normal.
+  void _toggleZoom(Size viewport) {
+    setState(() => _zoomed = !_zoomed);
+    if (!_zoomed) {
+      _controller.value = Matrix4.identity();
+      return;
+    }
+    final dx = viewport.width / 2 * (1 - _zoomLevel);
+    final dy = viewport.height / 3 * (1 - _zoomLevel);
+    _controller.value = Matrix4.diagonal3Values(_zoomLevel, _zoomLevel, 1)
+      ..setTranslationRaw(dx, dy, 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name = widget.document.number;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFE4E4E7),
+      appBar: AppBar(
+        title: Text(name),
+        actions: [
+          IconButton(
+            tooltip: _zoomed ? 'Alejar' : 'Acercar',
+            icon: Icon(_zoomed ? Icons.zoom_out : Icons.zoom_in),
+            onPressed: () => _toggleZoom(MediaQuery.sizeOf(context)),
+          ),
+        ],
+      ),
+      body: FutureBuilder<_RenderedPdf>(
+        future: _rendered,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(child: Text('No se pudo mostrar el PDF.'));
+          }
+          final pdf = snapshot.data;
+          if (pdf == null) return const Center(child: CircularProgressIndicator());
+
+          return Column(
+            children: [
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, box) => InteractiveViewer(
+                    transformationController: _controller,
+                    minScale: 1,
+                    maxScale: 6,
+                    constrained: false,
+                    boundaryMargin: const EdgeInsets.all(24),
+                    onInteractionEnd: (_) {
+                      final zoomed = _controller.value.getMaxScaleOnAxis() > 1.05;
+                      if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+                    },
+                    child: SizedBox(
+                      width: box.maxWidth,
+                      child: Column(
+                        children: [
+                          for (final page in pdf.pages)
+                            Container(
+                              margin: const EdgeInsets.all(12),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0x40000000),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Image.memory(page, fit: BoxFit.fitWidth, width: double.infinity),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Imprimir y compartir.
+              Material(
+                color: Theme.of(context).colorScheme.primary,
+                child: SafeArea(
+                  top: false,
+                  child: SizedBox(
+                    height: 56,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: IconButton(
+                            tooltip: 'Imprimir',
+                            color: Colors.white,
+                            icon: const Icon(Icons.print),
+                            onPressed: () => Printing.layoutPdf(
+                              name: '$name.pdf',
+                              onLayout: (_) async => pdf.bytes,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: IconButton(
+                            tooltip: 'Compartir',
+                            color: Colors.white,
+                            icon: const Icon(Icons.share),
+                            onPressed: () => Printing.sharePdf(
+                              bytes: pdf.bytes,
+                              filename: '$name.pdf',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }

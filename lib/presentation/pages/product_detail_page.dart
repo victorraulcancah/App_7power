@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/format_utils.dart';
-import '../../core/utils/stock_utils.dart';
 import '../../domain/entities/product_detail_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../components/components.dart';
@@ -121,11 +120,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       Text('${product.code}',
                           style: theme.textTheme.bodySmall
                               ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 8),
-                    StockLabel(
-                      stock: product.stock,
-                      style: theme.textTheme.bodyMedium,
-                    ),
                     if (product.priceVisible &&
                         detail.currencyOptions.length > 1)
                       _CurrencySelector(
@@ -145,15 +139,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       )
                     else
                       const _LockedPriceBanner(),
-                    if (product.priceVisible && product.isAvailable)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          'Disponible: ${StockUtils.units(product.stock)}',
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.outline),
-                        ),
+                    // El stock, una sola vez y bajo el precio.
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: StockLabel(
+                        stock: product.stock,
+                        style: theme.textTheme.bodyMedium,
                       ),
+                    ),
                     for (final entry in detail.sections.entries)
                       _Section(title: entry.key, body: entry.value),
                     if (detail.manualUrl != null)
