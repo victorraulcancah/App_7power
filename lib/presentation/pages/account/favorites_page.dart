@@ -289,28 +289,35 @@ class _FavoriteRow extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              // La cantidad a la izquierda y el corazón (quitar) a la derecha.
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Row(
-                  children: [
-                    if (canBuy)
-                      QuantitySelector(
-                        wide: true,
-                        width: 128,
-                        value: quantity,
-                        max: product.stock,
-                        onChanged: onQuantity,
-                      ),
-                    const Spacer(),
-                    IconButton(
-                      tooltip: 'Quitar de favoritos',
-                      icon: const Icon(Icons.favorite),
-                      color: theme.colorScheme.error,
-                      onPressed: () => _remove(context),
+              // La cantidad, justo en el medio de la tarjeta; el corazón (quitar) a la
+              // derecha. A la izquierda va un espacio del mismo ancho del corazón
+              // para que la barra quede centrada de verdad.
+              Row(
+                children: [
+                  const SizedBox(width: 40),
+                  Expanded(
+                    child: Center(
+                      child: canBuy
+                          ? QuantitySelector(
+                              wide: true,
+                              width: 128,
+                              value: quantity,
+                              max: product.stock,
+                              onChanged: onQuantity,
+                            )
+                          : const SizedBox(height: 46),
                     ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    tooltip: 'Quitar de favoritos',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    icon: const Icon(Icons.favorite),
+                    color: theme.colorScheme.error,
+                    onPressed: () => _remove(context),
+                  ),
+                ],
               ),
             ],
           ),
